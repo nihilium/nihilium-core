@@ -1,0 +1,33 @@
+{
+  "name": "datastream-server",
+  "version": "1.0.0",
+  "description": "Webservice for EVMDataStream",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "serve": "node dist/server.js",
+    "deploy": "ts-node src/scripts/deploy.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    
+    "express": "^4.19.2",
+    "fixed-merkle-tree": "^0.7.3",
+    "@nihilium/privacy-lib": "file:../../packages/privacy-lib",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "@types/yargs": "^17.0.32",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+} 

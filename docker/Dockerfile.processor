@@ -1,0 +1,36 @@
+# Use Node.js 18 LTS as base image
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies for native modules and RocksDB
+RUN apk add --no-cache python3 make g++ snappy-dev zlib-dev bzip2-dev lz4-dev zstd-dev
+
+# Copy the entire monorepo (node_modules and all)
+COPY . .
+
+# Build the processor application
+RUN cd apps/processor && npm run build
+
+# Expose the port (default is 3006 based on server.ts)
+EXPOSE 3006
+
+# Set working directory to the processor app
+WORKDIR /app/apps/processor
+
+# Create a non-root user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S processor -u 1001
+
+# Ensure the processor user has write permissions to the working directory
+RUN chown -R processor:nodejs /app/apps/processor
+
+USER processor
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3006/health || exit 1
+
+# Start the application
+CMD ["npm", "start"] 

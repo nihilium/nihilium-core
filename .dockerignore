@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+.cache
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+*.ptau
+apps/datastream-server/server-stream
+packages/circom
+packages/zkp-circuits/circom-circuits
+apps/test-ui
+# Environment files (optional - only exclude if you don't want them in container)
+# .env
+# .env.local
+# .env.development
+# .env.test
+# .env.production
+
+# IDE files (optional)
+.vscode
+.idea
+
+# OS generated files
+.DS_Store
+Thumbs.db 

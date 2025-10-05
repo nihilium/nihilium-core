@@ -1,0 +1,28 @@
+{
+  "name": "@nihilium/client-sdk",
+  "version": "0.1.0",
+  "description": "Browser SDK for privacy-accounts, using privacy-lib.",
+  "main": "dist/index.js",
+  "module": "dist/browser/index.es.js",
+  "browser": "dist/browser/index.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/browser/index.es.js",
+      "import": "./dist/browser/index.es.js",
+      "require": "./dist/index.js",
+      "default": "./dist/browser/index.es.js"
+    }
+  },
+  "scripts": {
+    "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc && NODE_OPTIONS='--max-old-space-size=8192' vite build --config vite.config.cjs",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@nihilium/privacy-lib": "file:../privacy-lib",
+    "axios": "^1.10.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

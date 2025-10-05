@@ -1,0 +1,9 @@
+{
+  "circuitName": "opening_proof",
+  "files": {
+    "verifier.sol": "QmWnkv8A4JzgFSXQL4mqpLDbHZ4okpVGpppuAVsisAhjFd",
+    "vkey.json": "QmZ3Esf5a85wobp1nv9rV9rBELTQNdounXxWNvRdtevg8j",
+    "zkey.zkey": "QmSjNWGA9MdeJYQrARUw9y2yXtahmsKCHPvWLLQzwwziNc",
+    "wasm.wasm": "QmUGTn2Q9kK7QTuXHvtNT1tj64pAp4Qw4X7mwFUV5njeDd"
+  }
+}

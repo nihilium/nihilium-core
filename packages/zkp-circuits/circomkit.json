@@ -1,0 +1,9 @@
+{
+    "version": "2.1.2",
+    "proofSystem": "groth16",
+    
+    "dirCircuits": "./circom-circuits/circuits",
+    "dirPtau": "./circom-circuits/ptau",
+    "dirBuild": "./circom-circuits/build",
+    "circuits": "./circom-circuits/circuits.json"
+}

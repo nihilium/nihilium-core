@@ -1,0 +1,6 @@
+nonceKey_p = ["", "", "", "", "", "", "", ""]
+privateKeyScalar = ""
+
+[publicKey]
+x = ""
+y = ""

@@ -1,0 +1,36 @@
+{
+  "name": "privacy-accounts",
+  "private": true,
+  "version": "1.0.1",
+  "workspaces": [
+   
+    "./packages/zkp-circuits",    
+    "./packages/privacy-lib",
+    "./packages/client-sdk",
+    "./apps/datastream-server",
+    "./apps/processor",
+    "./apps/test-ui"
+  ],
+  "overrides": {
+    "circomlibjs": "^0.1.7"
+  },
+  
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build-circuits": "cd packages/zkp-circuits && npm run build",
+    "build-lib": "cd packages/zkp-circuits && npm run build && cd ../privacy-lib && npm run build && cd ../client-sdk && npm run build",
+    "test": "npm run test --workspaces",
+    "clean": "npm run clean --workspaces",
+    "dev": "npm run dev --workspaces --if-present",
+    "build:watch": "npm run build:watch --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^7.0.4",
+    "vite-plugin-dts": "^4.0.0",
+    "vite-plugin-static-copy": "^3.1.1",
+    "vite-plugin-top-level-await": "^1.5.0",
+    "vite-plugin-wasm": "^3.5.0",
+    "ts-mocha": "^11.1.0"
+  }
+}

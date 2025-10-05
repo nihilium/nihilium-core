@@ -1,0 +1,208 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+       {
+            "name": "Debug Test Circuits Noir",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "env": {
+                "TS_NODE_PROJECT": "${workspaceRoot}/packages/zkp-circuits/tsconfig.json"
+            },
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",               
+                "${workspaceRoot}/packages/zkp-circuits/test/encryption.test.ts",
+                "--exit"
+            ],
+            
+            "cwd": "${workspaceRoot}/packages/zkp-circuits",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
+            "name": "Test Privacy Lib full",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/full.test.ts",
+                "--exit",
+                "--reporter",
+                "spec",
+                "--bail"
+
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
+            "name": "Test Privacy Lib Integrated",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/integrated.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
+            "name": "Debug Test Chained Proof",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/base_actions.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        
+        {
+            "name": "Debug Test Mimc",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/mimc.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
+            "name": "Debug Test Keccak",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/merkle_contracts.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
+            "name": "Debug Test Noir test",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/zkp-circuits/test/merkle_tests.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/zkp-circuits",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
+            "name": "TS-Node-Circom",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+            "runtimeArgs": [
+              "--transpile-only",
+              // if you use esm
+              "-r" 
+            ],
+            "program": "${file}",
+            "cwd": "${workspaceRoot}/packages/circom",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+          },
+          
+          {
+              "name": "Compile",
+              "type": "node",
+              "request": "launch",
+              "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+              "runtimeArgs": [
+                "--transpile-only",
+                // if you use esm
+                "-r" 
+              ],
+              "program": "${file}",
+              "cwd": "${workspaceRoot}/packages/circom",
+              "internalConsoleOptions": "openOnSessionStart",
+              "skipFiles": ["<node_internals>/**", "node_modules/**"]
+            },
+            {
+                "name": "Debug DataStream Server",
+                "type": "node",
+                "request": "launch",
+                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+                "runtimeArgs": [
+                  "--transpile-only",
+                  // if you use esm
+                  "-r" 
+                ],
+                
+                "program": "${workspaceRoot}/apps/datastream-server/src/server.ts",
+                "cwd": "${workspaceRoot}/apps/datastream-server",
+                "internalConsoleOptions": "openOnSessionStart",
+                "skipFiles": ["<node_internals>/**", "node_modules/**"]
+              },
+              {
+                  "name": "Debug Processor Server",
+                  "type": "node",
+                  "request": "launch",
+                  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+                  "runtimeArgs": [
+                  
+                    "--transpile-only",
+                    // if you use esm
+                    "-r" ,
+                   
+                  ],
+                  "program": "${workspaceRoot}/apps/processor/src/server.ts",
+                  
+                  "cwd": "${workspaceRoot}/apps/processor",
+                  "internalConsoleOptions": "openOnSessionStart",
+                  "skipFiles": ["<node_internals>/**", "node_modules/**"]
+                }
+        
+    ]
+}

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  processor:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.processor
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      # Add your required environment variables here:
+      # - PRIVATE_KEY=your_private_key
+      # - PRIVATE_KEY_HE=your_he_private_key
+      # - CHAINED_PROOF_CONTRACT_ADDRESS=contract_address
+      # - RPC_URL=your_rpc_url
+      # - CHAIN_ID=1337
+      # - OPENING_PROOF_ADDRESS=opening_proof_address
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Uncomment to add volume for persistent data if needed
+    # volumes:
+    #   - processor_data:/app/data
+    networks:
+      - processor_network
+
+networks:
+  processor_network:
+    driver: bridge
+
+# Uncomment if you need persistent volumes
+# volumes:
+#   processor_data: 

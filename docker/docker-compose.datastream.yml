@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  datastream:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.datastream
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      # Add your required environment variables here:
+      # - PRIVATE_KEY=your_private_key
+      # - CONTRACT_ADDRESS=datastream_contract_address
+      # - RPC_URL=your_rpc_url
+      # - CHAIN_ID=1337
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3006/address"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Volume for persistent datastream data
+    volumes:
+      - datastream_data:/app/apps/datastream-server/server-stream
+    networks:
+      - datastream_network
+
+networks:
+  datastream_network:
+    driver: bridge
+
+volumes:
+  datastream_data: 

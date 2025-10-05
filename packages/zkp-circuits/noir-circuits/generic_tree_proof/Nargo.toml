@@ -1,0 +1,9 @@
+[package]
+name = "generic_tree_proof"
+type = "bin"
+authors = [""]
+
+[dependencies]
+poseidon = { tag = "v0.1.0", git = "https://github.com/noir-lang/poseidon" }
+mimc = { tag = "v0.1.0", git = "https://github.com/noir-lang/mimc" }
+lib = { path = "../lib" }

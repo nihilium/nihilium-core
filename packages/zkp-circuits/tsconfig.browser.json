@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "outDir": "./dist-browser-temp"
+  },
+  "include": ["src/index.browser.ts", "src/circuit-wrapper.ts", "src/circom-wrapper.ts", "src/types/**/*", "src/utils/**/*", "src/tscircuits/**/*", "src/wasm-loader.ts"]
+} 

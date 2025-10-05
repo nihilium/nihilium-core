@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "outDir": "./test-dist",
+    "rootDir": "..",
+    "strict": false,
+    "types": ["node", "chai", "chai-as-promised"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types", "../src/types"]
+  },
+  "include": ["test/**/*"],
+  "exclude": ["node_modules"],
+  
+  "files": ["../hardhat.config.ts"]
+}

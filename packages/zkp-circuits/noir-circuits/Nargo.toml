@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "lib",
+    "top_level_merkle_proof",
+    "sub_tree_merkle_proof",
+    "generic_tree_proof",
+    "generic_adjacent_tree_proof",
+    "encrypt_proof",
+    "validated_sig_he_add",
+    "data_stream_roots_proof",
+    "mimc_test",
+]
