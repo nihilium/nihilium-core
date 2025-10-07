@@ -39,7 +39,7 @@ contract EmpheralMerkleTreeKeccak is Ownable {
   uint32 public maxValue;
   //  ----------------------
 
-  uint32 public constant ROOT_HISTORY_SIZE = 20;
+  uint32 public constant ROOT_HISTORY_SIZE = 60;
   // uint32 public constant ROOT_TIME_SLIPPAGE_IN_SECONDS = 60 * 30; //30 minutes;
   
 

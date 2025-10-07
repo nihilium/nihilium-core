@@ -209,12 +209,7 @@ export class Processor {
       empheral_p = encrypted_message.ephemeral_keys
       new_public_key = [pubKey[0], pubKey[1]]
     }
-    // const prvKeyBuffer = Buffer.from(keypair.privKey.toString(16), 'hex');
-    
-    //const pubValidationKey = cryptoTools.prv2pub(cryptoTools.bigInt2Buffer(this.signingPrivateKey));
-    //Different pubkey from homomorphic addition
-    //const pubKeyArrayBigint = [cryptoTools.bufferToBigInt(pubValidationKey[0]), cryptoTools.bufferToBigInt(pubValidationKey[1])]
-    //const pubKeyArray = toBigIntArray(this.publicHEKey);
+   
     var severed_commitment_random_value = cryptoTools.generateRandom248BitNumber();
     var msg = cryptoTools.hashCypherText(
       point_p.map(point => cryptoTools.toBigIntArray(point)).flat(), 

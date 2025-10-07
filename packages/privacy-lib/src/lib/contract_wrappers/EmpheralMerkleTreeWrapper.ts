@@ -101,6 +101,39 @@ export class EmpheralMerkleTreeWrapper {
       return 0;
     }
   }
+  async getLastInsertEvent(): Promise<{
+    leafIndex: bigint,
+    timestamp: bigint,
+    insertValue: string,    
+    newMerkleRoot: string,
+  }> {
+    const filter = this.contract.filters.TreeUpdate();
+    const latestBlock = await this.signer.provider?.getBlockNumber();
+    if(!latestBlock) throw new Error("Unable to get latest block number");
+    const chunkSize = 5000; // Adjust based on your RPC provider's limits (e.g., 1000-10000)
+    let currentTo = latestBlock;
+    let lastEvent = null;
+  
+    while (currentTo >= 0 && !lastEvent) {
+      const currentFrom = Math.max(0, currentTo - chunkSize + 1);
+      const events = await this.contract.queryFilter(filter, currentFrom, currentTo);
+      if (events.length > 0) {
+        lastEvent = events[events.length - 1];
+      }
+      currentTo = currentFrom - 1;
+    }
+  
+    if (!lastEvent) {
+      throw new Error("No TreeUpdate events found");
+    }
+  
+    return {
+      leafIndex: lastEvent.args.leafIndex,
+      timestamp: lastEvent.args.timestamp,
+      insertValue: lastEvent.args.leafValue,
+      newMerkleRoot: lastEvent.args.newValueRoot,
+    };
+  }
 
   async getTreeUpdateEvents(): Promise<{
     leafIndex: number,

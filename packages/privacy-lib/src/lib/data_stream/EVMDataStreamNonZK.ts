@@ -96,18 +96,58 @@ export class EVMDataStreamNonZK implements IDataStream {
         }
     }
 
-    async resyncGlobalTree(): Promise<void> {
-        const events = await this.global_evm_merkle_tree.getTreeUpdateEvents()
-        await this.persistence.resetContractTrees()
+    async resyncGlobalTree(force: boolean = false): Promise<void> {
+        const currentContractGlobalTreeIndex = await this.global_evm_merkle_tree.getCurrentIndex()
+        const currentContractGlobalRoot = await this.global_evm_merkle_tree.getLastMerkleRoot()
+        const isKnown = await this.global_evm_merkle_tree.isKnownValueRoot(this.globalValueTree.root.toString())
+        console.log("Current contract global root", currentContractGlobalRoot)
+        console.log("Current global root", this.globalValueTree.root, isKnown)
+        console.log("Current contract global tree index", currentContractGlobalTreeIndex)
+        console.log("Current global tree index", this.getGlobalTreeIndex())
+        console.log("Requires resync", force || currentContractGlobalTreeIndex > this.getGlobalTreeIndex())
         var localGlobalTree = await createKeccakMerkelTree(this.depth, [])
         var hasher = keccakTreeHasher;
-        for(const event of events) {
-            await this.persistence.storeGlobalValueTreeLeaf(toPaddedHex(event.value), event.timestamp)
-            //await this.persistence.storeGlobalRootTreeLeaf(event.newMerkleRoot.toString())
-            //TODO implement this
-           // this.globalTree.insert(event.newValueRoot.toString(16))
+
+        if(force || currentContractGlobalRoot != this.globalValueTree.root) {
+            const lastInsertEvent = await this.global_evm_merkle_tree.getLastInsertEvent()
+            const minusTree = await this.persistence.getLocalTree(this.getGlobalTreeIndex() - 1)
+            const minusTreeRoot = minusTree.root
+            const minusTreeLeaf = hasher(minusTreeRoot, lastInsertEvent.timestamp)
+            const localRoot = this.merkleTree.root
+            const localLeaf = hasher(lastInsertEvent.insertValue, lastInsertEvent.timestamp)
+            this.globalValueTree.insert(localLeaf)
+            if(this.globalValueTree.root != currentContractGlobalRoot) {
+                console.log("Global tree root does not match", this.globalValueTree.root, currentContractGlobalRoot)
+                force = true
+            }else{
+                await this.persistence.storeGlobalValueTreeLeaf(lastInsertEvent.insertValue, Number(lastInsertEvent.timestamp))
+                this.on_chain_publishing_state.processing_local_tree = -1
+                this.on_chain_publishing_state.local_trees_to_process.shift()
+                await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
+                console.log("Recovered from last unseen", lastInsertEvent)
+            }
+                //await this.persistence.storeGlobalRootTreeLeaf(event.newMerkleRoot.toString())
+                //TODO implement this
+                // this.globalTree.insert(event.newValueRoot.toString(16))
         }
-        //this.globalRootTree = await this.persistence.getGlobalRootTree()
+
+        
+        if(force || currentContractGlobalTreeIndex > this.getGlobalTreeIndex()) {
+            const events = await this.global_evm_merkle_tree.getTreeUpdateEvents()
+            await this.persistence.resetContractTrees()
+           
+            for(const event of events) {
+                await this.persistence.storeGlobalValueTreeLeaf(toPaddedHex(event.value), event.timestamp)
+                //await this.persistence.storeGlobalRootTreeLeaf(event.newMerkleRoot.toString())
+                //TODO implement this
+            // this.globalTree.insert(event.newValueRoot.toString(16))
+            }
+            //this.globalRootTree = await this.persistence.getGlobalRootTree()
+            //this.globalValueTree = await this.persistence.getGlobalValueTree()
+        }
+        //The tree was updated but the process got shutdown whilst updating our global tree
+       
+        
         this.globalValueTree = await this.persistence.getGlobalValueTree()
     }
 
@@ -179,6 +219,7 @@ export class EVMDataStreamNonZK implements IDataStream {
                 var previousLeaf = this.globalValueTree.elements.at(-1)?.toString()
                 var insert_value_proof = this.globalValueTree.path(this.globalValueTree.elements.length - 1).pathElements.map((element:any) => toPaddedHex(BigInt(element)));
                 var newSubTreeRoot = toPaddedHex(BigInt(localTree.root))
+                
                 var {index, timestamp, newValueRoot, leafHash, gasUsed} = await this.global_evm_merkle_tree.insert(
                     previousLeaf || "",
                     newSubTreeRoot, 

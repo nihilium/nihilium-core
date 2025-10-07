@@ -195,8 +195,9 @@ async function main() {
        // { name: "encrypt_proof", artifactPath: "contracts/encrypt_proof.sol/BaseHonkVerifier", contractPath: "contracts/encrypt_proof.sol:BaseHonkVerifier" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
-        { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
-        { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
+        // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
+        // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
+        { name: "opening_proof", artifactPath: "contracts/opening_proof.sol/opening_proof", contractPath: "contracts/opening_proof.sol:opening_proof" },
         { name: "validated_sig_he_add", artifactPath: "contracts/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/validated_sig_he_add.sol:validated_sig_he_add" },
     ];
 
@@ -230,7 +231,7 @@ async function main() {
     const empheralName = "EmpheralMerkleTreeKeccak";
     const empheralBytecode = getContractBytecode(`contracts/${empheralName}.sol/${empheralName}`);
     if (needsRedeployment(empheralName, empheralBytecode, existingDeployments)) {
-        const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, wallet.address, 20);
+        const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, wallet.address, 24);
         deploymentData[empheralMerkleTree.name] = {
             address: empheralMerkleTree.address,
             bytecode: empheralMerkleTree.bytecode,
@@ -282,8 +283,8 @@ async function main() {
             `contracts/${chainedProofName}.sol:${chainedProofName}`,
             wallet,
             gasPrice,
-            verifierAddresses["validated_sig_he_add"],
-            verifierAddresses["validated_sig_he_add"]
+            verifierAddresses["opening_proof"],
+            verifierAddresses["opening_proof"]
         );
         deploymentData[chainedProof.name] = {
             address: chainedProof.address,
