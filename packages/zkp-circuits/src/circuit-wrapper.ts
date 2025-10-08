@@ -4,6 +4,7 @@ import type { CircuitConfig, CircuitWrapper, ProofOptions, VerifyOptions } from 
 // import { resolvePath, detectEnvironment, loadCircuitJson } from './wasm-loader';
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from '@noble/hashes/utils';
+import { detectEnvironment } from './wasm-loader';
 
 
 
@@ -48,9 +49,20 @@ export class WrappedNoirCircuit<T extends InputMap> implements CircuitWrapper<T>
       this.noir = new Noir(this.circuit_json);
     }
     if(this.barretenberg == null) {
-      const availableCores = navigator.hardwareConcurrency || 4; // Fallback to 4 if unsupported
-      const threads =  Math.max(1, availableCores - 2);
-      console.log("Using", threads, "threads")
+      // Get available cores based on environment
+      let availableCores: number;
+      const environment = detectEnvironment();
+      
+      if (environment === 'browser' && typeof navigator !== 'undefined') {
+        availableCores = navigator.hardwareConcurrency || 4;
+      } else {
+        // Node.js environment - use os.cpus()
+        const os = require('os');
+        availableCores = os.cpus().length;
+      }
+      
+      const threads = Math.max(1, availableCores - 2);
+      console.log("Using", threads, "threads");
       const initialMemoryInBytes = 256 * 1024 * 1024; // 512MB
       const memoryInBytes = 384 * 1024 * 1024; // 512MB
       const pageSize = 64 * 1024; // 64KB per page
