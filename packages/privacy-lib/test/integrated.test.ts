@@ -7,15 +7,15 @@ import { ExtPointType } from "@noble/curves/abstract/edwards";
 chai.use(chaiAsPromised);
 
 import {Keypair} from "../src/types/index";
-import {ClientSingleShareSealingProcess} from "../src/lib/client_single_share_sealing";
-import {Processor} from "../src/lib/processor";
+import {ClientSingleShareSealingProcess} from "../src/lib/client/client_single_share_sealing";
+import {Processor} from "../src/lib/processor/processor";
 // import { assert } from "console";
 import { IDataStream } from "../src/lib/data_stream/types";
 import { describe, it } from "mocha";
 import { buildEddsa } from "circomlibjs";
 import { cryptoTools } from "@nihilium/zkp-circuits";
 
-import { ClientSingleShareUnsealingProcess } from "../src/lib/client_single_share_unsealing";
+import { ClientSingleShareUnsealingProcess } from "../src/lib/client/client_single_share_unsealing";
 import { ProcessorEndpoint } from "../src/types/protocol/common";
 import { DataStreamClient } from "../src/lib/data_stream/DataStreamClient";
 

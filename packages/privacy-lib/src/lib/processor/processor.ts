@@ -3,15 +3,15 @@ import { cryptoTools } from '@nihilium/zkp-circuits';
 // import { babyJub, Keypair, PubKey } from "../types/index";
 // import { bigInt2Buffer, bufferToBigInt, coordinatesToExtPointBigint, generateRandom248BitNumber, stringifyBigInts, toBigIntArray, uint8ArrayToHex } from '@nihilium/noir-circuits/utils/tools';
 // import { Environment } from 'nihilium-circuits/types/circuit_wrapper';
-import { SingleSealRequest, SingleSealRequestResponse, SingleUnsealRequest, SingleSealUnsealRequestResponse } from '../types/protocol/common';
+import { SingleSealRequest, SingleSealRequestResponse, SingleUnsealRequest, SingleSealUnsealRequestResponse } from '../../types/protocol/common';
 import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
 //import { circuit_ENCRYPT_PROOF, circuit_KEY_HE_ADD } from '../env_settings';
 import { hexToBytes } from '@noble/hashes/utils';
 import { poseidon2 } from "poseidon-lite";
 import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
-import { GenericVerifyCollection } from './reveal_methods/collections/generic_verify_collection';
+import { GenericVerifyCollection } from '../reveal_methods/collections/generic_verify_collection';
 import { Signer } from 'ethers';
-import { IDataStream } from './data_stream/types';
+import { IDataStream } from '../data_stream/types';
 // import { stringifyBigInts, toBigIntArray, generateRandom248BitNumber, coordinatesToExtPoint } from 'nihilium-circuits'
 /**
  * ProcessorStageOne
@@ -102,6 +102,17 @@ export class Processor {
     this.signer = signer;
   }
   
+  get_chain_id(): number {
+    return Number(this.signer.provider!.getNetwork().then(network => network.chainId));
+  }
+
+  get_chained_proof_address(): string {
+    return this.chained_proof_address;
+  }
+
+  get_forced_opening_address(): string {
+    return this.forced_opening_address;
+  }
   /**
    * Initialize the circuit
    */
@@ -226,15 +237,7 @@ export class Processor {
     
     var signature = this.zkeddsa.signMessage(cryptoTools.bigInt2Buffer(this.signingPrivateKey), msg);
     
-    // var hashed_preimage_plus_random_value = poseidon2([
-    //   BigInt(request.hashed_reveal_value_preimage), 
-    //     severed_commitment_random_value])
-    //var hashed_preimage_plus_random_value_bigint = hashed_preimage_plus_random_value;
-    //console.log(hashed_preimage_plus_random_value_bigint);
-    //var severed_commitment_signature = zkeddsa.signMessage(cryptoTools.bigInt2Buffer(this.signingPrivateKey), hashed_preimage_plus_random_value);
-  //var cccc = cryptoTools.bufferToBigInt(signature.R8[0])
-  //var dddd = cryptoTools.uint8ArrayToHex(signature.R8[0])
-//console.log(  "signature_R8x", cryptoTools.bufferToBigInt(signature.R8[0]).toString(16), cryptoTools.bufferToBigInt(signature.R8[0]))
+   
     return {
       proof: request.require_proof ? cryptoTools.uint8ArrayToHex(proof?.proof) : "",
       public_signals: request.require_proof ? proof?.publicSignals : [],

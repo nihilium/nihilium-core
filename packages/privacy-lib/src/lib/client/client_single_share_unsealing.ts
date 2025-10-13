@@ -1,11 +1,11 @@
 
 
-import { IClientSingleShareUnsealingProcess, ProcessorEndpoint, ProcessorStatus, PROTOCOL_PROCESSOR_PATHS, SingleSealStoragePackage, SingleUnsealRequest, SingleSealUnsealRequestResponse, UnsealingStatus } from "../types/protocol/common";
-import { EnvSettings, get_env_settings } from "../env_settings";
-import { IDataStream } from "./data_stream/types";
+import { IClientSingleShareUnsealingProcess, ProcessorEndpoint, ProcessorStatus, PROTOCOL_PROCESSOR_PATHS, SingleSealStoragePackage, SingleUnsealRequest, SingleSealUnsealRequestResponse, UnsealingStatus } from "../../types/protocol/common";
+import { EnvSettings, get_env_settings } from "../../env_settings";
+import { IDataStream } from "../data_stream/types";
 import axios from "axios";
 import { cryptoTools } from "@nihilium/zkp-circuits";
-import { ChainedProofCollection } from "./reveal_methods/collections/types";
+import { ChainedProofCollection } from "../reveal_methods/collections/types";
 
 import { hexToBytes } from "@noble/hashes/utils";
 

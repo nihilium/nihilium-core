@@ -38,42 +38,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak__factory>;
     getContractFactory(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BaseHonkVerifier__factory>;
-    getContractFactory(
-      name: "Encrypt_proof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Encrypt_proof__factory>;
-    getContractFactory(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IVerifier__factory>;
-    getContractFactory(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BaseHonkVerifier__factory>;
-    getContractFactory(
-      name: "Generic_adjacent_tree_proof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Generic_adjacent_tree_proof__factory>;
-    getContractFactory(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IVerifier__factory>;
-    getContractFactory(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BaseHonkVerifier__factory>;
-    getContractFactory(
-      name: "Generic_tree_proof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Generic_tree_proof__factory>;
-    getContractFactory(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IVerifier__factory>;
-    getContractFactory(
       name: "IDataStream",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IDataStream__factory>;
@@ -86,21 +50,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.NihiliumRecoveryRegister__factory>;
     getContractFactory(
-      name: "Opening_proof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Opening_proof__factory>;
-    getContractFactory(
       name: "BaseHonkVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseHonkVerifier__factory>;
+    getContractFactory(
+      name: "Encrypt_proof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Encrypt_proof__factory>;
     getContractFactory(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
     getContractFactory(
-      name: "Sub_tree_merkle_proof",
+      name: "IVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Sub_tree_merkle_proof__factory>;
+    ): Promise<Contracts.IVerifier__factory>;
+    getContractFactory(
+      name: "Opening_proof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Opening_proof__factory>;
     getContractFactory(
       name: "SubTreeMerkleProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -110,33 +78,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue__factory>;
     getContractFactory(
-      name: "BaseHonkVerifier",
+      name: "TimeAfterProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BaseHonkVerifier__factory>;
+    ): Promise<Contracts.TimeAfterProof__factory>;
     getContractFactory(
-      name: "IVerifier",
+      name: "TimeBeforeProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IVerifier__factory>;
+    ): Promise<Contracts.TimeBeforeProof__factory>;
     getContractFactory(
-      name: "Top_level_merkle_proof",
+      name: "TimeBetweenOffsetProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Top_level_merkle_proof__factory>;
+    ): Promise<Contracts.TimeBetweenOffsetProof__factory>;
+    getContractFactory(
+      name: "TimeBetweenProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TimeBetweenProof__factory>;
     getContractFactory(
       name: "TopLevelMerkleProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TopLevelMerkleProof__factory>;
-    getContractFactory(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BaseHonkVerifier__factory>;
-    getContractFactory(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IVerifier__factory>;
-    getContractFactory(
-      name: "Validated_sig_he_add",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Validated_sig_he_add__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -169,51 +129,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.EmpheralMerkleTreeKeccak>;
     getContractAt(
-      name: "BaseHonkVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BaseHonkVerifier>;
-    getContractAt(
-      name: "Encrypt_proof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Encrypt_proof>;
-    getContractAt(
-      name: "IVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IVerifier>;
-    getContractAt(
-      name: "BaseHonkVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BaseHonkVerifier>;
-    getContractAt(
-      name: "Generic_adjacent_tree_proof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Generic_adjacent_tree_proof>;
-    getContractAt(
-      name: "IVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IVerifier>;
-    getContractAt(
-      name: "BaseHonkVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BaseHonkVerifier>;
-    getContractAt(
-      name: "Generic_tree_proof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Generic_tree_proof>;
-    getContractAt(
-      name: "IVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IVerifier>;
-    getContractAt(
       name: "IDataStream",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -229,25 +144,30 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     getContractAt(
-      name: "Opening_proof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Opening_proof>;
-    getContractAt(
       name: "BaseHonkVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.BaseHonkVerifier>;
+    getContractAt(
+      name: "Encrypt_proof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Encrypt_proof>;
     getContractAt(
       name: "IVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IVerifier>;
     getContractAt(
-      name: "Sub_tree_merkle_proof",
+      name: "IVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Sub_tree_merkle_proof>;
+    ): Promise<Contracts.IVerifier>;
+    getContractAt(
+      name: "Opening_proof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Opening_proof>;
     getContractAt(
       name: "SubTreeMerkleProof",
       address: string | ethers.Addressable,
@@ -259,40 +179,30 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     getContractAt(
-      name: "BaseHonkVerifier",
+      name: "TimeAfterProof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.BaseHonkVerifier>;
+    ): Promise<Contracts.TimeAfterProof>;
     getContractAt(
-      name: "IVerifier",
+      name: "TimeBeforeProof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IVerifier>;
+    ): Promise<Contracts.TimeBeforeProof>;
     getContractAt(
-      name: "Top_level_merkle_proof",
+      name: "TimeBetweenOffsetProof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Top_level_merkle_proof>;
+    ): Promise<Contracts.TimeBetweenOffsetProof>;
+    getContractAt(
+      name: "TimeBetweenProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TimeBetweenProof>;
     getContractAt(
       name: "TopLevelMerkleProof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.TopLevelMerkleProof>;
-    getContractAt(
-      name: "BaseHonkVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BaseHonkVerifier>;
-    getContractAt(
-      name: "IVerifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IVerifier>;
-    getContractAt(
-      name: "Validated_sig_he_add",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Validated_sig_he_add>;
 
     deployContract(
       name: "Ownable",
@@ -319,42 +229,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak>;
     deployContract(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "Encrypt_proof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Encrypt_proof>;
-    deployContract(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "Generic_adjacent_tree_proof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Generic_adjacent_tree_proof>;
-    deployContract(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "Generic_tree_proof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Generic_tree_proof>;
-    deployContract(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
       name: "IDataStream",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IDataStream>;
@@ -367,21 +241,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     deployContract(
-      name: "Opening_proof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Opening_proof>;
-    deployContract(
       name: "BaseHonkVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseHonkVerifier>;
+    deployContract(
+      name: "Encrypt_proof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Encrypt_proof>;
     deployContract(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
-      name: "Sub_tree_merkle_proof",
+      name: "IVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Sub_tree_merkle_proof>;
+    ): Promise<Contracts.IVerifier>;
+    deployContract(
+      name: "Opening_proof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Opening_proof>;
     deployContract(
       name: "SubTreeMerkleProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -391,33 +269,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     deployContract(
-      name: "BaseHonkVerifier",
+      name: "TimeAfterProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
+    ): Promise<Contracts.TimeAfterProof>;
     deployContract(
-      name: "IVerifier",
+      name: "TimeBeforeProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
+    ): Promise<Contracts.TimeBeforeProof>;
     deployContract(
-      name: "Top_level_merkle_proof",
+      name: "TimeBetweenOffsetProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Top_level_merkle_proof>;
+    ): Promise<Contracts.TimeBetweenOffsetProof>;
+    deployContract(
+      name: "TimeBetweenProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TimeBetweenProof>;
     deployContract(
       name: "TopLevelMerkleProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
-    deployContract(
-      name: "BaseHonkVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
-      name: "Validated_sig_he_add",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Validated_sig_he_add>;
 
     deployContract(
       name: "Ownable",
@@ -450,51 +320,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak>;
     deployContract(
-      name: "BaseHonkVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "Encrypt_proof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Encrypt_proof>;
-    deployContract(
-      name: "IVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
-      name: "BaseHonkVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "Generic_adjacent_tree_proof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Generic_adjacent_tree_proof>;
-    deployContract(
-      name: "IVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
-      name: "BaseHonkVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "Generic_tree_proof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Generic_tree_proof>;
-    deployContract(
-      name: "IVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
       name: "IDataStream",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -510,25 +335,30 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     deployContract(
-      name: "Opening_proof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Opening_proof>;
-    deployContract(
       name: "BaseHonkVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseHonkVerifier>;
+    deployContract(
+      name: "Encrypt_proof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Encrypt_proof>;
     deployContract(
       name: "IVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
-      name: "Sub_tree_merkle_proof",
+      name: "IVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Sub_tree_merkle_proof>;
+    ): Promise<Contracts.IVerifier>;
+    deployContract(
+      name: "Opening_proof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Opening_proof>;
     deployContract(
       name: "SubTreeMerkleProof",
       args: any[],
@@ -540,40 +370,30 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     deployContract(
-      name: "BaseHonkVerifier",
+      name: "TimeAfterProof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
+    ): Promise<Contracts.TimeAfterProof>;
     deployContract(
-      name: "IVerifier",
+      name: "TimeBeforeProof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
+    ): Promise<Contracts.TimeBeforeProof>;
     deployContract(
-      name: "Top_level_merkle_proof",
+      name: "TimeBetweenOffsetProof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Top_level_merkle_proof>;
+    ): Promise<Contracts.TimeBetweenOffsetProof>;
+    deployContract(
+      name: "TimeBetweenProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TimeBetweenProof>;
     deployContract(
       name: "TopLevelMerkleProof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
-    deployContract(
-      name: "BaseHonkVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BaseHonkVerifier>;
-    deployContract(
-      name: "IVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IVerifier>;
-    deployContract(
-      name: "Validated_sig_he_add",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Validated_sig_he_add>;
 
     // default types
     getContractFactory(

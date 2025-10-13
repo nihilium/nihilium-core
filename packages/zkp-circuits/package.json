@@ -47,7 +47,7 @@
     "harmonise-circom-files": "node ./harmonise_verification_circom.js ./circom-circuits/build/opening_proof/opening_proof.sol",
     "build-circom-circuits": "rm -rf ./circom-circuits/build/opening_proof && npx circomkit setup opening_proof && npx circomkit contract opening_proof",
     "build-circom": "npm run build-circom-circuits && npm run rename-circom-files2 && npm run harmonise-circom-files && ./rename_contract_circom.sh opening_proof ./circom-circuits/build/opening_proof/opening_proof.sol && npm run copy-circom-to-lib",
-    "copy-circom-to-lib": "cp ./circom-circuits/build/opening_proof/opening_proof.sol ../privacy-lib/contracts/opening_proof.sol",
+    "copy-circom-to-lib": "cp ./circom-circuits/build/opening_proof/opening_proof.sol ../privacy-lib/contracts/proofs/opening_proof.sol",
     "copy-circom-build": "rm -rf ./src/circom-circuits/build/opening_proof && mkdir -p ./src/circom-circuits/build && cp -r ./circom-circuits/build/opening_proof ./src/circom-circuits/build/opening_proof",
     "upload-to-pinata": "node ./scripts/upload_to_pinata.js"
   },

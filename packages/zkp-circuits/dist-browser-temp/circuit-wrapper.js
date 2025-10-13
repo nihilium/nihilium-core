@@ -3,6 +3,7 @@ import { Noir } from '@noir-lang/noir_js';
 // import { resolvePath, detectEnvironment, loadCircuitJson } from './wasm-loader';
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from '@noble/hashes/utils';
+import { detectEnvironment } from './wasm-loader';
 export class WrappedNoirCircuit {
     constructor(json_circuit_path) {
         //private config: CircuitConfig;
@@ -37,7 +38,17 @@ export class WrappedNoirCircuit {
             this.noir = new Noir(this.circuit_json);
         }
         if (this.barretenberg == null) {
-            const availableCores = navigator.hardwareConcurrency || 4; // Fallback to 4 if unsupported
+            // Get available cores based on environment
+            let availableCores;
+            const environment = detectEnvironment();
+            if (environment === 'browser' && typeof navigator !== 'undefined') {
+                availableCores = navigator.hardwareConcurrency || 4;
+            }
+            else {
+                // Node.js environment - use os.cpus()
+                const os = require('os');
+                availableCores = os.cpus().length;
+            }
             const threads = Math.max(1, availableCores - 2);
             console.log("Using", threads, "threads");
             const initialMemoryInBytes = 256 * 1024 * 1024; // 512MB
