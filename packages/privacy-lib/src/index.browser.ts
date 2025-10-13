@@ -13,8 +13,8 @@ import {cryptoTools} from '@nihilium/zkp-circuits';
 // import * as Processor from './lib/processor';
 import {DataStreamClient} from './lib/data_stream/DataStreamClient';
 // import * as Persistence from './lib/persistence/DataStreamFilePersistence';
-import {ClientSingleShareSealingProcess} from './lib/client_single_share_sealing'
-import {ClientSingleShareUnsealingProcess} from './lib/client_single_share_unsealing'
+import {ClientSingleShareSealingProcess} from './lib/client/client_single_share_sealing'
+import {ClientSingleShareUnsealingProcess} from './lib/client/client_single_share_unsealing'
 import {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
 import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';

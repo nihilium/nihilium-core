@@ -22,6 +22,17 @@ export const request_public_keys = async (req: Request, res: Response): Promise<
   }
 }; 
 
+
+export const identity = async (req: Request, res: Response): Promise<void> => {
+  const processor: Processor = req.app.locals.processor; 
+  const public_keys = await processor.get_public_keys();
+  res.json({ result: {
+      chained_proof_address: processor.get_chained_proof_address(),
+      
+      chain_id: processor.get_chain_id().toString(),
+      public_keys: [{signing_public_key:public_keys.signing_public_key, active:true}, {he_public_key:public_keys.he_public_key, active:true}],
+  } });
+}
 export const request_seal = async (req: Request, res: Response): Promise<void> => {
   try {
     console.time("Seal Request")

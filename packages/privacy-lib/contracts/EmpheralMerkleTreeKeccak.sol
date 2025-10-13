@@ -10,6 +10,12 @@ import "./Interfaces.sol";
 
 
 /**
+ This contracts holds the top-level merkle root of the top-level balanced merkle tree.
+ Each leaf contains the root of the sub-tree combined with the block.timestamp upon insertion.
+ See the insert function for more details. 
+
+ The tree is used in combination with the TopLevelMerkleProof to prove inclusion in the tree.
+ See the TopLevelMerkleProof for more details.
 
   
  */
@@ -19,8 +25,8 @@ contract EmpheralMerkleTreeKeccak is Ownable {
   //event Log(uint value);
   event TreeUpdate(uint32 leafIndex, bytes32 leafValue,  uint256 timestamp, bytes32 newValueRoot);
   uint32 public levels = 20;
-  uint256 public constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-  bytes32 public constant ZERO_VALUE = 0x937759b0c00d3bc82439e3acdb505be98d7bca79f508bb77a8bfafc2666260a6; // = keccak256("tornado") % FIELD_SIZE
+  
+  
   //IHasher public immutable hasher;
   
   // Precomputed zero values for each level

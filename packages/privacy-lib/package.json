@@ -18,7 +18,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "tsc && vite build",
+    "build": "hardhat compile && tsc && vite build",
     "test": "jest",
     "deploy-static-ganache": "DEPLOY_NETWORK=ganache PRIVATE_KEY=0x00c02c2c80ec46a6cbc5ccce6b0ce9e293c46a568cd2ffdfb69315efd7dafa36 npx hardhat run scripts/deploy_static.ts",
     "deploy-static-avax-testnet": "DEPLOY_NETWORK=avax-testnet npx hardhat run scripts/deploy_static.ts",

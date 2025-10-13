@@ -26,9 +26,7 @@ import type {
 export interface EmpheralMerkleTreeKeccakInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "FIELD_SIZE"
       | "ROOT_HISTORY_SIZE"
-      | "ZERO_VALUE"
       | "_efficientHash"
       | "currentIndex"
       | "findDivergenceLevelForNext"
@@ -52,15 +50,7 @@ export interface EmpheralMerkleTreeKeccakInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
-    functionFragment: "FIELD_SIZE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "ROOT_HISTORY_SIZE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "ZERO_VALUE",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -110,12 +100,10 @@ export interface EmpheralMerkleTreeKeccakInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "zeros", values: [BigNumberish]): string;
 
-  decodeFunctionResult(functionFragment: "FIELD_SIZE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "ROOT_HISTORY_SIZE",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "ZERO_VALUE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "_efficientHash",
     data: BytesLike
@@ -260,11 +248,7 @@ export interface EmpheralMerkleTreeKeccak extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  FIELD_SIZE: TypedContractMethod<[], [bigint], "view">;
-
   ROOT_HISTORY_SIZE: TypedContractMethod<[], [bigint], "view">;
-
-  ZERO_VALUE: TypedContractMethod<[], [string], "view">;
 
   _efficientHash: TypedContractMethod<
     [a: BytesLike, b: BytesLike],
@@ -323,14 +307,8 @@ export interface EmpheralMerkleTreeKeccak extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "FIELD_SIZE"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
     nameOrSignature: "ROOT_HISTORY_SIZE"
   ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "ZERO_VALUE"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "_efficientHash"
   ): TypedContractMethod<[a: BytesLike, b: BytesLike], [string], "view">;

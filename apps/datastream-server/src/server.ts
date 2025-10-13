@@ -145,6 +145,15 @@ async function main() {
         res.json({ result });
     });
 
+    app.get('/identity', (req, res) => {
+        
+        res.json({ result: {
+            address: dataStream.getAddress(),
+            chain_id: chainId,
+            public_keys: [{address: wallet.address, active: true}],
+        } });
+    });
+
     app.get('/health', (req, res) => {
         res.json({ result: 'ok' });
     });

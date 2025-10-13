@@ -1,6 +1,6 @@
-import { ProcessorEndpoint, ClientProcessorSealingPhase, SecretThrowawayPackage, PROTOCOL_PROCESSOR_PATHS, RevealConditions, SingleSealRequestResponse, SingleSealRequest, RevealConditionRequest, SingleSealStoragePackage, RevealCondition, SingleUnsealRequest } from "../types/protocol/common";
+import { ProcessorEndpoint, ClientProcessorSealingPhase, SecretThrowawayPackage, PROTOCOL_PROCESSOR_PATHS, RevealConditions, SingleSealRequestResponse, SingleSealRequest, RevealConditionRequest, SingleSealStoragePackage, RevealCondition, SingleUnsealRequest } from "../../types/protocol/common";
 import { buildPoseidon, buildBabyjub, buildEddsa } from "circomlibjs";
-import { IClientSingleShareSealingProcess } from "../types/protocol/common";
+import { IClientSingleShareSealingProcess } from "../../types/protocol/common";
 // import { BigNumber } from "ethers";
 import { circomOpeningProof, cryptoTools } from "@nihilium/zkp-circuits";
 import { poseidon1, poseidon2, poseidon4 } from "poseidon-lite"
@@ -11,10 +11,10 @@ import axios from "axios";
 
 // import { PubKey } from "@nihilium/noir-circuits";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IDataStream } from "./data_stream/types";
+import { IDataStream } from "../data_stream/types";
 import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
 //import { encryptProofCircuit } from "@nihilium/zkp-circuits";
-import { ChainedProofCollection } from "./reveal_methods/collections/types";
+import { ChainedProofCollection } from "../reveal_methods/collections/types";
 
 
 

@@ -17,8 +17,8 @@ chai.use(chaiAsPromised);
 //     generateRandom248BitNumber,
 // } from '@nihilium/zkp-circuits/cryptoTools';
 import {Keypair} from "../src/types/index";
-import {ClientSingleShareSealingProcess} from "../src/lib/client_single_share_sealing";
-import {Processor} from "../src/lib/processor";
+import {ClientSingleShareSealingProcess} from "../src/lib/client/client_single_share_sealing";
+import {Processor} from "../src/lib/processor/processor";
 // import { assert } from "console";
 import { IDataStream } from "../src/lib/data_stream/types";
 //import { describe, it } from "mocha";
@@ -26,7 +26,7 @@ import { buildEddsa } from "circomlibjs";
 //import { cryptoTools } from "@nihilium/zkp-circuits";
 //import { EVMDataStream } from "../src/lib/data_stream/EVMDataStream";
 import { EVMDataStreamNonZK } from "../src/lib/data_stream/EVMDataStreamNonZK";
-import { ClientSingleShareUnsealingProcess } from "../src/lib/client_single_share_unsealing";
+import { ClientSingleShareUnsealingProcess } from "../src/lib/client/client_single_share_unsealing";
 import { ProcessorEndpoint } from "../src/types/protocol/common";
 import { DataStreamClient } from "../src/lib/data_stream/DataStreamClient";
 import { ethers } from "hardhat";
@@ -99,10 +99,10 @@ describe("Processor-Client intereaction", () => {
       encryptProofAddress = await encryptProofContract.getAddress();
       console.log(encryptProofAddress);
 
-      const genericAdjacentTreeProofC = await ethers.getContractFactory("generic_adjacent_tree_proof");
-      genericAdjacentTreeProof = await genericAdjacentTreeProofC.deploy();
-      genericAdjacentTreeProofAddress = await genericAdjacentTreeProof.getAddress();
-      console.log(genericAdjacentTreeProofAddress);
+      // const genericAdjacentTreeProofC = await ethers.getContractFactory("generic_adjacent_tree_proof");
+      // genericAdjacentTreeProof = await genericAdjacentTreeProofC.deploy();
+      // genericAdjacentTreeProofAddress = await genericAdjacentTreeProof.getAddress();
+      // console.log(genericAdjacentTreeProofAddress);
 
       // const topLevelMerkleProofC = await ethers.getContractFactory("top_level_merkle_proof");
       // topLevelMerkleProof = await topLevelMerkleProofC.deploy();
