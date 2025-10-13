@@ -1,0 +1,17 @@
+[package]
+name = "nihilium-primitives"
+edition = "2021"
+version = "0.1.0"
+description = "Rust implementation of the nihilium protocol primitives (e.g. cryptography, blockchain primitives, etc.)"
+
+[dependencies]
+# cryptography
+babyjubjub-rs = "0.0.11"
+
+# blockchain primitives
+alloy-sol-macro = { version = "1.4.0", features = ["json"] }
+alloy-sol-types = "1.4.0"
+alloy-contract = "1.0.38"
+
+# serde
+serde = { version = "1.0.228", features = ["derive"] }
