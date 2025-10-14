@@ -1,5 +1,5 @@
 use alloy_sol_macro::sol;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 sol! {
     #[sol(rpc)]
