@@ -1,17 +1,10 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL3
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {EmpheralMerkleTreeKeccak} from "./EmpheralMerkleTreeKeccak.sol";
-import {IVerifier, IDataStream} from "./Interfaces.sol";
-
-interface HashFunction {
-    function hash(bytes32[] calldata inputs) external view returns (bytes32);
-}
-
-
-
-
+import "./IVerifier.sol";
+import "./IDataStream.sol";
 
 struct ProvingState {
     bytes32 current_hash;

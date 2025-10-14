@@ -5,28 +5,10 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./Interfaces.sol";
+import "./IVerifier.sol";
 
 
 
-/**
-
-  
-pub fn main(
-    subtree_root: Field,
-    block_timestamp: Field,
-    root: Field,
-    path: [Field; DEPTH],
-    index_bits: [u1; DEPTH],
-) -> pub (Field, Field, Field, Field) {
-   
-    let leaf = mimc_hash([subtree_root, block_timestamp]);
-    let computed_root = binary_merkle_root::<DEPTH>(mimc_hash, leaf, DEPTH, index_bits, path);
-
-    assert(computed_root == root);
-    (computed_root, block_timestamp, subtree_root, bits_to_index(index_bits))
-}
- */
 
 contract TopLevelMerkleProof is IVerifier {
  
