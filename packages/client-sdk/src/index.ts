@@ -57,7 +57,7 @@ export async function getDefaultSealingProcess() {
    const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint.url);
    const genanche = nhsdk.deployedProtocolContracts[nhsdk.NETWORK_IDS.AVAX_TESTNET];
     const proofCollection = new nhsdk.ProofCollections["reveal_only_normal_trees"](
-        genanche.validated_sig_he_add.address,
+        genanche.opening_proof.address,
         genanche.TopLevelMerkleProof.address,
         genanche.SubTreeMerkleProof.address,
         [resolvedDataStream])
