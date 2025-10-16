@@ -114,13 +114,13 @@ export class EVMDataStreamNonZK implements IDataStream {
             const minusTreeRoot = minusTree.root
             const minusTreeLeaf = hasher(minusTreeRoot, lastInsertEvent.timestamp)
             const localRoot = this.merkleTree.root
-            const localLeaf = hasher(lastInsertEvent.insertValue, lastInsertEvent.timestamp)
+            const localLeaf = hasher(lastInsertEvent.newValueRoot, lastInsertEvent.timestamp)
             this.globalValueTree.insert(localLeaf)
             if(this.globalValueTree.root != currentContractGlobalRoot) {
                 console.log("Global tree root does not match", this.globalValueTree.root, currentContractGlobalRoot)
                 force = true
             }else{
-                await this.persistence.storeGlobalValueTreeLeaf(lastInsertEvent.insertValue, Number(lastInsertEvent.timestamp))
+                await this.persistence.storeGlobalValueTreeLeaf(lastInsertEvent.newValueRoot, Number(lastInsertEvent.timestamp))
                 this.on_chain_publishing_state.processing_local_tree = -1
                 this.on_chain_publishing_state.local_trees_to_process.shift()
                 await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)

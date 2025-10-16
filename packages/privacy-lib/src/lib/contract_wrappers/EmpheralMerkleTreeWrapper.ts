@@ -104,13 +104,13 @@ export class EmpheralMerkleTreeWrapper {
   async getLastInsertEvent(): Promise<{
     leafIndex: bigint,
     timestamp: bigint,
-    insertValue: string,    
+    newValueRoot: string,    
     newMerkleRoot: string,
   }> {
     const filter = this.contract.filters.TreeUpdate();
     const latestBlock = await this.signer.provider?.getBlockNumber();
     if(!latestBlock) throw new Error("Unable to get latest block number");
-    const chunkSize = 5000; // Adjust based on your RPC provider's limits (e.g., 1000-10000)
+    const chunkSize = 2048; // Adjust based on your RPC provider's limits (e.g., 1000-10000)
     let currentTo = latestBlock;
     let lastEvent = null;
   
@@ -130,7 +130,7 @@ export class EmpheralMerkleTreeWrapper {
     return {
       leafIndex: lastEvent.args.leafIndex,
       timestamp: lastEvent.args.timestamp,
-      insertValue: lastEvent.args.leafValue,
+      newValueRoot: lastEvent.args.leafValue,
       newMerkleRoot: lastEvent.args.newValueRoot,
     };
   }
