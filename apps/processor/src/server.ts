@@ -80,7 +80,7 @@ async function main() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));  
    // Parse URL-encoded bodies
-  app.locals.processor = new Processor.Processor(
+  app.locals.processor = new Processor(
     privateKey, 
     privateKeyHE,     
     contractAddress, 

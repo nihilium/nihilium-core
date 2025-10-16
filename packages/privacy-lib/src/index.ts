@@ -9,7 +9,7 @@
 import type * as types from './types';
 import {cryptoTools} from '@nihilium/zkp-circuits';
 import * as utils from './lib/utils';
-import * as Processor from './lib/processor/processor';
+import { Processor } from './lib/processor/processor';
 import * as ProtocolTypes from './types/protocol/common';
 import {DataStreamClient} from './lib/data_stream/DataStreamClient';
 import * as DataStream from './lib/data_stream/EVMDataStreamNonZK';
