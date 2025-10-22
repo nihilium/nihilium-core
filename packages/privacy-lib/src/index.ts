@@ -21,9 +21,15 @@ import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';
 import { RevealOnlyCollectionNormalTrees } from './lib/reveal_methods/collections/reveal_only_normal_trees';
 import { ChainedProofCollection} from './lib/reveal_methods/collections/types';
+import { ChainedProofSolana, ProvingState } from './solana/ChainedProofSolana';
 var contracts = {
   EmpheralMerkleTree: EmpheralMerkleTreeWrapper,
   ChainedProofWrapper: ChainedProofWrapper
+}
+
+// Solana contracts
+var solanaContracts = {
+  ChainedProofSolana: ChainedProofSolana
 } 
 
 //TODO: do this dynamically
@@ -41,6 +47,7 @@ export {
   DataStreamClient,
   Persistence,
   contracts, 
+  solanaContracts,
   utils,
   ProofCollections,
   ChainedProofCollection,

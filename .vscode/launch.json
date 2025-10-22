@@ -83,6 +83,43 @@
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
+        {
+            "name": "Debug Test Base Actions Solana",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/base_actions_solana.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"],
+            
+        },
+        {
+            "name": "Debug Test Base Actions Solana (Manual Setup)",
+            "type": "node",
+            "request": "launch",
+            
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/privacy-lib/test/base_actions_solana.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
         
         {
             "name": "Debug Test Mimc",

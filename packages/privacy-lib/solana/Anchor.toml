@@ -1,0 +1,40 @@
+[toolchain]
+anchor_version = "0.32.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+chained_proof = "CPoof11111111111111111111111111111111111111"
+merkle_tree = "MTree11111111111111111111111111111111111111"
+sub_tree_verifier = "STVer11111111111111111111111111111111111111"
+test_verifier = "TVer111111111111111111111111111111111111111"
+top_level_verifier = "TLVer11111111111111111111111111111111111111"
+verifier = "Verif11111111111111111111111111111111111111"
+
+[programs.localnet]
+chained_proof = "4VzEeAmMSWU4Co2bSBzqqEXYDeiFnzsY6NRKaNLjZnHs"
+merkle_tree = "6nHv9FN4BwiHxbvEqh8nWRqoFqag9j3FPRiDpNxmAnzU"
+sub_tree_verifier = "AHdizgCbxeWJjSVZiQKS4QfHmeKdBVAKHqxRnFtguvK2"
+test_verifier = "WqbxrLUUxVthvX6ZBaniBm8jtckYXBnxdZamemU2cun"
+top_level_verifier = "9mqBTAxvHQPT4SRrhDwjn4pjrvvStY1hRV5byy9Rtkua"
+verifier = "Ey3Faatpi6oEbH195uuR6i1Ek7FoZSj6KEvePTGrbz4h"
+
+[programs.mainnet]
+chained_proof = "CPoof11111111111111111111111111111111111111"
+merkle_tree = "MTree11111111111111111111111111111111111111"
+sub_tree_verifier = "STVer11111111111111111111111111111111111111"
+test_verifier = "TVer111111111111111111111111111111111111111"
+top_level_verifier = "TLVer11111111111111111111111111111111111111"
+verifier = "Verif11111111111111111111111111111111111111"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

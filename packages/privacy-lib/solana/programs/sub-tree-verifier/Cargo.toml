@@ -1,0 +1,21 @@
+[package]
+name = "sub-tree-verifier"
+version = "0.1.0"
+description = "Sub Tree Proof Verifier Solana Program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sub_tree_verifier"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"
+tiny-keccak = { version = "2.0", features = ["keccak"] }

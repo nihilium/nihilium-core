@@ -46,10 +46,11 @@
     "rename-circom-files2": "cp ./circom-circuits/build/opening_proof/groth16_verifier.sol ./circom-circuits/build/opening_proof/opening_proof.sol",
     "harmonise-circom-files": "node ./harmonise_verification_circom.js ./circom-circuits/build/opening_proof/opening_proof.sol",
     "build-circom-circuits": "rm -rf ./circom-circuits/build/opening_proof && npx circomkit setup opening_proof && npx circomkit contract opening_proof",
-    "build-circom": "npm run build-circom-circuits && npm run rename-circom-files2 && npm run harmonise-circom-files && ./rename_contract_circom.sh opening_proof ./circom-circuits/build/opening_proof/opening_proof.sol && npm run copy-circom-to-lib",
+    "build-circom": "npm run build-circom-circuits && npm run rename-circom-files2 && npm run harmonise-circom-files && npm run parse-vk-to-rust && ./rename_contract_circom.sh opening_proof ./circom-circuits/build/opening_proof/opening_proof.sol && npm run copy-circom-to-lib",
     "copy-circom-to-lib": "cp ./circom-circuits/build/opening_proof/opening_proof.sol ../privacy-lib/contracts/proofs/opening_proof.sol",
     "copy-circom-build": "rm -rf ./src/circom-circuits/build/opening_proof && mkdir -p ./src/circom-circuits/build && cp -r ./circom-circuits/build/opening_proof ./src/circom-circuits/build/opening_proof",
-    "upload-to-pinata": "node ./scripts/upload_to_pinata.js"
+    "upload-to-pinata": "node ./scripts/upload_to_pinata.js",
+    "parse-vk-to-rust": "node ./parse_vk_to_rust.js ./circom-circuits/build/opening_proof/groth16_vkey.json ./circom-circuits/build/opening_proof"
   },
   "dependencies": {
     "@aztec/bb.js": "0.84.0",

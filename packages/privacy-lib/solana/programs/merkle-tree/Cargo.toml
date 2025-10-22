@@ -1,0 +1,21 @@
+[package]
+name = "merkle-tree"
+version = "0.1.0"
+description = "EmpheralMerkleTree Solana Program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "merkle_tree"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"
+tiny-keccak = { version = "2.0", features = ["keccak"] }

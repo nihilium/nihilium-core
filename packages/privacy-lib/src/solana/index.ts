@@ -1,0 +1,11 @@
+export { ChainedProofSolana, ProvingState } from './ChainedProofSolana';
+export {
+    ACTION_START_UNSEALING,
+    ACTION_PREPARE_NEXT_PROOF,
+    ACTION_CHAIN_PROOF_VERIFY,
+    ACTION_STATIC_INPUT,
+    ACTION_PASS_SIGNAL,
+    ACTION_PASS_SIGNAL_PLUSONE,
+    ACTION_VALIDATE_TIMESTAMP,
+    ACTION_VALIDATE_DATA_ROOT
+} from './ChainedProofSolana';

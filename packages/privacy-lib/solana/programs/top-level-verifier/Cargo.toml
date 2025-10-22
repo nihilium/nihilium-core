@@ -1,0 +1,21 @@
+[package]
+name = "top-level-verifier"
+version = "0.1.0"
+description = "Top Level Proof Verifier Solana Program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "top_level_verifier"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
