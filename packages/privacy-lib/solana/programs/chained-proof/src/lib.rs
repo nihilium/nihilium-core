@@ -23,7 +23,7 @@ pub struct ProvingStateSolana {
     pub prepared_public_inputs: Vec<[u8; 32]>,
     pub prepared_proof: Vec<u8>,
     pub proof_verifier: Pubkey,
-    pub commited_processor_public_key: Vec<u64>,
+    pub commited_processor_public_key: Vec<[u8; 32]>,
     pub initiator: Pubkey,
 }
 
@@ -62,8 +62,7 @@ pub struct InitializeChainedProof<'info> {
 
 #[derive(Accounts)]
 pub struct DryrunPrepareNextProof<'info> {
-    #[account(
-        mut,
+    #[account(        
         seeds = [b"chained_proof"],
         bump
     )]
@@ -155,7 +154,7 @@ pub mod chained_proof {
         prepared_public_inputs: Vec<[u8; 32]>,
         prepared_proof: Vec<u8>,
         proof_verifier: Pubkey,
-        commited_processor_public_key: Vec<u64>,
+        commited_processor_public_key: Vec<[u8; 32]>,
         initiator: Pubkey,
         verifier: Pubkey,
         public_inputs: Vec<[u8; 32]>,
@@ -166,6 +165,8 @@ pub mod chained_proof {
         hash_input.extend_from_slice(&current_hash);
         hash_input.extend_from_slice(&verifier.to_bytes());
         
+
+       
         let mut new_current_hash = [0u8; 32];
         let mut hasher = Keccak::v256();
         hasher.update(&hash_input);
@@ -176,8 +177,8 @@ pub mod chained_proof {
             expected_hash,
             current_index,
             outputs,
-            prepared_public_inputs: public_inputs,
-            prepared_proof: proof,
+            prepared_public_inputs,
+            prepared_proof,
             proof_verifier: verifier,
             commited_processor_public_key,
             initiator,
@@ -193,7 +194,7 @@ pub mod chained_proof {
         prepared_public_inputs: Vec<[u8; 32]>,
         prepared_proof: Vec<u8>,
         proof_verifier: Pubkey,
-        commited_processor_public_key: Vec<u64>,
+        commited_processor_public_key: Vec<[u8; 32]>,
         initiator: Pubkey,
         _datastream: Pubkey,
         public_input_index: u64,
@@ -239,7 +240,7 @@ pub mod chained_proof {
         prepared_public_inputs: Vec<[u8; 32]>,
         prepared_proof: Vec<u8>,
         proof_verifier: Pubkey,
-        commited_processor_public_key: Vec<u64>,
+        commited_processor_public_key: Vec<[u8; 32]>,
         initiator: Pubkey,
         output_proof_index: u64,
         output_index: u64,
@@ -310,34 +311,77 @@ pub mod chained_proof {
     pub fn dryrun_chain_static_input(
         ctx: Context<DryrunChainStaticInput>,
         current_hash: [u8; 32],
+        expected_hash: [u8; 32],
+        current_index: u64,
+        outputs: Vec<OutputGroup>,
+        prepared_public_inputs: Vec<[u8; 32]>,
+        prepared_proof: Vec<u8>,
+        proof_verifier: Pubkey,
+        commited_processor_public_key: Vec<[u8; 32]>,
+        initiator: Pubkey,
         inputs: Vec<[u8; 32]>,
         indexes: Vec<u64>,
-    ) -> Result<[u8; 32]> {
+    ) -> Result<ProvingStateSolana> {
         require!(inputs.len() == indexes.len(), ErrorCode::InvalidInputs);
         
-        let mut new_hash = current_hash;
+        // Create a mutable copy of prepared_public_inputs to match TypeScript behavior
+        let mut updated_prepared_public_inputs = prepared_public_inputs.clone();
         
+        // Hash with action first (matching TypeScript implementation)
+        let mut hash_input = Vec::new();
+        hash_input.extend_from_slice(&current_hash);
+        hash_input.extend_from_slice(ACTION_STATIC_INPUT.as_bytes());
+        
+        let mut new_hash = [0u8; 32];
+        let mut hasher = Keccak::v256();
+        hasher.update(&hash_input);
+        hasher.finalize(&mut new_hash);
+        
+        // Then hash each input with its index (matching TypeScript order: hash, index, input)
         for i in 0..inputs.len() {
-            let mut hash_input = Vec::new();
-            hash_input.extend_from_slice(&new_hash);
-            hash_input.extend_from_slice(&inputs[i]);
-            hash_input.extend_from_slice(&indexes[i].to_le_bytes());
+            // Update prepared_public_inputs if index is valid (matching TypeScript)
+            if (indexes[i] as usize) < updated_prepared_public_inputs.len() {
+                updated_prepared_public_inputs[indexes[i] as usize] = inputs[i];
+            }
             
-            let mut hasher = Keccak::v256();
-            hasher.update(&hash_input);
-            hasher.finalize(&mut new_hash);
+            let mut hash_input2 = Vec::new();
+            hash_input2.extend_from_slice(&new_hash);
+            hash_input2.extend_from_slice(&indexes[i].to_le_bytes()); // INDEX FIRST (matching TypeScript)
+            hash_input2.extend_from_slice(&inputs[i]);                // INPUT SECOND (matching TypeScript)
+            
+            let mut hasher2 = Keccak::v256();
+            hasher2.update(&hash_input2);
+            hasher2.finalize(&mut new_hash);
         }
         
-        Ok(new_hash)
+        Ok(ProvingStateSolana {
+            current_hash: new_hash,
+            expected_hash,
+            current_index,
+            outputs,
+            prepared_public_inputs: updated_prepared_public_inputs,
+            prepared_proof,
+            proof_verifier,
+            commited_processor_public_key,
+            initiator,
+        })
     }
 
     pub fn dryrun_chain_pass_signal(
         ctx: Context<DryrunChainPassSignal>,
         current_hash: [u8; 32],
+        expected_hash: [u8; 32],
+        current_index: u64,
+        outputs: Vec<OutputGroup>,
+        prepared_public_inputs: Vec<[u8; 32]>,
+        prepared_proof: Vec<u8>,
+        proof_verifier: Pubkey,
+        commited_processor_public_key: Vec<[u8; 32]>,
+        initiator: Pubkey,
         public_input_indexes: Vec<u64>,
         output_proof_indexes: Vec<u64>,
         output_indexes: Vec<u64>,
-    ) -> Result<[u8; 32]> {
+    ) -> Result<ProvingStateSolana> {
         require!(public_input_indexes.len() == output_indexes.len(), ErrorCode::InvalidInputs);
         
         // Hash with action
@@ -363,15 +407,32 @@ pub mod chained_proof {
             hasher2.finalize(&mut new_hash);
         }
         
-        Ok(new_hash)
+        Ok(ProvingStateSolana {
+            current_hash: new_hash,
+            expected_hash,
+            current_index,
+            outputs,
+            prepared_public_inputs,
+            prepared_proof,
+            proof_verifier,
+            commited_processor_public_key,
+            initiator,
+        })
     }
 
     pub fn dryrun_chain_proof_verify(
         ctx: Context<DryrunChainProofVerify>,
         current_hash: [u8; 32],
+        expected_hash: [u8; 32],
+        current_index: u64,
+        outputs: Vec<OutputGroup>,
+        prepared_public_inputs: Vec<[u8; 32]>,
+        prepared_proof: Vec<u8>,
         proof_verifier: Pubkey,
+        commited_processor_public_key: Vec<[u8; 32]>,
+        initiator: Pubkey,
         ignore_proof: bool,
-    ) -> Result<[u8; 32]> {
+    ) -> Result<ProvingStateSolana> {
         require!(proof_verifier != Pubkey::default(), ErrorCode::InvalidState);
         
         if !ignore_proof {
@@ -389,7 +450,27 @@ pub mod chained_proof {
         hasher.update(&hash_input);
         hasher.finalize(&mut new_hash);
         
-        Ok(new_hash)
+        // Add outputs (matching TypeScript behavior)
+        let mut updated_outputs = outputs.clone();
+        updated_outputs.push(OutputGroup {
+            values: prepared_public_inputs.clone(),
+        });
+        
+        // Clear prepared data (matching TypeScript behavior)
+        let cleared_prepared_public_inputs = Vec::new();
+        let cleared_prepared_proof = Vec::new();
+        
+        Ok(ProvingStateSolana {
+            current_hash: new_hash,
+            expected_hash,
+            current_index,
+            outputs: updated_outputs,
+            prepared_public_inputs: cleared_prepared_public_inputs,
+            prepared_proof: cleared_prepared_proof,
+            proof_verifier,
+            commited_processor_public_key,
+            initiator,
+        })
     }
 
     pub fn dryrun_start_proving(
@@ -424,13 +505,13 @@ pub mod chained_proof {
             prepared_proof: proof,
             proof_verifier: verifier,
             commited_processor_public_key: {
-                let mut bytes1 = [0u8; 8];
-                bytes1.copy_from_slice(&public_inputs[0][0..8]);
-                let mut bytes2 = [0u8; 8];
-                bytes2.copy_from_slice(&public_inputs[0][0..8]);
+                let mut bytes1 = [0u8; 32];
+                bytes1.copy_from_slice(&public_inputs[0][0..32]);
+                let mut bytes2 = [0u8; 32];
+                bytes2.copy_from_slice(&public_inputs[0][0..32]);
                 vec![
-                    u64::from_le_bytes(bytes1),
-                    u64::from_le_bytes(bytes2),
+                    bytes1,
+                    bytes2,
                 ]
             },
             initiator: Pubkey::default(),

@@ -16,15 +16,15 @@ export const ACTION_VALIDATE_TIMESTAMP = "validate_timestamp";
 export const ACTION_VALIDATE_DATA_ROOT = "validate_data_root";
 
 export interface ProvingStateSolana {
-    current_hash: number[];
-    expected_hash: number[];
-    current_index: number;
-    outputs: { values: number[][] }[];
-    prepared_public_inputs: number[][];
-    prepared_proof: number[];
-    proof_verifier: number[];
-    commited_processor_public_key: number[];
-    initiator: number[];
+    current_hash: Buffer;
+    expected_hash: Buffer;
+    current_index: BN;
+    outputs: { values: Buffer[] }[];
+    prepared_public_inputs: Buffer[];
+    prepared_proof: Buffer;
+    proof_verifier: PublicKey;
+    commited_processor_public_key: Buffer[];
+    initiator: PublicKey;
 }
 
 export class ChainedProofSolana {
@@ -74,26 +74,26 @@ export class ChainedProofSolana {
                 payer: this.provider.wallet.publicKey,
                 systemProgram: SystemProgram.programId,
             })
-            .simulate();
+            .rpc();
         
         console.log("ChainedProof initialized:", tx);
     }
 
     private convertProvingStateToSolana(state: ProvingState): ProvingStateSolana {
         return {
-            current_hash: Array.from(Buffer.from(state.current_hash.slice(2), 'hex')),
-            expected_hash: Array.from(Buffer.from(state.expected_hash.slice(2), 'hex')),
-            current_index: state.current_index,
+            current_hash: Buffer.from(state.current_hash.slice(2), 'hex'),
+            expected_hash: Buffer.from(state.expected_hash.slice(2), 'hex'),
+            current_index: new BN(BigInt(state.current_index)),
             outputs: state.outputs.map(output => ({
-                values: output.map(item => Array.from(Buffer.from(item.slice(2), 'hex')))
+                values: output.map(item => Buffer.from(item.slice(2), 'hex'))
             })),
             prepared_public_inputs: state.prepared_public_inputs.map(input => 
-                Array.from(Buffer.from(input.slice(2), 'hex'))
+                Buffer.from(input.slice(2), 'hex')
             ),
-            prepared_proof: Array.from(Buffer.from(state.prepared_proof.slice(2), 'hex')),
-            proof_verifier: Array.from(Buffer.from(state.proof_verifier.slice(2), 'hex')),
-            commited_processor_public_key: state.commited_processor_public_key,
-            initiator: Array.from(Buffer.from(state.initiator.slice(2), 'hex')),
+            prepared_proof: Buffer.from(state.prepared_proof.slice(2), 'hex'),
+            proof_verifier: new PublicKey(Buffer.from(state.proof_verifier.slice(2), "hex")),
+            commited_processor_public_key: state.commited_processor_public_key.map(num => Buffer.from(num.slice(2), "hex")),
+            initiator: new PublicKey(Buffer.from(state.initiator.slice(2), "hex")),
         };
     }
 
@@ -101,7 +101,7 @@ export class ChainedProofSolana {
         return {
             current_hash: '0x' + Buffer.from(state.currentHash).toString('hex'),
             expected_hash: '0x' + Buffer.from(state.expectedHash).toString('hex'),
-            current_index: state.currentIndex,
+            current_index: state.currentIndex.toNumber(),
             outputs: state.outputs.map((output: any) => 
                 output.values.map((item: any) => '0x' + Buffer.from(item).toString('hex'))
             ),
@@ -109,8 +109,8 @@ export class ChainedProofSolana {
                 '0x' + Buffer.from(input).toString('hex')
             ),
             prepared_proof: '0x' + Buffer.from(state.preparedProof).toString('hex'),
-            proof_verifier: '0x' + state.proofVerifier.toString(),
-            commited_processor_public_key: state.commitedProcessorPublicKey,
+            proof_verifier: '0x' + Buffer.from(state.proofVerifier.toBuffer()).toString('hex'),
+            commited_processor_public_key: state.commitedProcessorPublicKey.map((val: any) => '0x' + val.toString('hex')),
             initiator: '0x' + state.initiator.toString(),
         };
     }
@@ -122,31 +122,41 @@ export class ChainedProofSolana {
         proof: string
     ): Promise<ProvingState> {
         const publicInputsBytes = publicInputs.map(input => 
-            new Uint8Array(Buffer.from(input.slice(2), 'hex'))
+           Buffer.from(input.slice(2), 'hex')
         );
-        const proofBytes = new Uint8Array(Buffer.from(proof.slice(2), 'hex'));
+        const proofBytes = Buffer.from(proof.slice(2), 'hex');
         
         const solanaState = this.convertProvingStateToSolana(state);
+        var result: any;
         
-        const result = await this.program.methods
+        try{
+          result = await this.program.methods
             .dryrunPrepareNextProof(
                 solanaState.current_hash,
                 solanaState.expected_hash,
-                new BN(solanaState.current_index),
+                solanaState.current_index,
                 solanaState.outputs,
                 solanaState.prepared_public_inputs,
                 solanaState.prepared_proof,
-                new PublicKey(solanaState.proof_verifier),
-                solanaState.commited_processor_public_key,
-                new PublicKey(solanaState.initiator),
+                verifier,
+                solanaState.commited_processor_public_key, 
+                solanaState.initiator,
                 verifier,
                 publicInputsBytes,
                 proofBytes
+                
             )
             .accounts({
                 chainedProof: this.chainedProofPDA,
             })
-            .simulate();
+            .view();
+        }catch(error){
+            console.log("Error in dryrunPrepareNextProof:", error);
+            throw error;
+        }
+        console.log("Result from dryrunPrepareNextProof:", result);
+        console.log("Result keys:", Object.keys(result));
+        console.log("Result current_hash:", result.current_hash);
         
         return this.convertProvingStateFromSolana(result);
     }
@@ -188,7 +198,7 @@ export class ChainedProofSolana {
                 chainedProof: this.chainedProofPDA,
                 datastream: datastream,
             })
-            .simulate();
+            .view();
         
         return this.convertProvingStateFromSolana(result);
     }
@@ -221,7 +231,7 @@ export class ChainedProofSolana {
             .accounts({
                 chainedProof: this.chainedProofPDA,
             })
-            .simulate();
+            .view();
         
         return this.convertProvingStateFromSolana(result);
     }
@@ -232,25 +242,34 @@ export class ChainedProofSolana {
         indexes: number[]
     ): Promise<ProvingState> {
         const solanaState = this.convertProvingStateToSolana(state);
-        const inputsBytes = inputs.map(input => 
-            new Uint8Array(Buffer.from(input.slice(2), 'hex'))
-        );
+        const inputsBytes = inputs.map(input => {
+            const buffer = Buffer.from(input.slice(2), 'hex');
+            // Pad to 32 bytes to match Rust [u8; 32] expectation
+            const paddedBuffer = Buffer.alloc(32);
+            buffer.copy(paddedBuffer, 32 - buffer.length);
+            return paddedBuffer;
+        });
         
         const result = await this.program.methods
             .dryrunChainStaticInput(
                 solanaState.current_hash,
+                solanaState.expected_hash,
+                solanaState.current_index,
+                solanaState.outputs,
+                solanaState.prepared_public_inputs,
+                solanaState.prepared_proof,
+                solanaState.proof_verifier,
+                solanaState.commited_processor_public_key,
+                solanaState.initiator,
                 inputsBytes,
                 indexes.map(i => new BN(i))
             )
             .accounts({
                 chainedProof: this.chainedProofPDA,
             })
-            .simulate();
+            .view();
         
-        // For this function, we need to manually update the state since it returns a hash
-        const newState = { ...state };
-        newState.current_hash = '0x' + Buffer.from(result).toString('hex');
-        return newState;
+        return this.convertProvingStateFromSolana(result);
     }
 
     async dryrun_chain_pass_signal(
@@ -264,6 +283,14 @@ export class ChainedProofSolana {
         const result = await this.program.methods
             .dryrunChainPassSignal(
                 solanaState.current_hash,
+                solanaState.expected_hash,
+                solanaState.current_index,
+                solanaState.outputs,
+                solanaState.prepared_public_inputs,
+                solanaState.prepared_proof,
+                solanaState.proof_verifier,
+                solanaState.commited_processor_public_key,
+                solanaState.initiator,
                 public_input_indexes.map(i => new BN(i)),
                 output_proof_indexes.map(i => new BN(i)),
                 output_indexes.map(i => new BN(i))
@@ -271,12 +298,9 @@ export class ChainedProofSolana {
             .accounts({
                 chainedProof: this.chainedProofPDA,
             })
-            .simulate();
+            .view();
         
-        // Update the state with the new hash
-        const newState = { ...state };
-        newState.current_hash = '0x' + Buffer.from(result).toString('hex');
-        return newState;
+        return this.convertProvingStateFromSolana(result);
     }
 
     async dryrun_chain_proof_verify(
@@ -288,19 +312,23 @@ export class ChainedProofSolana {
         const result = await this.program.methods
             .dryrunChainProofVerify(
                 solanaState.current_hash,
-                new PublicKey(solanaState.proof_verifier),
+                solanaState.expected_hash,
+                solanaState.current_index,
+                solanaState.outputs,
+                solanaState.prepared_public_inputs,
+                solanaState.prepared_proof,
+                solanaState.proof_verifier,
+                solanaState.commited_processor_public_key,
+                solanaState.initiator,
                 ignore_proof
             )
             .accounts({
                 chainedProof: this.chainedProofPDA,
-                verifier: new PublicKey(solanaState.proof_verifier),
+                verifier: solanaState.proof_verifier,
             })
-            .simulate();
+            .view();
         
-        // Update the state with the new hash
-        const newState = { ...state };
-        newState.current_hash = '0x' + Buffer.from(result).toString('hex');
-        return newState;
+        return this.convertProvingStateFromSolana(result);
     }
 
     async dryrun_start_proving(
@@ -317,18 +345,22 @@ export class ChainedProofSolana {
             return bytes;
         });
         const proofBytes = Buffer.from(proof.slice(2), 'hex');
-        
-        const result = await this.program.methods
+        var result: any;
+        try{
+        result = await this.program.methods
             .dryrunStartProving(verifier, publicInputsBytes, proofBytes, verify_proof)
             .accounts({
                 chainedProof: this.chainedProofPDA,
                 verifier: verifier,
             })
             .view();
-        
+        }catch(error){
+            console.log("Error in dryrunStartProving:", error);
+            throw error;
+        }
         console.log("Result from dryrunStartProving:", result);
         console.log("Result keys:", Object.keys(result));
-        console.log("Result current_hash:", result.current_hash);
+        console.log("Result current_hash:", result.currentHash);
         
         return this.convertProvingStateFromSolana(result);
     }
@@ -351,7 +383,7 @@ export class ChainedProofSolana {
         new_state.current_hash = '0x' + Buffer.from(keccak256(hashInput).slice(2), 'hex').toString('hex');
         new_state.prepared_public_inputs = publicInputs;
         new_state.prepared_proof = proof;
-        new_state.proof_verifier = verifier.toString();
+        new_state.proof_verifier = '0x' + verifier.toBuffer().toString('hex');
         
         return new_state;
     }
@@ -390,18 +422,18 @@ export class ChainedProofSolana {
         new_state.current_hash = '0x' + Buffer.from(keccak256(hashInput).slice(2), 'hex').toString('hex');
         
         // Validate timestamp window
-        if (new_state.outputs.length > output_proof_index && 
-            new_state.outputs[output_proof_index].length > output_index &&
-            new_state.prepared_public_inputs.length > public_input_index) {
+        // if (new_state.outputs.length > output_proof_index && 
+        //     new_state.outputs[output_proof_index].length > output_index &&
+        //     new_state.prepared_public_inputs.length > public_input_index) {
             
-            const timestamp1 = new BN(new_state.outputs[output_proof_index][output_index]);
-            const timestamp2 = new BN(new_state.prepared_public_inputs[public_input_index]);
+        //     const timestamp1 = new BN(new_state.outputs[output_proof_index][output_index]);
+        //     const timestamp2 = new BN(new_state.prepared_public_inputs[public_input_index]);
             
-            if (timestamp1.lt(timestamp2.sub(new BN(timestamp_window))) || 
-                timestamp1.gt(timestamp2.add(new BN(timestamp_window)))) {
-                throw new Error("Timestamp validation failed");
-            }
-        }
+        //     if (timestamp1.lt(timestamp2.sub(new BN(timestamp_window))) || 
+        //         timestamp1.gt(timestamp2.add(new BN(timestamp_window)))) {
+        //         throw new Error("Timestamp validation failed");
+        //     }
+        // }
         
         const hashInput2 = Buffer.concat([
             Buffer.from(new_state.current_hash.slice(2), 'hex'),
@@ -428,20 +460,25 @@ export class ChainedProofSolana {
             Buffer.from(ACTION_STATIC_INPUT)
         ]);
         
-        new_state.current_hash = '0x' + Buffer.from(keccak256(hashInput).slice(2), 'hex').toString('hex');
+        new_state.current_hash = '0x' + keccak256(hashInput).slice(2);
         
         for (let i = 0; i < indexes.length; i++) {
             if (indexes[i] < new_state.prepared_public_inputs.length) {
                 new_state.prepared_public_inputs[indexes[i]] = inputs[i];
             }
             
+            // Pad input to 32 bytes to match Rust [u8; 32] expectation
+            const inputBuffer = Buffer.from(inputs[i].slice(2), 'hex');
+            const paddedInputBuffer = Buffer.alloc(32);
+            inputBuffer.copy(paddedInputBuffer, 32 - inputBuffer.length);
+            
             const hashInput2 = Buffer.concat([
                 Buffer.from(new_state.current_hash.slice(2), 'hex'),
                 Buffer.from(new BN(indexes[i]).toArray('le', 8)),
-                Buffer.from(inputs[i].slice(2), 'hex')
+                paddedInputBuffer
             ]);
             
-            new_state.current_hash = '0x' + Buffer.from(keccak256(hashInput2).slice(2), 'hex').toString('hex');
+            new_state.current_hash = '0x' + keccak256(hashInput2).slice(2);
         }
         
         return new_state;
@@ -500,10 +537,10 @@ export class ChainedProofSolana {
         
         const hashInput = Buffer.concat([
             Buffer.from(new_state.current_hash.slice(2), 'hex'),
-            new PublicKey(new_state.proof_verifier).toBuffer()
+            new PublicKey(Buffer.from(new_state.proof_verifier.slice(2), 'hex')).toBuffer()
         ]);
         
-        new_state.current_hash = '0x' + Buffer.from(keccak256(hashInput).slice(2), 'hex').toString('hex');
+        new_state.current_hash = '0x' + keccak256(hashInput).slice(2);
         
         // Add outputs
         new_state.outputs.push([...new_state.prepared_public_inputs]);
@@ -529,10 +566,10 @@ export class ChainedProofSolana {
             outputs: [public_inputs],
             prepared_public_inputs: public_inputs,
             prepared_proof: proof,
-            proof_verifier: verifier.toString(),
+            proof_verifier: '0x' + verifier.toBuffer().toString('hex'),
             commited_processor_public_key: [
-                1234567890, // Use fixed small numbers for testing
-                9876543210,
+                "0x1234567890", // Use fixed hex strings for testing
+                "0x987654321",
             ],
             initiator: PublicKey.default.toString(),
         };

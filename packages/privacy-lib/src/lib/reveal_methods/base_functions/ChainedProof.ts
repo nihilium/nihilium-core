@@ -20,7 +20,7 @@ export interface ProvingState {
     prepared_public_inputs: string[];
     prepared_proof: string;
     proof_verifier: string;
-    commited_processor_public_key: number[];
+    commited_processor_public_key: string[];
     initiator: string;
     
 }

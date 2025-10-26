@@ -230,7 +230,7 @@ export class WrappedCircomCircuit implements CircuitWrapper<any> {
    * Returns the proof object and public signals.
    * Use encodeProofForContract() to convert the proof to bytes for smart contract verification.
    */
-  async generateProof(options: ProofOptions<any>): Promise<{ rawProof?: any; circomProof?: any; proof: any; publicSignals: string[] }> {
+  async generateProof(options: ProofOptions<any>): Promise<{ rawProof?: any; circomProof?: any; proof: any; proofSolana: any; publicSignals: string[] }> {
     if (!this.resolvedWasmPath || !this.resolvedZkeyPath || !this.snarkjs) {
       throw new Error('Circuit not initialized. Call init() first.');
     }
@@ -275,6 +275,7 @@ export class WrappedCircomCircuit implements CircuitWrapper<any> {
     return {
       rawProof: result.proof,
       proof: this.encodeProofForContract(result.proof),
+      proofSolana: this.encodeProofForContractSolana(result.proof),
       circomProof: this.formatProofForSolidity(result.proof),
       publicSignals: result.publicSignals.map(signal => "0x" + BigInt(signal).toString(16).padStart(64, '0')),
     };
@@ -405,6 +406,26 @@ export class WrappedCircomCircuit implements CircuitWrapper<any> {
     result.set(bigIntToBytes32(proof.pi_c[1]), offset);
 
     return result;
+  }
+
+  /**
+   * Encode proof for Solana program verification.
+   * Converts the snarkjs proof object into a single Uint8Array matching the format expected by
+   * the Solana groth16-solana crate verification.
+   * 
+   * The Solana BN254 implementation expects the proof in the same format as Solidity,
+   * but we need to ensure the byte order is correct for the groth16-solana crate.
+   * 
+   * Format: Same as Solidity (abi.encodePacked(uint[2] _pA, uint[2][2] _pB, uint[2] _pC))
+   * - _pA: pi_a[0], pi_a[1] (64 bytes)
+   * - _pB: pi_b[0][0], pi_b[0][1], pi_b[1][0], pi_b[1][1] (128 bytes) 
+   * - _pC: pi_c[0], pi_c[1] (64 bytes)
+   * Total: 256 bytes
+   */
+  encodeProofForContractSolana(proof: any): Uint8Array {
+    // For Solana, we use the same format as Solidity since groth16-solana
+    // expects the same proof format as the Solidity BN254 precompile
+    return this.encodeProofForContract(proof);
   }
 
   /**
