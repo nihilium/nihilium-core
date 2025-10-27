@@ -4,7 +4,7 @@ use groth16_solana::groth16::Groth16Verifier;
 mod verifying_key;
 use verifying_key::VERIFYINGKEY;
 
-declare_id!("WqbxrLUUxVthvX6ZBaniBm8jtckYXBnxdZamemU2cun");
+declare_id!("FvX2BGtrhYopTdKndMfMz4Gi8F16HKU7XGofh7mpNdTJ");
 
 #[derive(Accounts)]
 pub struct OpeningProof<'info> {

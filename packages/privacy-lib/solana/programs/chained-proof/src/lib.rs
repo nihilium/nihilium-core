@@ -1,11 +1,7 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::{Instruction, AccountMeta};
+use anchor_lang::solana_program::program::invoke;
 use tiny_keccak::{Hasher, Keccak};
-
-
-// Import the verifier program for CPI
-// use verifier::cpi::accounts::Verify as VerifierVerify;
-// use verifier::cpi::verify as verifier_verify;
-// use verifier::program::Verifier;
 
 declare_id!("4VzEeAmMSWU4Co2bSBzqqEXYDeiFnzsY6NRKaNLjZnHs");
 
@@ -117,6 +113,7 @@ pub struct DryrunChainProofVerify<'info> {
     /// CHECK: This account is used for proof verification and is checked by the program logic
     pub verifier: AccountInfo<'info>,
 }
+
 
 #[derive(Accounts)]
 pub struct DryrunStartProving<'info> {
@@ -436,8 +433,61 @@ pub mod chained_proof {
         require!(proof_verifier != Pubkey::default(), ErrorCode::InvalidState);
         
         if !ignore_proof {
-            // TODO: Call the verifier program specified in the proving state via CPI
-            // For now, we'll skip the actual verification
+            // Call the verifier program specified in the proving state via CPI
+            let verifier_program = ctx.accounts.verifier.to_account_info();
+            
+            // Create the instruction data for the verify function
+            let mut instruction_data = Vec::new();
+            
+            // Add discriminator for the verify function (8 bytes)
+            let hash_bytes = anchor_lang::solana_program::hash::hash(b"global:verify").to_bytes();
+            let verify_discriminator: [u8; 8] = [
+                hash_bytes[0], hash_bytes[1], hash_bytes[2], hash_bytes[3],
+                hash_bytes[4], hash_bytes[5], hash_bytes[6], hash_bytes[7]
+            ];
+            instruction_data.extend_from_slice(&verify_discriminator);
+            
+            // Serialize the proof parameter
+            let mut proof_data = Vec::new();
+            proof_data.extend_from_slice(&(prepared_proof.len() as u32).to_le_bytes());
+            proof_data.extend_from_slice(&prepared_proof);
+            instruction_data.extend_from_slice(&proof_data);
+            
+            // Serialize the public_signals parameter
+            let mut signals_data = Vec::new();
+            signals_data.extend_from_slice(&(prepared_public_inputs.len() as u32).to_le_bytes());
+            for signal in &prepared_public_inputs {
+                signals_data.extend_from_slice(signal);
+            }
+            instruction_data.extend_from_slice(&signals_data);
+            
+            // Create the instruction
+            let instruction = Instruction {
+                program_id: *verifier_program.key,
+                accounts: vec![
+                    AccountMeta::new_readonly(*ctx.accounts.verifier.key, false),
+                ],
+                data: instruction_data,
+            };
+            
+            // Invoke the instruction
+            let result = invoke(
+                &instruction,
+                &[
+                    ctx.accounts.verifier.to_account_info(),
+                ],
+            );
+            
+            match result {
+                Ok(()) => {
+                    // If the invoke succeeded, we assume the verification passed
+                    msg!("Proof verification successful");
+                }
+                Err(e) => {
+                    msg!("Verification failed with error: {:?}", e);
+                    return Err(ErrorCode::ProofVerificationFailed.into());
+                }
+            }
         }
         
         // Hash with verifier
@@ -519,6 +569,7 @@ pub mod chained_proof {
         
         Ok(state)
     }
+
 }
 
 #[error_code]

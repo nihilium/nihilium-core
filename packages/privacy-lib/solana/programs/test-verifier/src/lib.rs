@@ -16,8 +16,8 @@ pub mod test_verifier {
     /// Always returns true for testing
     pub fn verify(
         ctx: Context<Verify>,
-        _proof: Vec<u8>,
-        _public_signals: Vec<[u8; 32]>,
+        proof: Vec<u8>,
+        public_signals: Vec<[u8; 32]>,
     ) -> Result<bool> {
         // Always return true for testing purposes
         Ok(true)
