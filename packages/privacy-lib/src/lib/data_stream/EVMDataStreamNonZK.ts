@@ -246,6 +246,9 @@ export class EVMDataStreamNonZK implements IDataStream {
             }
         } catch (error) {
             console.error("Error processing global tree insert", error)
+            setTimeout( () => {
+                this.processGlobalTreeInsert(true)
+            }, 1000)
             // this.on_chain_publishing_state.processing_local_tree = -1
             // this.on_chain_publishing_state.local_trees_to_process.shift()
             // await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
