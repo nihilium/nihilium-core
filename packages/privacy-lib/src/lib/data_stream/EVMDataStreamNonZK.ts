@@ -65,19 +65,20 @@ export class EVMDataStreamNonZK implements IDataStream {
     getUrl(): string {
         return this.id
     }
-    async initialize(): Promise<void> {
-        
-        this.on_chain_publishing_state = await this.persistence.getOnChainPublishingState()
+
+    async load_everything(): Promise<void> {
+        this.global_evm_merkle_tree = new EmpheralMerkleTreeWrapper(this.signer)
         await this.global_evm_merkle_tree.attach(this.global_tree_address)
-        // var last_root = await this.global_evm_merkle_tree.getLastMerkleRoot()
-        // var last_value_root = await this.global_evm_merkle_tree.getValueIndex()
+        this.on_chain_publishing_state = await this.persistence.getOnChainPublishingState()
+        
         this.merkleTree = await this.persistence.getLocalTree(this.getGlobalTreeIndex())
-       // var globalLeafs = await this.persistence.getGlobalValueTree()
         this.globalRootTree = await this.persistence.getGlobalRootTree()
         this.globalValueTree = await this.persistence.getGlobalValueTree()
-        //var is_known_value_root = await this.global_evm_merkle_tree.isKnownValueRoot(toPaddedHex(BigInt(this.globalValueTree.root)))
         this.globalLeafTimestamps = await this.persistence.getGlobalLeafTimestamps()
-        console.log("Global tree index", this.getGlobalTreeIndex(), this.globalLeafTimestamps.size)
+    }
+    
+    async initialize(): Promise<void> {
+        await this.load_everything()
         await this.resyncGlobalTree()
         if(this.on_chain_publishing_state.processing_local_tree >= 0 && this.on_chain_publishing_state.local_trees_to_process.length > 0) {
             await this.processGlobalTreeInsert(true)
@@ -87,7 +88,7 @@ export class EVMDataStreamNonZK implements IDataStream {
         setInterval(async () => {
             // await this.closeLocalTree()
             await this.processGlobalTreeInsert()
-        }, 1000)
+        }, 3000)
 
         if(this.forced_publication_interval_in_seconds > 0) {
             setInterval(async () => {
@@ -246,9 +247,8 @@ export class EVMDataStreamNonZK implements IDataStream {
             }
         } catch (error) {
             console.error("Error processing global tree insert", error)
-            setTimeout( () => {
-                this.processGlobalTreeInsert(true)
-            }, 1000)
+            await this.load_everything()
+            await this.resyncGlobalTree()
             // this.on_chain_publishing_state.processing_local_tree = -1
             // this.on_chain_publishing_state.local_trees_to_process.shift()
             // await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
