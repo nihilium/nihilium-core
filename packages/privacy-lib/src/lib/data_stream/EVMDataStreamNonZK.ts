@@ -1,7 +1,7 @@
 
 import { HexString } from "../../types/protocol/common";
 import { MerkleTree, PartialMerkleTree, ProofPath } from 'fixed-merkle-tree'
-
+import process from 'node:process';
 import { IDataStream } from "./types";
 import { toPaddedHex, keccakTreeHasher, createKeccakMerkelTree } from "../utils";
 
@@ -92,6 +92,7 @@ export class EVMDataStreamNonZK implements IDataStream {
 
         if(this.forced_publication_interval_in_seconds > 0) {
             setInterval(async () => {
+                console.log("Forced publication")
                 await this.postData([toPaddedHex(cryptoTools.generateRandom248BitNumber())])
             }, this.forced_publication_interval_in_seconds * 1000)
         }
@@ -247,8 +248,12 @@ export class EVMDataStreamNonZK implements IDataStream {
             }
         } catch (error) {
             console.error("Error processing global tree insert", error)
+            
             await this.load_everything()
             await this.resyncGlobalTree()
+            await this.processGlobalTreeInsert(true)
+            //Temp solution to let docker restart the container
+            process.exit(-1)
             // this.on_chain_publishing_state.processing_local_tree = -1
             // this.on_chain_publishing_state.local_trees_to_process.shift()
             // await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
