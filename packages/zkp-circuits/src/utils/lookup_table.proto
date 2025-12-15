@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message LookupTableEntry {
+  bytes key = 1;  // x-coordinate as big-endian bytes (32 bytes for field element)
+  uint64 value = 2;  // xhi value as native uint64
+}
+
+message LookupTable {
+  repeated LookupTableEntry entries = 1;
+  uint32 precomputeSize = 2;
+}

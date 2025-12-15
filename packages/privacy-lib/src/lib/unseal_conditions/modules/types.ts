@@ -1,4 +1,4 @@
-import { ACTION_STATIC_INPUT, ACTION_STATIC_INPUT_FROM_USER } from "../ChainedProof";
+import { ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT, ACTION_STATIC_INPUT_FROM_USER } from "../ChainedProof";
 import { ProofLibraryType } from "../proofs";
 import { UnsealConditionProof } from "../proofs/types";
 import { UnsealProofAction } from "../types";
@@ -17,6 +17,7 @@ export type IOMap = {
 
 export type CompiledModule = {
     actions: UnsealProofAction[];
+    outputs: {[key: string]: [number, number, number]};
 }
 
 
@@ -47,6 +48,8 @@ export class ModuleNode {
 }
 
 export enum ModuleEdgeInput {
+    external_input = "external_input",
+    link = "link",//Simple link to define ordering
     signal_pass = "signal_pass",
     static_input = "static_input",
     user_input = "user_input"//becomes a static input during compilation
@@ -58,11 +61,15 @@ export class ModuleEdge {
     to: ModuleNode;
     mapping: [string, string|any]; //Key is the from node output key, the value node to input key
     input_type: ModuleEdgeInput;
-    constructor(edge_id: string, from: ModuleNode|undefined, to: ModuleNode, mapping: [string, any], input_type: ModuleEdgeInput) {
+    constructor( from: ModuleNode|undefined, to: ModuleNode, mapping: [string, any], input_type: ModuleEdgeInput, edge_id: string = "") {
         this.edge_id = edge_id;
+
         this.from = from;
         this.to = to;
         this.mapping = mapping;
+        if(edge_id == ""){
+            this.edge_id = this.from?.node_id + "_" + this.to.node_id + "_" + this.mapping[0] + "_" + this.mapping[1];
+        }
         this.input_type = input_type;
         if(!this.validate_inputs()) {
             throw new Error("Invalid module edge");
@@ -75,30 +82,59 @@ export class ModuleEdge {
         }
         if(this.input_type === "signal_pass") {
             if(this.from === undefined) {
+                console.log("From is undefined");
                 return false;
             }
             if(!this.from.get_output_keys().includes(this.mapping[0])) {
+                console.log("From output key not found");
                 return false;
             }
-            if(!this.to.get_input_keys().includes(this.mapping[1])) {
+            if(!this.to.get_output_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
                 return false;
             }
             return true;
         }
         if(this.input_type === "static_input") {
             if(this.from !== undefined) {
+                console.log("From is not undefined");
                 return false;
             }
             if(!this.to.get_input_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
                 return false;
             }
             return true;
         }
         if(this.input_type === "user_input") {
             if(this.from !== undefined) {
+                console.log("From is not undefined");
+                return false;
+            }
+            if(!this.to.get_output_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
+                return false;
+            }
+            return true;
+        }
+        if(this.input_type === "external_input") {
+            if(this.from !== undefined) {
+                console.log("From is not undefined");
                 return false;
             }
             if(!this.to.get_input_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
+                return false;
+            }
+            return true;
+        }
+        if(this.input_type === "link") {
+            if(this.from !== undefined) {
+                console.log("From is not undefined");
+                return false;
+            }
+            if(this.to === undefined) {
+                console.log("To input key not found");
                 return false;
             }
             return true;
@@ -124,13 +160,8 @@ export abstract class UnsealConditionModule {
         this.proofLibrary = proofLibrary;
     }
     getUserInputs(): IOMap {
-        var user_inputs: IOMap = {};
-        Object.keys(this.inputs).forEach((key: string) => {
-            if (this.inputs[key].user_input) {
-                user_inputs[key] = this.inputs[key];
-            }
-        });
-        return user_inputs;
+        
+        return this.inputs;
     }
     getOutputs(): IOMap {
         return this.outputs;
@@ -189,28 +220,39 @@ export abstract class UnsealConditionModule {
         return true;
     }
 
+    getPassedSignalForProof(input_key: string, previous_signals: any[][]): any {
+
+    }
+
     getInputEdgesForNode(node_id: string): ModuleEdge[] {
         return Object.values(this.edges).filter(edge => edge.to.node_id === node_id);
     }
 
 
+    async produce_proofs(...args: any[]): Promise<{proofs: any[], public_inputs: any[][]}> {
+        throw new Error("Not implemented");
+    }
+
     compile(address_map: {[key: string]: string}, input_mapping: {[key: string]: {        
         output_proof_indexes: number[];
         output_signal_indexes: number[];
     }}, current_proof_depth: number): CompiledModule {
+        //Check if all inputs are mapped
         for(var input of Object.keys(this.inputs)) {
             if(input_mapping[input] === undefined) {
                 throw new Error("Failed to compile module " + this.name + ": Input mapping not found for input " + input);
             }
         }
         var nodes = this.sortedNodes();
+        
         var return_actions: UnsealProofAction[] = [];
+        var node_depth_offset = current_proof_depth;
         for(var node of nodes) {
             var compiled_node = this.nodes[node].proof.compile(address_map);
             if(compiled_node.prepare_action !== undefined) {
                 return_actions.push(compiled_node.prepare_action);
             }
-
+            
 
             var input_edges = this.getInputEdgesForNode(node);
             for(var input_edge of input_edges) {
@@ -232,19 +274,46 @@ export abstract class UnsealConditionModule {
                         action: ACTION_STATIC_INPUT,
                         params: {
                             public_input_index: public_input_index,
-                            value: input_mapping[module_input_key].value,
+                            value: input_edge.mapping[1],
                         }
                     });
                 }
+                //External signal passing, use the input_mapping
+                if(input_edge.input_type === ModuleEdgeInput.external_input) {
+                    return_actions.push({
+                        action: ACTION_PASS_SIGNAL,
+                        params: {
+                            public_input_indexes: this.nodes[node].proof.getProofInputSignalIndex(input_edge.mapping[1]),
+                            output_proof_indexes: input_mapping[input_edge.mapping[0]].output_proof_indexes,
+                            output_signal_indexes: input_mapping[input_edge.mapping[0]].output_signal_indexes,
+                        }
+                    });
+                }
+                //Internal signal passing, use the depth
+                if(input_edge.input_type === ModuleEdgeInput.signal_pass) {
+                    return_actions.push({
+                        action: ACTION_PASS_SIGNAL,
+                        params: {
+                            public_input_indexes: this.nodes[node].proof.getProofInputSignalIndex(input_edge.mapping[1]),
+                            output_proof_indexes: [node_depth_offset -(nodes.indexOf(input_edge.from?.node_id || "")), 1], //Length 1 for default, TODO make this dynamic
+                            output_signal_indexes: input_edge.from?.get_outputs()[input_edge.mapping[1]],
+                        }
+                    });
+                }
+                if(input_edge.input_type === ModuleEdgeInput.link) {
+                    //Do nothing, just to define ordering
+                }
+            
             }
 
-
-
+            //Close it off
             if(compiled_node.validate_action !== undefined) {
                 return_actions.push(compiled_node.validate_action);
             }
-            
-        }
+            node_depth_offset += 1;
+        
+    }
+
 
 
 
@@ -252,9 +321,9 @@ export abstract class UnsealConditionModule {
             actions: [],
         }
     }
-    
-    
-    
-    
-    
 }
+    
+    
+    
+    
+    

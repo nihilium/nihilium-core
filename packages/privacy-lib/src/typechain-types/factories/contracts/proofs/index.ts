@@ -2,7 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as encryptProofSol from "./encrypt_proof.sol";
+export { Between__factory } from "./Between__factory";
+export { GreaterOrEqualThen__factory } from "./GreaterOrEqualThen__factory";
 export { IVerifier__factory } from "./IVerifier__factory";
+export { SmallerThen__factory } from "./SmallerThen__factory";
 export { SubTreeMerkleProof__factory } from "./SubTreeMerkleProof__factory";
 export { TestVerifyAlwaysTrue__factory } from "./TestVerifyAlwaysTrue__factory";
 export { TimeAfterProof__factory } from "./TimeAfterProof__factory";

@@ -50,6 +50,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.NihiliumRecoveryRegister__factory>;
     getContractFactory(
+      name: "Between",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Between__factory>;
+    getContractFactory(
       name: "BaseHonkVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseHonkVerifier__factory>;
@@ -62,6 +66,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
     getContractFactory(
+      name: "GreaterOrEqualThen",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.GreaterOrEqualThen__factory>;
+    getContractFactory(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
@@ -69,6 +77,10 @@ declare module "hardhat/types/runtime" {
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Opening_proof__factory>;
+    getContractFactory(
+      name: "SmallerThen",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SmallerThen__factory>;
     getContractFactory(
       name: "SubTreeMerkleProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -144,6 +156,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     getContractAt(
+      name: "Between",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Between>;
+    getContractAt(
       name: "BaseHonkVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -159,6 +176,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IVerifier>;
     getContractAt(
+      name: "GreaterOrEqualThen",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.GreaterOrEqualThen>;
+    getContractAt(
       name: "IVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -168,6 +190,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Opening_proof>;
+    getContractAt(
+      name: "SmallerThen",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SmallerThen>;
     getContractAt(
       name: "SubTreeMerkleProof",
       address: string | ethers.Addressable,
@@ -241,6 +268,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     deployContract(
+      name: "Between",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Between>;
+    deployContract(
       name: "BaseHonkVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseHonkVerifier>;
@@ -253,6 +284,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "GreaterOrEqualThen",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.GreaterOrEqualThen>;
+    deployContract(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
@@ -260,6 +295,10 @@ declare module "hardhat/types/runtime" {
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
+    deployContract(
+      name: "SmallerThen",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SmallerThen>;
     deployContract(
       name: "SubTreeMerkleProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -335,6 +374,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     deployContract(
+      name: "Between",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Between>;
+    deployContract(
       name: "BaseHonkVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -350,6 +394,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "GreaterOrEqualThen",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.GreaterOrEqualThen>;
+    deployContract(
       name: "IVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -359,6 +408,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
+    deployContract(
+      name: "SmallerThen",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SmallerThen>;
     deployContract(
       name: "SubTreeMerkleProof",
       args: any[],

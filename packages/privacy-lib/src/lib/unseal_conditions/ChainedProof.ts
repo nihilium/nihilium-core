@@ -6,9 +6,11 @@ import { ChainedProofWrapper } from "../contract_wrappers/ChainedProofWrapper";
 export const ACTION_PREPARE_NEXT_PROOF = "prepare_next_proof";
 export const ACTION_CHAIN_PROOF_VERIFY = "chain_proof_verify";
 export const ACTION_CHAIN_PROOF_FORK = "chain_proof_fork";
+export const ACTION_CHAIN_PROOF_FORK_END = "chain_proof_fork_end";
 
 export const ACTION_STATIC_INPUT = "static_input";
 export const ACTION_PASS_SIGNAL = "pass_signal";
+//Place holder for user input, should be replaced with static_input
 export const ACTION_STATIC_INPUT_FROM_USER = "static_input_from_user";
 
 export const ACTION_VALIDATE_TIMESTAMP = "validate_timestamp";

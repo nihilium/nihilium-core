@@ -1,4 +1,4 @@
-import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../ChainedProof";
+import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../ChainedProof";
 import { TopLevelTreeProof } from "../proofs/lib/002_top_level_tree_proof";
 import { SubTreeProof } from "../proofs/lib/001_sub_tree_proof";
 import { ProofMode } from "../proofs/zk_proofs/types";
@@ -31,6 +31,10 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     private opening_proof:UnsealOpeningProof;
     private top_level_merkle_tree_proof:TopLevelTreeProof;
     private sub_tree_merkle_tree_proof:SubTreeProof;
+
+    private opening_proof_node: ModuleNode;
+    private top_level_merkle_tree_proof_node: ModuleNode;
+    private sub_tree_merkle_tree_proof_node: ModuleNode;
     // private inputs: IOMap;
     // private outputs: IOMap;
     
@@ -42,6 +46,13 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     ){
         super("DefaultAnchoredOpeningProof", "Default Anchored Opening Proof", proofLibrary);
         this.inputs = {
+            //This is a starting module so no link required
+            // link: {
+            //     type_order: [],
+            //     user_input: false,
+            //     description: "A simple link to define ordering",
+            //     required: true
+            // },
             metadata_root_hash: {
                 type_order: ["String"],
                 user_input: true,
@@ -50,6 +61,12 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             },
         }
         this.outputs = {
+            link: {
+                type_order: [],
+                user_input: false,
+                description: "A simple link to define ordering",
+                required: true
+            },
             reveal_value: {
                 type_order: ["String"],
                 user_input: false,
@@ -87,28 +104,49 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         this.top_level_merkle_tree_proof = new proofLibrary.standard["TopLevelTreeProof"]() as TopLevelTreeProof;
         this.sub_tree_merkle_tree_proof = new proofLibrary.standard["SubTreeProof"]() as SubTreeProof;
         
-        this.nodes["opening_proof"] = new ModuleNode("opening_proof", this.opening_proof, [this.inputs["metadata_root_hash"]]);
-        this.nodes["top_level_merkle_tree_proof"] = new ModuleNode("top_level_merkle_tree_proof", this.top_level_merkle_tree_proof, []);
-        this.nodes["sub_tree_merkle_tree_proof"] = new ModuleNode("sub_tree_merkle_tree_proof", this.sub_tree_merkle_tree_proof, []);
+
+        this.opening_proof_node = new ModuleNode("opening_proof", this.opening_proof, [this.inputs["metadata_root_hash"]]);
+        this.top_level_merkle_tree_proof_node = new ModuleNode("top_level_merkle_tree_proof", this.top_level_merkle_tree_proof, []);
+        this.sub_tree_merkle_tree_proof_node = new ModuleNode("sub_tree_merkle_tree_proof", this.sub_tree_merkle_tree_proof, []);
+
+        //Required by super class for compilation
+        this.nodes[this.opening_proof_node.node_id] = this.opening_proof_node;
+        this.nodes[this.top_level_merkle_tree_proof_node.node_id] = this.top_level_merkle_tree_proof_node;
+        this.nodes[this.sub_tree_merkle_tree_proof_node.node_id] = this.sub_tree_merkle_tree_proof_node;
         
-        //Represents a static input from the user
-        this.edges["opening_proof_metadata_root_hash"] = new ModuleEdge("opening_proof_metadata_root_hash", 
+        
+        var opening_edge =  new ModuleEdge( 
             undefined,
-            this.nodes["opening_proof"], 
+            this.opening_proof_node, 
             ["metadata_root_hash", "metadata_root_hash"], 
             ModuleEdgeInput.user_input);
 
-        this.edges["opening_proof_to_sub_tree_merkle_tree_proof_reveal_value"] = 
-                 new ModuleEdge("opening_proof_to_sub_tree_merkle_tree_proof_reveal_value", 
-                    this.nodes["opening_proof"], 
-                    this.nodes["sub_tree_merkle_tree_proof"], 
-                    ["reveal_value", "reveal_value"], ModuleEdgeInput.signal_pass);
+        var link_edge =  new ModuleEdge( 
+            this.opening_proof_node,
+            this.sub_tree_merkle_tree_proof_node, 
+            ["link", "link"], 
+            ModuleEdgeInput.link);
+        //Represents a static input from the user
+        
 
-        this.edges["sub_tree_merkle_tree_to_top_level_merkle_tree_proof_subtree_root"] = 
-                new ModuleEdge("sub_tree_merkle_tree_to_top_level_merkle_tree_proof_subtree_root", 
-                   this.nodes["sub_tree_merkle_tree_proof"], 
-                   this.nodes["top_level_merkle_tree_proof"], 
-                   ["computed_root", "subtree_root"], ModuleEdgeInput.signal_pass);
+        // var sub_tree_edge =  new ModuleEdge( 
+        //     this.opening_proof_node,
+        //     this.sub_tree_merkle_tree_proof_node, 
+        //     ["reveal_value", "reveal_value"], 
+        //     ModuleEdgeInput.signal_pass);
+        
+
+        var top_level_edge =  new ModuleEdge( 
+            this.sub_tree_merkle_tree_proof_node,
+            this.top_level_merkle_tree_proof_node, 
+            ["computed_root", "subtree_root"], ModuleEdgeInput.signal_pass);
+        
+        
+            //Required by super class for compilation
+        this.edges[opening_edge.edge_id] = opening_edge;
+        this.edges[link_edge.edge_id] = link_edge;
+        //this.edges[sub_tree_edge.edge_id] = sub_tree_edge;
+        this.edges[top_level_edge.edge_id] = top_level_edge;
     
    
    
@@ -156,7 +194,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     //     return "reveal_only_normal_trees";
     // }
 
-    async produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<any> {
+    async produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<{proofs: any[], public_inputs: any[][]}> {
         var return_proofs = [opening_proof];
         var return_public_inputs = [opening_public_inputs];
         var reveal_value = opening_public_inputs[this.opening_proof.get_output_index("reveal_value")[0]];

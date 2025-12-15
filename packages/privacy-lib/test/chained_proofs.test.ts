@@ -2,16 +2,21 @@
 
 import { assert, expect } from "chai";
 import { ChainedProof } from "../src/lib/unseal_conditions/ChainedProof";
+import { DefaultAnchoredOpeningProofModule } from "../src/lib/unseal_conditions/modules";
+import { ProofLibrary } from "../src/lib/unseal_conditions/proofs";
+import * as staticContracts from "../src/static_contracts";
 import { ChainedProofWrapper } from "../src/lib/contract_wrappers/ChainedProofWrapper";
 import { ethers } from "hardhat";
 import { Provider, Signer } from "ethers";
+import { deployedProtocolContracts } from "../src/static_contracts";
 
 
 
-describe("ChainedProof", () => {
+describe("ChainedProofs", () => {
     var chainedProof: ChainedProofWrapper;
     var verifierContract: any;
     var verifierAddress: string;
+    var addressMap: {[key: string]: string};
     before("should deploy ChainedProof contract", async () => {
         const verifier = await ethers.getContractFactory("TestVerifyAlwaysTrue");
         verifierContract = await verifier.deploy();
@@ -25,7 +30,18 @@ describe("ChainedProof", () => {
         var chainedProofAddress = await chainedProofContract.getAddress();
         console.log(chainedProofAddress);
         await chainedProof.attach(chainedProofAddress);
+        addressMap = {
+            "opening_proof": deployedProtocolContracts[staticContracts.NETWORK_IDS.AVAX_TESTNET].validated_sig_he_add.address,
+            "TopLevelMerkleProof": deployedProtocolContracts[staticContracts.NETWORK_IDS.AVAX_TESTNET].TopLevelMerkleProof.address,
+            "SubTreeMerkleProof": deployedProtocolContracts[staticContracts.NETWORK_IDS.AVAX_TESTNET].SubTreeMerkleProof.address,
+        }
         //expect(chainedProof).to.be.an("object");
+    });
+
+    it("should compile a module", async () => {
+        const module = new DefaultAnchoredOpeningProofModule(ProofLibrary);
+        const compiledModule = module.compile(addressMap, {"metadata_root_hash": ""}, 0);
+        assert.equal(compiledModule.actions.length, 1);
     });
     it("should hash equilivantly", async () => {
         const chainedProofLocal = new ChainedProof("0x1234", "0x4567", ethers.provider);

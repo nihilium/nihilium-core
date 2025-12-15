@@ -3,7 +3,10 @@
 /* eslint-disable */
 import type * as encryptProofSol from "./encrypt_proof.sol";
 export type { encryptProofSol };
+export type { Between } from "./Between";
+export type { GreaterOrEqualThen } from "./GreaterOrEqualThen";
 export type { IVerifier } from "./IVerifier";
+export type { SmallerThen } from "./SmallerThen";
 export type { SubTreeMerkleProof } from "./SubTreeMerkleProof";
 export type { TestVerifyAlwaysTrue } from "./TestVerifyAlwaysTrue";
 export type { TimeAfterProof } from "./TimeAfterProof";

@@ -9,6 +9,25 @@ import { toPaddedHex } from "../utils";
 
 
 
+/**
+ * Describes the path you are planning to proof
+ * It is constructed as a 256 bit number with the first bit being the length of the proof path
+ * The remaining 248 bits are the proof path
+ * This means there is a limited to the amount of 'forks' you can take in a proof path
+ * Which is 248 and should be more than anyone would ever need
+ * The proof path is a boolean array of length 248
+ 
+ */
+export class UnsealConditionsProofPathDescriptor {
+    proof_path_length: number; //1 byte
+    proof_path: boolean[]; //248bits
+    constructor(){
+        this.proof_path_length = 0;
+        this.proof_path = [];
+    }
+
+}
+
 export abstract class ChainedProofCollection {
     protected unseal_proof_actions: UnsealProofAction[] = [];
     protected opening_proof_address: string;
