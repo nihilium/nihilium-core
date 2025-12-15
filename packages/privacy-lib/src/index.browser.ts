@@ -19,8 +19,8 @@ import {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleT
 import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';
 import * as ProtocolTypes from './types/protocol/common';
-import { RevealOnlyCollectionNormalTrees } from './lib/reveal_methods/collections/reveal_only_normal_trees';
-import { ChainedProofCollection} from './lib/reveal_methods/collections/types';
+import { DefaultAnchoredOpeningProofCollection } from './lib/unseal_conditions/collections/default_anchored_opening_proof';
+import { ChainedProofCollection} from './lib/unseal_conditions/types';
 const stub = {}
 var Persistence = stub;
 var Processor = stub;
@@ -30,8 +30,10 @@ var contracts = {
   ChainedProofWrapper: ChainedProofWrapper
 } 
 var ProofCollections: any = {
-  "reveal_only_normal_trees": RevealOnlyCollectionNormalTrees,
-}
+  default: {
+    "default_anchored_opening_proof": DefaultAnchoredOpeningProofCollection,
+  }
+} 
 
 export { 
   cryptoTools,

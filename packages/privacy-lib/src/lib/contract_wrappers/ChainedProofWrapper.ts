@@ -1,7 +1,7 @@
 import { Contract, Signer, ethers } from "ethers";
 import { ChainedProof } from "../../typechain-types"; // auto-generated
 import { ChainedProof__factory } from "../../typechain-types";
-import { ProvingState } from "../reveal_methods/base_functions/ChainedProof";
+import { ProvingState } from "../unseal_conditions/ChainedProof";
 import { toPaddedHex } from "../utils";
 import { LocalVMExecutor } from "./LocalVMExecutor";
 

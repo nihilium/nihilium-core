@@ -1,11 +1,11 @@
-import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../base_functions/ChainedProof";
-import { TopLevelTreeProof } from "../base_functions/zk_proofs/002_top_level_tree_proof";
-import { SubTreeProof } from "../base_functions/zk_proofs/001_sub_tree_proof";
-import { ProofMode } from "../base_functions/zk_proofs/types";
-import { ChainedProofCollection, UnsealProofAction } from "./types";
+import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../ChainedProof";
+import { TopLevelTreeProof } from "../proofs/zk_proofs/002_top_level_tree_proof";
+import { SubTreeProof } from "../proofs/zk_proofs/001_sub_tree_proof";
+import { ProofMode } from "../proofs/zk_proofs/types";
+import { ChainedProofCollection, UnsealProofAction } from "../types";
 import { IDataStream } from "../../data_stream/types";
 import { ethers, Signer } from "ethers";
-import { UnsealOpeningProof } from "../base_functions/zk_proofs/000_unseal_opening_proof";
+import { UnsealOpeningProof } from "../proofs/zk_proofs/000_unseal_opening_proof";
 import { ProofPath } from "fixed-merkle-tree";
 import { ProcessorEndpoint } from "../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../utils";
@@ -23,7 +23,7 @@ import { hexToBytes } from "@noble/hashes/utils";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class RevealOnlyCollectionNormalTrees extends ChainedProofCollection {
+export class DefaultAnchoredOpeningProofCollection extends ChainedProofCollection {
     
     private top_level_merkle_tree_address: string;
     private sub_tree_merkle_tree_address: string;

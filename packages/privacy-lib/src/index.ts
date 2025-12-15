@@ -19,8 +19,8 @@ import {ClientSingleShareUnsealingProcess} from './lib/client/client_single_shar
 import {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
 import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';
-import { RevealOnlyCollectionNormalTrees } from './lib/reveal_methods/collections/reveal_only_normal_trees';
-import { ChainedProofCollection} from './lib/reveal_methods/collections/types';
+import { DefaultAnchoredOpeningProofCollection } from './lib/unseal_conditions/collections/default_anchored_opening_proof';
+import { ChainedProofCollection} from './lib/unseal_conditions/types';
 var contracts = {
   EmpheralMerkleTree: EmpheralMerkleTreeWrapper,
   ChainedProofWrapper: ChainedProofWrapper
@@ -28,7 +28,9 @@ var contracts = {
 
 //TODO: do this dynamically
 var ProofCollections: any = {
-  "reveal_only_normal_trees": RevealOnlyCollectionNormalTrees,
+  default: {
+    "default_anchored_opening_proof": DefaultAnchoredOpeningProofCollection,
+  }
 }
 
 export { 

@@ -3,7 +3,7 @@ import { HexString } from "../../types/protocol/common";
 import { MerkleTree, PartialMerkleTree, ProofPath } from 'fixed-merkle-tree'
 import process from 'node:process';
 import { IDataStream } from "./types";
-import { toPaddedHex, keccakTreeHasher, createKeccakMerkelTree } from "../utils";
+import { toPaddedHex, keccakTreeHasher, createKeccakMerkelTree, signDataInsertRequestJWT } from "../utils";
 
 import { IDataStreamPersistence, OnChainPublishingState } from "../persistence/types";
 import { assert, Signer } from "ethers";
@@ -39,6 +39,7 @@ export class EVMDataStreamNonZK implements IDataStream {
         processing_local_tree: -1,
         local_trees_to_process: []
     }
+    private postDataLock: Promise<void> = Promise.resolve();
 
     constructor(id:string, persistence:IDataStreamPersistence, global_tree_address:string, 
         signer: Signer,
@@ -260,29 +261,47 @@ export class EVMDataStreamNonZK implements IDataStream {
         }
     }
 
-    async postData(data: HexString[]): Promise<[number, number]> {
-        var hashedData = data.map(d => keccakTreeHasher(d, 0n))
-        for(const leaf of hashedData){
-            //We insert with +1 if the global index is the next one to be inserted
-            await this.persistence.storeLocalTreeLeaf(this.getGlobalTreeIndex() + this.on_chain_publishing_state.local_trees_to_process.length, this.merkleTree.elements.length, leaf)
-            this.merkleTree.insert(leaf)
-        }
-        //await this.closeLocalTree()
-        //await this.processGlobalTreeInsert()
-        //this.merkleTree.bulkInsert(hashedData)
-        //We add plus one to the global index as this the next index where to local tree is inserted
-        //NOTE: in a smart contract situation this might need better async capabilities
-        //TODO handle multiple inserts, now itreturns the last local tree index
-        var toReturn: [number, number] = [this.getGlobalTreeIndex(),this.merkleTree.elements.length]
-        //If full we upgrade to the next global index
-        // if(this.merkleTree.elements.length >= this.max_local_tree_elements) {
-        //     var timestamp = Date.now()
-        //       this.globalTree.insert(this.hashFunction(this.merkleTree.root, timestamp.toString(16)))
-        //     this.local_trees.push([this.merkleTree, timestamp])
-        //     this.merkleTree = new MerkleTree(this.depth, [], {hashFunction: this.hashFunction, zeroElement: ZERO.toString(16)})
-        // }
+    async postData(data: HexString[]): Promise<[number, number, string]> {
+        //TODO there might be a cleaner approach for this but probably has to come from the data-storage
+        // Acquire lock - wait for previous operation to complete
+        await this.postDataLock;
         
-        return toReturn;
+        // Create new lock promise for next operation
+        let releaseLock: () => void;
+        this.postDataLock = new Promise<void>((resolve) => {
+            releaseLock = resolve;
+        });
+        
+        try {
+            var hashedData = data.map(d => keccakTreeHasher(d, 0n))
+            var inserted_at = this.merkleTree.elements.length;
+            for(const leaf of hashedData){
+                //We insert with +1 if the global index is the next one to be inserted
+                await this.persistence.storeLocalTreeLeaf(this.getGlobalTreeIndex() + this.on_chain_publishing_state.local_trees_to_process.length, this.merkleTree.elements.length, leaf)
+                this.merkleTree.insert(leaf)
+            }
+            //await this.closeLocalTree()
+            //await this.processGlobalTreeInsert()
+            //this.merkleTree.bulkInsert(hashedData)
+            //We add plus one to the global index as this the next index where to local tree is inserted
+            //NOTE: in a smart contract situation this might need better async capabilities
+            var signature = await signDataInsertRequestJWT(data, this.getGlobalTreeIndex(), inserted_at, this.signer)
+            //TODO handle multiple inserts, now itreturns the last local tree index
+            var toReturn: [number, number, string] = [this.getGlobalTreeIndex(),inserted_at, signature];
+
+            //If full we upgrade to the next global index
+            // if(this.merkleTree.elements.length >= this.max_local_tree_elements) {
+            //     var timestamp = Date.now()
+            //       this.globalTree.insert(this.hashFunction(this.merkleTree.root, timestamp.toString(16)))
+            //     this.local_trees.push([this.merkleTree, timestamp])
+            //     this.merkleTree = new MerkleTree(this.depth, [], {hashFunction: this.hashFunction, zeroElement: ZERO.toString(16)})
+            // }
+            
+            return toReturn;
+        } finally {
+            // Release lock
+            releaseLock!();
+        }
     }
 
     async getLatestGlobalLeafProof(): Promise<[ProofPath, string, number, number]> {

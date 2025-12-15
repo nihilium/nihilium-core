@@ -9,7 +9,7 @@ import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
 import { hexToBytes } from '@noble/hashes/utils';
 import { poseidon2 } from "poseidon-lite";
 import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
-import { GenericVerifyCollection } from '../reveal_methods/collections/generic_verify_collection';
+import { GenericVerifyCollection } from '../unseal_conditions/generic_verify_collection';
 import { Signer } from 'ethers';
 import { IDataStream } from '../data_stream/types';
 // import { stringifyBigInts, toBigIntArray, generateRandom248BitNumber, coordinatesToExtPoint } from 'nihilium-circuits'

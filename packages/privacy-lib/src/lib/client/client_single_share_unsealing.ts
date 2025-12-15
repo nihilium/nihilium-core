@@ -5,7 +5,7 @@ import { EnvSettings, get_env_settings } from "../../env_settings";
 import { IDataStream } from "../data_stream/types";
 import axios from "axios";
 import { cryptoTools } from "@nihilium/zkp-circuits";
-import { ChainedProofCollection } from "../reveal_methods/collections/types";
+import { ChainedProofCollection } from "../unseal_conditions/types";
 
 import { hexToBytes } from "@noble/hashes/utils";
 

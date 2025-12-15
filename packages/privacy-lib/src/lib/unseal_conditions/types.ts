@@ -1,15 +1,15 @@
 import { ethers, Signer } from "ethers";
-import { IDataStream } from "../../data_stream/types";
-import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_VALIDATE_DATA_ROOT } from "../base_functions/ChainedProof";
-import { ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING } from "../base_functions/ChainedProof";
-import { ProvingState } from "../base_functions/ChainedProof";
-import { ChainedProof } from "../base_functions/ChainedProof";
-import { ProcessorEndpoint } from "../../../types/protocol/common";
-import { toPaddedHex } from "../../utils";
+import { IDataStream } from "../data_stream/types";
+import { ACTION_CHAIN_PROOF_FORK, ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT_FROM_USER, ACTION_STATIC_INPUT, ACTION_VALIDATE_DATA_ROOT } from "./ChainedProof";
+import { ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING } from "./ChainedProof";
+import { ProvingState } from "./ChainedProof";
+import { ChainedProof } from "./ChainedProof";
+import { ProcessorEndpoint } from "../../types/protocol/common";
+import { toPaddedHex } from "../utils";
 
+export type ProofMode = "PROOF" | "BRANCH" | "MERGE"
 
-
-export abstract class ChainedProofCollection {
+export abstract class CompiledChainedProofCollection {
     protected unseal_proof_actions: UnsealProofAction[] = [];
     protected opening_proof_address: string;
     protected proof_order: string[] = [];
@@ -102,7 +102,9 @@ export abstract class ChainedProofCollection {
                 proof_counter++;
             }
             if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-                proof_state = await this.chainedProof.dryrun_prepare_next_proof(proof_state, action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
+                proof_state = await this.chainedProof.dryrun_prepare_next_proof(proof_state,
+                     action.params.verifier_address, 
+                     dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
                 proof_counter++;
             }
             if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
@@ -113,6 +115,11 @@ export abstract class ChainedProofCollection {
                     action.params.public_input_indexes, 
                     action.params.output_proof_indexes, 
                     action.params.output_signal_indexes, dryrun)
+            }
+            if(action.action === ACTION_STATIC_INPUT) {
+                proof_state = await this.chainedProof.dryrun_chain_static_input(proof_state,
+                    action.params.public_input_index,
+                    action.params.value)
             }
             if(action.action === ACTION_VALIDATE_DATA_ROOT) {
                 proof_state = await this.chainedProof.dryrun_validate_data_root(
@@ -136,8 +143,58 @@ export abstract class ChainedProofCollection {
     }
     
 }
-
+//Action and params are used during unseal_root calculation
 export type UnsealProofAction = {
+
     action: string;
+    
     params: any;
 }
+
+export type UnsealProofActionPrepareNextProof = UnsealProofAction & {
+    action: typeof ACTION_PREPARE_NEXT_PROOF;
+    params: {
+        verifier_address: string;    
+    }
+}
+export type UnsealProofActionChainProofVerify = UnsealProofAction & {
+    action: typeof ACTION_CHAIN_PROOF_VERIFY;
+    params: {
+        
+    }
+}
+export type UnsealProofActionChainProofFork = UnsealProofAction & {
+    action: typeof ACTION_CHAIN_PROOF_FORK;
+    params: {
+        
+    }
+}
+export type UnsealProofActionPassSignal = UnsealProofAction & {
+    action: typeof ACTION_PASS_SIGNAL;
+    params: {
+        public_input_indexes: number[];
+        output_proof_indexes: number[];
+        output_signal_indexes: number[];
+    }
+}
+
+//This is used during compilation of the module to be replaced during compilation
+//of the collection.
+export type UnsealProofActionStaticInputFromUser = UnsealProofAction & {
+    action: typeof ACTION_STATIC_INPUT_FROM_USER;
+    params: {
+        
+        public_input_index: [number, number];//index and range
+        
+        
+    }
+}
+
+export type UnsealProofActionStaticInput = UnsealProofAction & {
+    action: typeof ACTION_STATIC_INPUT;
+    params: {
+        public_input_index: number;
+        value: any;
+    }
+}
+    

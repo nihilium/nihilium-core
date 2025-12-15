@@ -1,5 +1,5 @@
 import { IDataStream } from "../../lib/data_stream/types";
-import { ChainedProofCollection, UnsealProofAction } from "../../lib/reveal_methods/collections/types";
+import { ChainedProofCollection, UnsealProofAction } from "../../lib/unseal_conditions/types";
 
 export type HexString = string ;//& { __brand: 'HexString' };
 

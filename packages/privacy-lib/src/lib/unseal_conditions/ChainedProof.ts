@@ -1,13 +1,16 @@
 import { ethers, keccak256, Signer } from "ethers";
-import { ChainedProofWrapper } from "../../contract_wrappers/ChainedProofWrapper";
+import { ChainedProofWrapper } from "../contract_wrappers/ChainedProofWrapper";
 
-export const ACTION_START_UNSEALING = "start_unsealing";
+//ACTION_start_unsealing is to be replaced with prepare_next_proof
+//export const ACTION_START_UNSEALING = "start_unsealing";
 export const ACTION_PREPARE_NEXT_PROOF = "prepare_next_proof";
 export const ACTION_CHAIN_PROOF_VERIFY = "chain_proof_verify";
+export const ACTION_CHAIN_PROOF_FORK = "chain_proof_fork";
 
 export const ACTION_STATIC_INPUT = "static_input";
 export const ACTION_PASS_SIGNAL = "pass_signal";
-export const ACTION_PASS_SIGNAL_PLUSONE = "pass_signal_plusone";
+export const ACTION_STATIC_INPUT_FROM_USER = "static_input_from_user";
+
 export const ACTION_VALIDATE_TIMESTAMP = "validate_timestamp";
 export const ACTION_VALIDATE_DATA_ROOT = "validate_data_root";
 

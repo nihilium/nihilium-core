@@ -10,7 +10,7 @@ import "./IVerifier.sol";
 
 
 
-contract TimeAfterProof is IVerifier { 
+contract GreaterOrEqualThen is IVerifier { 
   
   constructor() {
   }
@@ -26,7 +26,7 @@ contract TimeAfterProof is IVerifier {
   function verify(bytes calldata proof, bytes32[] calldata publicSignals) external pure returns (bool) {
     assert(publicSignals.length == 2);
    
-    return uint256(publicSignals[0]) > uint256(publicSignals[1]);
+    return uint256(publicSignals[0]) >= uint256(publicSignals[1]);
   }
 
 

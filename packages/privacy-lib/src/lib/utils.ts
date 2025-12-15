@@ -1,7 +1,8 @@
-import { ethers, keccak256, toBeHex } from "ethers";
+import { ethers, keccak256, Signer, toBeHex } from "ethers";
 import MerkleTree from "fixed-merkle-tree";
 import { buildMimc7 } from "circomlibjs";
-
+import jwtTools from "jsonwebtoken";
+import { HexString } from "ethers/lib.commonjs/utils/data";
 
 export function toPaddedHex(bn: bigint, length = 32): string {
     return ethers.zeroPadValue(toBeHex(bn), length);
@@ -56,3 +57,16 @@ export async function createKeccakMerkelTree(depth: number, leaves: string[]): P
 }
 
 
+export async function signDataInsertRequestJWT(data:  HexString[], global_tree_index: number, inserted_at: number ,secret: Signer): Promise<string> {
+
+
+
+    var data_hash = keccak256(ethers.solidityPacked(
+        
+        ["bytes32[]", "uint256", "uint256"],
+        [data.map(d => toPaddedHex(BigInt(d))), global_tree_index, inserted_at]
+    ));
+    
+
+    return await secret.signMessage(data_hash);
+}

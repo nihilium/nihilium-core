@@ -47,7 +47,7 @@ export class DataStreamClient implements IDataStream {
 
     
 
-    async postData(data: HexString[]): Promise<[number, number]> {
+    async postData(data: HexString[]): Promise<[number, number, string]> {
         return axios.post(this.endpoint + PROTOCOL_DATA_STREAM_PATHS.POST_DATA, {data: data}).then(res => res.data)
     }
 

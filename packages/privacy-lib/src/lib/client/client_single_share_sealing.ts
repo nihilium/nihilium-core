@@ -14,7 +14,7 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { IDataStream } from "../data_stream/types";
 import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
 //import { encryptProofCircuit } from "@nihilium/zkp-circuits";
-import { ChainedProofCollection } from "../reveal_methods/collections/types";
+import { ChainedProofCollection } from "../unseal_conditions/types";
 
 
 
