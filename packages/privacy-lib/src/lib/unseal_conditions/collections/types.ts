@@ -1,11 +1,8 @@
 import { ethers, Signer } from "ethers";
-import { IDataStream } from "../data_stream/types";
-import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_VALIDATE_DATA_ROOT } from "./ChainedProof";
-import { ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING } from "./ChainedProof";
-import { ProvingState } from "./ChainedProof";
-import { ChainedProof } from "./ChainedProof";
-import { ProcessorEndpoint } from "../../types/protocol/common";
-import { toPaddedHex } from "../utils";
+import { IDataStream } from "../../data_stream/types";
+import { CompiledModule, IOMap, UnsealConditionModule } from "../modules/types";
+import { ProofLibraryType } from "../proofs";
+import { ModuleLibraryType } from "../modules";
 
 
 
@@ -28,135 +25,171 @@ export class UnsealConditionsProofPathDescriptor {
 
 }
 
-export abstract class ChainedProofCollection {
-    protected unseal_proof_actions: UnsealProofAction[] = [];
-    protected opening_proof_address: string;
-    protected proof_order: string[] = [];
-    protected chainedProof: ChainedProof;
-    protected datastreams: IDataStream[];
-    protected signer: Signer | undefined;
-    protected provider: ethers.Provider | undefined;
-    constructor(opening_proof_address: string, datastreams: IDataStream[], provider: ethers.Provider | undefined = undefined, signer: Signer | undefined = undefined) {
-        this.opening_proof_address = opening_proof_address;
-        this.datastreams = datastreams;
-        this.chainedProof = new ChainedProof(this.opening_proof_address, this.opening_proof_address, provider, signer);
-        this.signer = signer;
-        this.provider = provider;
-    }
-    abstract getCollectionId(): string;
-    abstract getConstructorFields(): {[key:string]:any} ;
 
-    getUnsealProofActions(): UnsealProofAction[] {
-        return this.unseal_proof_actions;
-    }
-
-    abstract produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<{proofs:any[], public_inputs:any[][]}>;
-
-    getDatastreams(): IDataStream[] {
-        return this.datastreams;
-    }
-
-    getAddress(): string {
-        return this.opening_proof_address;
-    }
-    //TODO get the datastream from a merkle proof
-    async verifySolidity(dryrun: boolean = true, dataStreamAddress: string, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
-        if(!dryrun) {           
-            if(public_inputs.length != proofs.length) {
-                throw new Error("Number of public inputs must match the number of proofs in the proof order");
-            }            
-        }
-        console.log("Data stream address: " + dataStreamAddress)
-        var proof_counter = 0;
-        var proof_state: any | ProvingState = {};
-        for(var action of this.unseal_proof_actions) {
-            console.log(action)
-            if(action.action === ACTION_START_UNSEALING) {
-                proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
-                proof_counter++;
-            }
-            if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-                proof_state = await this.chainedProof.solidity_dryrun_prepare_next_proof(proof_state, action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter])
-                proof_counter++;
-            }
-            if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
-                proof_state = await this.chainedProof.solidity_dryrun_chain_proof_verify(proof_state, dryrun)
-            }
-            if(action.action === ACTION_PASS_SIGNAL) {
-                proof_state = await this.chainedProof.solidity_dryrun_chain_pass_signal(proof_state, 
-                    action.params.public_input_indexes, 
-                    action.params.output_proof_indexes, 
-                    action.params.output_signal_indexes, dryrun)
-            }
-            if(action.action === ACTION_VALIDATE_DATA_ROOT) {
-                proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
-                    proof_state, 
-                    dataStreamAddress,                    
-                    action.params.public_input_index, 
-                    action.params.is_delayed_proof, 
-                    action.params.optional_dual_tree_proof, 
-                    action.params.optional_dual_tree_public_inputs,
-                    action.params.merkle_root_index)
-            }
-            console.log(action.action, proof_state.current_hash)
-        }
-
-        //TODO make sure it is within field
-        return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n)
-    }
-
-    async getUnsealRoot(dryrun: boolean = true, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
-        //Make sure proofs and inputs are correct
-        if(!dryrun) {
-            if(proofs.length != public_inputs.length) {
-                throw new Error("Number of public inputs must match the number of proofs in the proof order");
-            }            
-        }
-        
-        var proof_counter = 0;
-        var proof_state: any | ProvingState = {};
-        for(var action of this.unseal_proof_actions) {      
-            if(action.action === ACTION_START_UNSEALING) {
-                proof_state = await this.chainedProof.dryrun_start_proving(action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
-                proof_counter++;
-            }
-            if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-                proof_state = await this.chainedProof.dryrun_prepare_next_proof(proof_state, action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
-                proof_counter++;
-            }
-            if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
-                proof_state = await this.chainedProof.dryrun_chain_proof_verify(proof_state, dryrun)
-            }
-            if(action.action === ACTION_PASS_SIGNAL) {
-                proof_state = await this.chainedProof.dryrun_chain_pass_signal(proof_state, 
-                    action.params.public_input_indexes, 
-                    action.params.output_proof_indexes, 
-                    action.params.output_signal_indexes, dryrun)
-            }
-            if(action.action === ACTION_VALIDATE_DATA_ROOT) {
-                proof_state = await this.chainedProof.dryrun_validate_data_root(
-                    proof_state,                     
-                    action.params.public_input_index, 
-                    action.params.is_delayed_proof, 
-                    action.params.optional_dual_tree_proof, 
-                    action.params.optional_dual_tree_public_inputs,
-                    action.params.merkle_root_index)
-            }
-            console.log(action.action, proof_state.current_hash)
-            
-        }
-
-      
-        return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n);
-    }
-
-    getProofOrder(): string[] {
-        return this.proof_order;
-    }
-    
+export function import_collectionnode_from_json(json: string, moduleLibrary: ModuleLibraryType, proofLibrary: ProofLibraryType): CollectionNode {
+    var data = JSON.parse(json);
+    return new CollectionNode(data.node_id, new moduleLibrary.standard[data.module_name](proofLibrary), data.public_inputs);
 }
 
-export type UnsealProofAction = {
-    action: string;
-    params: any;
+export class CollectionNode {
+    node_id: string;
+    module: UnsealConditionModule;    
+    public_inputs: any[];
+    constructor(node_id: string, module: UnsealConditionModule, public_inputs: any[]) {
+        this.node_id = node_id;
+        this.module = module;
+        this.public_inputs = public_inputs;
+    }
+
+    export_to_json(): string {
+        return JSON.stringify({
+            node_id: this.node_id,
+            module_name: this.module.name,
+            public_inputs: this.public_inputs,
+        }, null, 2);
+    }
+
+    get_outputs(): IOMap {
+        return this.module.getOutputs();
+    }
+
+    get_output_keys(): string[] {
+        return Object.keys(this.get_outputs());
+    }
+    get_input_keys(): string[] {
+        return Object.keys(this.module.getUserInputs());
+    }
+    validate_input_mapping(input_mapping: {[key: string]: any}): boolean {
+        return this.module.validateInputs(input_mapping);
+    }
+}
+
+export enum CollectionEdgeInput {
+    
+    link = "link",//Simple link to define ordering
+    signal_pass = "signal_pass",
+    static_input = "static_input",    
+    user_input = "user_input"//becomes a static input during compilation
+}
+
+export function import_collectionedge_from_json(json: string, nodes: {[key: string]: CollectionNode}): CollectionEdge {
+    var data = JSON.parse(json);
+    return new CollectionEdge(data.from_node_id ? nodes[data.from_node_id] : undefined,
+         nodes[data.to_node_id], data.mapping, data.input_type);
+}
+
+export class CollectionEdge {
+    edge_id: string;
+    from: CollectionNode|undefined;
+    to: CollectionNode;
+    mapping: [string, string|any]; //Key is the from node output key, the value node to input key
+    input_type: CollectionEdgeInput;
+    constructor( from: CollectionNode|undefined, to: CollectionNode, mapping: [string, any], input_type: CollectionEdgeInput, edge_id: string = "") {
+        this.edge_id = edge_id;
+
+        this.from = from;
+        this.to = to;
+        this.mapping = mapping;
+        if(edge_id == ""){
+            this.edge_id = this.from?.node_id + "_" + this.to.node_id + "_" + this.mapping[0] + "_" + this.mapping[1];
+        }
+        this.input_type = input_type;
+        if(!this.validate_inputs()) {
+            throw new Error("Invalid module edge");
+        }
+    }
+
+    export_to_json(): string {
+        return JSON.stringify({
+            edge_id: this.edge_id,
+            from_node_id: this.from?.node_id,
+            to_node_id: this.to.node_id,
+            mapping: this.mapping,
+            input_type: this.input_type,
+        }, null, 2);
+    }
+    validate_inputs(): boolean {
+        if(this.mapping[0] === undefined || this.mapping[1] === undefined) {
+            return false;
+        }
+        if(this.input_type === "signal_pass") {
+            if(this.from === undefined) {
+                console.log("From is undefined");
+                return false;
+            }
+            if(!this.from.get_output_keys().includes(this.mapping[0])) {
+                console.log("From output key not found");
+                return false;
+            }
+            if(!this.to.get_input_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
+                return false;
+            }
+            return true;
+        }
+        if(this.input_type === "static_input") {
+            if(this.from !== undefined) {
+                console.log("From is not undefined");
+                return false;
+            }
+            if(!this.to.get_input_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
+                return false;
+            }
+            return true;
+        }
+        if(this.input_type === "user_input") {
+            if(this.from !== undefined) {
+                console.log("From is not undefined");
+                return false;
+            }
+            if(!this.to.get_output_keys().includes(this.mapping[1])) {
+                console.log("To input key not found");
+                return false;
+            }
+            return true;
+        }
+        
+        if(this.input_type === "link") {
+            // Link edges require a from node to define ordering
+            if(this.from === undefined) {
+                console.log("From is undefined for link edge");
+                return false;
+            }
+            if(this.to === undefined) {
+                console.log("To is undefined for link edge");
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+
+}
+
+export enum ChangedType {
+    removed = "removed",
+    added = "added",
+    modified = "modified",
+}
+export type ChangedCallback = (changes: {
+    action: ChangedType,
+    nodes?: CollectionNode[],
+    edges?: CollectionEdge[],
+    starting_node?: CollectionNode|undefined,
+    
+}) => void;
+
+
+export type RequiredUserInput = { 
+    module_index: number;
+    signal_indexes: [number, number];
+    name: string;
+    description: string;
+}
+
+export type CompiledCollectionExport = {
+    compiled_modules: CompiledModule[];
+    user_inputs: RequiredUserInput[];
 }

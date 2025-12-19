@@ -14,3 +14,14 @@ export var deployedProtocolContracts = {
   [NETWORK_IDS.GENANCHE]: deployedContracts1337,
   [NETWORK_IDS.AVAX_TESTNET]: deployedContracts43113,
 }
+
+export function toAddressMap(networkId: number) {
+  return {
+    "opening_proof": deployedProtocolContracts[networkId].opening_proof.address,
+    "TopLevelMerkleProof": deployedProtocolContracts[networkId].TopLevelMerkleProof.address,
+    "SubTreeMerkleProof": deployedProtocolContracts[networkId].SubTreeMerkleProof.address,
+    "KeccakTreeEntry": deployedProtocolContracts[networkId].KeccakTreeEntry.address,
+    "GreaterOrEqualThen": deployedProtocolContracts[networkId].GreaterOrEqualThen.address,
+    "SmallerThan": deployedProtocolContracts[networkId].SmallerThan.address,
+  }
+}

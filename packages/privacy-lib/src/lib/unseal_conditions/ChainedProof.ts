@@ -124,44 +124,7 @@ export class ChainedProof {
         return new_state;
     }
 
-    async solidity_dryrun_validate_timestamp(state: ProvingState, output_proof_index: number, output_index: number, public_input_index: number, timestamp_window: number): Promise<ProvingState> {
-        if (this.chainedProofWrapper) {
-            return await this.chainedProofWrapper.dryrunValidateTimestamp(state, output_proof_index, output_index, public_input_index, timestamp_window);
-        }else{
-            throw new Error("ChainedProofWrapper not initialized");
-        }
-    }
 
-    dryrun_validate_timestamp(
-        state: ProvingState,
-        output_proof_index: number,
-        output_index: number,
-        public_input_index: number,
-        timestamp_window: number
-    ): ProvingState {
-        const new_state = { ...state };
-        // if (!new_state.prepared_proof || !new_state.prepared_public_inputs.length || !new_state.proof_verifier) {
-        //     throw new Error("Invalid state");
-        // }
-
-        new_state.current_hash = keccak256(ethers.solidityPacked(
-            ["bytes32", "string"],
-            [new_state.current_hash, ACTION_VALIDATE_TIMESTAMP]
-        ));
-        // const timestamp1 = parseInt(new_state.outputs[output_proof_index][output_index]);
-        // const timestamp2 = parseInt(new_state.prepared_public_inputs[public_input_index]);
-        
-        // if (timestamp1 < timestamp2 - timestamp_window || timestamp1 > timestamp2 + timestamp_window) {
-        //     throw new Error("Timestamp validation failed");
-        // }
-
-        new_state.current_hash = keccak256(ethers.solidityPacked(
-            ["bytes32", "uint256", "uint256", "uint256", "uint256"],
-            [new_state.current_hash, output_proof_index, output_index, public_input_index, timestamp_window]
-        ));
-
-        return new_state;
-    }
 
 
     async solidity_dryrun_chain_static_input(state: ProvingState, inputs: string[], indexes: number[]): Promise<ProvingState> {

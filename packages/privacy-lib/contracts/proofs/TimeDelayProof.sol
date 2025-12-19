@@ -10,7 +10,7 @@ import "./IVerifier.sol";
 
 
 
-contract SmallerThen is IVerifier { 
+contract TimeDelayProof is IVerifier { 
   
   constructor() {
   }
@@ -20,13 +20,15 @@ contract SmallerThen is IVerifier {
    * @param proof proof is empty
    * @dev publicSignals[0] is the timestamp being checked
    * @dev publicSignals[1] is the timestamp to check against
+   * @dev publicSignals[2] is the offset
    
    * @param publicSignals The public signals to verify
    */
   function verify(bytes calldata proof, bytes32[] calldata publicSignals) external pure returns (bool) {
-    assert(publicSignals.length == 2);
+    assert(publicSignals.length == 3);
    
-    return uint256(publicSignals[0]) < uint256(publicSignals[1]);
+    return uint256(publicSignals[0]) > uint256(publicSignals[1]) && 
+      uint256(publicSignals[0]) < (uint256(publicSignals[1]) - uint256(publicSignals[2]));
   }
 
 

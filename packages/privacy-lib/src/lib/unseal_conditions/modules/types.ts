@@ -11,13 +11,29 @@ export type IO = {
     description: string;
     required: boolean;
 }
+export type ModuleOutput = {
+    type_order: IOType[];
+    name: string;     
+    description: string;
+    proof_key: string;
+    signal_key: string; //[Start index, length]
+}
 export type IOMap = {
     [key: string]: IO;
 }
 
+export type ModuleOutputMap = {
+    [key: string]: ModuleOutput;
+}
+
 export type CompiledModule = {
+    module_id: string;
+    new_depth: number;
     actions: UnsealProofAction[];
-    outputs: {[key: string]: [number, number, number]};
+    outputs: {[key: string]: {
+        output_proof_index: number;
+        output_signal_index: [number, number];
+    }};
 }
 
 
@@ -42,6 +58,7 @@ export class ModuleNode {
     get_input_keys(): string[] {
         return this.proof.getProofInputSignalKeys();
     }
+   
     validate_input_mapping(input_mapping: {[key: string]: any}): boolean {
         return this.proof.getProofInputSignalKeys().every(key => input_mapping[key] !== undefined);
     }
@@ -129,12 +146,13 @@ export class ModuleEdge {
             return true;
         }
         if(this.input_type === "link") {
-            if(this.from !== undefined) {
-                console.log("From is not undefined");
+            // Link edges require a from node to define ordering
+            if(this.from === undefined) {
+                console.log("From is undefined for link edge");
                 return false;
             }
             if(this.to === undefined) {
-                console.log("To input key not found");
+                console.log("To is undefined for link edge");
                 return false;
             }
             return true;
@@ -145,17 +163,29 @@ export class ModuleEdge {
 
 }
 
+/**
+ * 
+ */
+export enum ModuleEligibility {
+    eligible = "eligible",
+    not_eligible = "not_eligible",
+    passive_waiting = "passive_waiting", 
+    active_waiting = "active_waiting",
+}
+
 export abstract class UnsealConditionModule {
-    protected name: string = "";
-    protected description: string = "";
+    public name: string = "";
+    public short_description: string = "";
+    public description: string = "";
     protected inputs: IOMap = {};
-    protected outputs: IOMap = {};
+    protected outputs: ModuleOutputMap = {};
     protected proofLibrary: ProofLibraryType;
+    protected startingNode: ModuleNode|undefined = undefined;
     protected nodes: {[key: string]: ModuleNode} = {};
     protected edges: {[key: string]: ModuleEdge} = {};
-    constructor(name: string, description: string, proofLibrary: ProofLibraryType) {
+    constructor(name: string, short_description: string, proofLibrary: ProofLibraryType) {
         this.name = name;
-        this.description = description;
+        this.short_description = short_description;
         
         this.proofLibrary = proofLibrary;
     }
@@ -163,53 +193,81 @@ export abstract class UnsealConditionModule {
         
         return this.inputs;
     }
-    getOutputs(): IOMap {
+    getOutputs(): ModuleOutputMap {
         return this.outputs;
     }
+    
     sortedNodes(): string[] {
-        // Perform a topological sort of nodes based on edges
+        // Perform a depth-first topological sort starting from startingNode
+        // Only signal_pass and link edges define ordering dependencies
 
-        // Collect all node ids
+        if (!this.startingNode) {
+            throw new Error("Starting node is not defined");
+        }
+
         const nodeIds = Object.keys(this.nodes);
-
-        // Build a map of inbound edge counts for Kahn's algorithm
-        const inDegree: { [id: string]: number } = {};
-        for (const nodeId of nodeIds) {
-            inDegree[nodeId] = 0;
+        if (nodeIds.length === 0) {
+            return [];
         }
+
+        // Build adjacency list for ordering edges (signal_pass and link only)
+        const adjacencyList: { [id: string]: string[] } = {};
+        for (const nodeId of nodeIds) {
+            adjacencyList[nodeId] = [];
+        }
+
         for (const edge of Object.values(this.edges)) {
-            if (edge.to && edge.to.node_id !== undefined) {
-                inDegree[edge.to.node_id]++;
-            }
-        }
-
-        // Initialize queue with nodes that have zero in-degree (no dependencies)
-        const queue: string[] = [];
-        for (const nodeId of nodeIds) {
-            if (inDegree[nodeId] === 0) {
-                queue.push(nodeId);
-            }
-        }
-
-        const sorted: string[] = [];
-        while (queue.length > 0) {
-            const nodeId = queue.shift()!;
-            sorted.push(nodeId);
-
-            // Decrement in-degree of nodes connected by an outgoing edge
-            for (const edge of Object.values(this.edges)) {
-                if (edge.from && edge.from.node_id === nodeId && edge.to && edge.to.node_id !== undefined) {
-                    inDegree[edge.to.node_id]--;
-                    if (inDegree[edge.to.node_id] === 0) {
-                        queue.push(edge.to.node_id);
-                    }
+            // Only signal_pass and link edges define ordering
+            if ((edge.input_type === ModuleEdgeInput.signal_pass || edge.input_type === ModuleEdgeInput.link) &&
+                edge.from && edge.to && edge.from.node_id && edge.to.node_id) {
+                const fromId = edge.from.node_id;
+                const toId = edge.to.node_id;
+                if (!adjacencyList[fromId].includes(toId)) {
+                    adjacencyList[fromId].push(toId);
                 }
             }
         }
 
-        // If there are nodes left with non-zero in-degree, there's a cycle or disconnected nodes
+        // Track visited nodes and nodes in current path (for cycle detection)
+        const visited: Set<string> = new Set();
+        const inPath: Set<string> = new Set();
+        const sorted: string[] = [];
+
+        // DFS helper function (pre-order traversal for topological sort)
+        // If A -> B, we want A before B, so we add A before visiting B
+        const dfs = (nodeId: string): void => {
+            if (inPath.has(nodeId)) {
+                throw new Error(`Cycle detected in graph at node: ${nodeId}`);
+            }
+            if (visited.has(nodeId)) {
+                return; // Already processed
+            }
+
+            inPath.add(nodeId);
+            visited.add(nodeId);
+            sorted.push(nodeId); // Add node before visiting dependencies (pre-order)
+            
+            // Visit all neighbors (dependencies come after this node)
+            for (const neighborId of adjacencyList[nodeId]) {
+                if (!this.nodes[neighborId]) {
+                    throw new Error(`Edge references non-existent node: ${neighborId}`);
+                }
+                dfs(neighborId);
+            }
+
+            inPath.delete(nodeId);
+        };
+
+        // Start DFS from startingNode
+        if (!this.nodes[this.startingNode.node_id]) {
+            throw new Error(`Starting node ${this.startingNode.node_id} not found in nodes`);
+        }
+        dfs(this.startingNode.node_id);
+
+        // Verify all nodes are reachable from startingNode
         if (sorted.length !== nodeIds.length) {
-            throw new Error("Cycle detected or orphan nodes in graph");
+            const unreachable = nodeIds.filter(id => !visited.has(id));
+            throw new Error(`Orphan nodes detected that are not reachable from startingNode: ${unreachable.join(", ")}`);
         }
 
         return sorted;
@@ -229,42 +287,77 @@ export abstract class UnsealConditionModule {
     }
 
 
+    /**
+     * Produces the proofs for the module
+     * @param args 
+     */
     async produce_proofs(...args: any[]): Promise<{proofs: any[], public_inputs: any[][]}> {
         throw new Error("Not implemented");
     }
 
-    compile(address_map: {[key: string]: string}, input_mapping: {[key: string]: {        
-        output_proof_indexes: number[];
+    /**
+     * Prepares the module for proving, this can be publishing a value onto the 
+     * data stream or call external functions that might take longer to complete.
+     
+     * @param args 
+     */
+    async prepare_for_proving(...args: any[]): Promise<any> {
+        throw new Error("Not implemented");
+    }
+
+    /**
+     * Checks if the module is eligible to prove
+     * @param args 
+     */
+    async eligible_to_prove(...args: any[]): Promise<boolean> {
+        throw new Error("Not implemented");
+    }
+
+    compile(external_node_id: string, address_map: {[key: string]: string}, input_mapping: {[key: string]: {        
+        output_proof_index: number;
         output_signal_indexes: number[];
     }}, current_proof_depth: number): CompiledModule {
         //Check if all inputs are mapped
         for(var input of Object.keys(this.inputs)) {
-            if(input_mapping[input] === undefined) {
-                throw new Error("Failed to compile module " + this.name + ": Input mapping not found for input " + input);
+            if(this.inputs[input].user_input === false) {
+                if(input_mapping[input] === undefined) {
+                    throw new Error("Failed to compile module " + this.name + ": Input mapping not found for input " + input);
+                }else{
+                    
+                    if(input_mapping[input].output_signal_indexes.length !== 2) {
+                        throw new Error("Failed to compile module " + this.name + ": Input mapping for input " + input + " has " + input_mapping[input].output_signal_indexes.length + " output signal indexes, expected 1");
+                    }
+                }
             }
         }
         var nodes = this.sortedNodes();
         
         var return_actions: UnsealProofAction[] = [];
-        var node_depth_offset = current_proof_depth;
-        for(var node of nodes) {
-            var compiled_node = this.nodes[node].proof.compile(address_map);
+        //Used for user inputs to offset
+        var new_node_index = 0;
+        for(var node_id of nodes) {
+            
+            var node = this.nodes[node_id];
+            var compiled_node = node.proof.compile(address_map);
+            
             if(compiled_node.prepare_action !== undefined) {
                 return_actions.push(compiled_node.prepare_action);
             }
             
 
-            var input_edges = this.getInputEdgesForNode(node);
+            var input_edges = this.getInputEdgesForNode(node_id);
             for(var input_edge of input_edges) {
                 var module_input_key = input_edge.mapping[0];
-                if(this.inputs[module_input_key] === undefined) {
+                if(input_edge.from?.get_output_keys().includes(module_input_key) === false && input_edge.input_type !== ModuleEdgeInput.link) {
                     throw new Error("Failed to compile module " + this.name + ": Input key not found for input " + module_input_key);
                 }
-                var public_input_index = this.nodes[node].proof.getProofInputSignalIndex(module_input_key);
+                var public_input_index = node.proof.getPublicSignals()[module_input_key];
                 if(input_edge.input_type === ModuleEdgeInput.user_input) {
                     return_actions.push({
                         action: ACTION_STATIC_INPUT_FROM_USER,
-                        params: {                            
+                        params: {
+                            module_input_key: module_input_key,
+                            output_proof_index: current_proof_depth + new_node_index,
                             public_input_index: public_input_index,
                         }
                     });
@@ -283,8 +376,8 @@ export abstract class UnsealConditionModule {
                     return_actions.push({
                         action: ACTION_PASS_SIGNAL,
                         params: {
-                            public_input_indexes: this.nodes[node].proof.getProofInputSignalIndex(input_edge.mapping[1]),
-                            output_proof_indexes: input_mapping[input_edge.mapping[0]].output_proof_indexes,
+                            public_input_indexes: node.proof.getProofInputSignalIndex(input_edge.mapping[1]),
+                            output_proof_index: input_mapping[input_edge.mapping[0]].output_proof_index,
                             output_signal_indexes: input_mapping[input_edge.mapping[0]].output_signal_indexes,
                         }
                     });
@@ -294,31 +387,48 @@ export abstract class UnsealConditionModule {
                     return_actions.push({
                         action: ACTION_PASS_SIGNAL,
                         params: {
-                            public_input_indexes: this.nodes[node].proof.getProofInputSignalIndex(input_edge.mapping[1]),
-                            output_proof_indexes: [node_depth_offset -(nodes.indexOf(input_edge.from?.node_id || "")), 1], //Length 1 for default, TODO make this dynamic
-                            output_signal_indexes: input_edge.from?.get_outputs()[input_edge.mapping[1]],
+                            public_input_indexes: node.proof.getProofInputSignalIndex(input_edge.mapping[1]),
+                            output_proof_index: current_proof_depth +(nodes.indexOf(input_edge.from?.node_id || "")), //Length 1 for default, TODO make this dynamic
+                            output_signal_indexes: input_edge.from?.get_outputs()[input_edge.mapping[0]],
                         }
                     });
                 }
                 if(input_edge.input_type === ModuleEdgeInput.link) {
                     //Do nothing, just to define ordering
                 }
-            
+               
             }
+            new_node_index++;
 
             //Close it off
             if(compiled_node.validate_action !== undefined) {
                 return_actions.push(compiled_node.validate_action);
             }
-            node_depth_offset += 1;
+            
         
-    }
+}
+        var output_map: {[key: string]: {
+            output_proof_index: number;
+            output_signal_index: [number, number];
+        }} = {};
+        for(var output_key of Object.keys(this.outputs)) {
+            //don't care about links
+           if(output_key !== "link") {
+                output_map[output_key] = {
+                    output_proof_index: current_proof_depth + nodes.indexOf(this.outputs[output_key].proof_key),
+                    output_signal_index: this.nodes[this.outputs[output_key].proof_key].get_outputs()[this.outputs[output_key].signal_key],
+                };
+            }
+        }
 
 
-
-
+        //TODO implement
         return {
-            actions: [],
+            module_id: external_node_id,
+            //We subtract 1 to account as the depth is where the first node is inserted
+            new_depth: current_proof_depth + nodes.length,
+            actions: return_actions,
+            outputs: output_map,
         }
     }
 }

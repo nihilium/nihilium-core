@@ -38,7 +38,7 @@ export class UnsealOpeningProof extends UnsealConditionProof {
     protected description: string = "The base opening proof for everything Nihilium.";
     protected version: string = "1.0.0";
     private circuit: WrappedNoirCircuit<validated_sig_he_addInputType> | null;
-    protected id: string = "UnsealOpeningProof";
+    protected id: string = "opening_proof";
     protected proof_input_signals: {[key: string]: [number, number]} = {
         Ax: [0, 1],
         Ay: [1, 1],

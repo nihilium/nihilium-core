@@ -2,8 +2,11 @@
 import { UnsealOpeningProof } from "./lib/000_unseal_opening_proof"
 import { SubTreeProof } from "./lib/001_sub_tree_proof";
 import { TopLevelTreeProof } from "./lib/002_top_level_tree_proof";
+import { KeccakTreeEntryProof } from "./lib/003_keccak_tree_entry";
+import { GreaterOrEqualThenProof } from "./lib/005_greater_or_equal";
+import { SmallerThanProof } from "./lib/004_smaller_than";
 import { UnsealConditionProof } from "./types"
-
+import { TimeDelayProof } from "./lib/006_time_delay";
 
 export type ProofLibraryType = {
     standard: {
@@ -19,6 +22,10 @@ export const ProofLibrary: ProofLibraryType = {
         ["UnsealOpeningProof"]: UnsealOpeningProof,
         ["TopLevelTreeProof"]: TopLevelTreeProof,
         ["SubTreeProof"]: SubTreeProof,
+        ["KeccakTreeEntryProof"]: KeccakTreeEntryProof,
+        ["SmallerThanProof"]: SmallerThanProof,
+        ["GreaterOrEqualThenProof"]: GreaterOrEqualThenProof,
+        ["TimeDelayProof"]: TimeDelayProof,
     },
     custom: {        
     },

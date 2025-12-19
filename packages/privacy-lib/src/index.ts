@@ -19,7 +19,7 @@ import {ClientSingleShareUnsealingProcess} from './lib/client/client_single_shar
 import {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
 import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';
-import { DefaultAnchoredOpeningProofCollection } from './lib/unseal_conditions/collections/default_anchored_opening_proof';
+import { DefaultAnchoredOpeningProofCollection } from './lib/unseal_conditions/collections/default_anchored_opening_collection';
 import { ChainedProofCollection} from './lib/unseal_conditions/types';
 var contracts = {
   EmpheralMerkleTree: EmpheralMerkleTreeWrapper,

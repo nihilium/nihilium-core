@@ -15,7 +15,7 @@ import { Proof, UnsealConditionProof } from "../types";
 export class SubTreeProof extends UnsealConditionProof {
     //Proof ID is best some form of identifier based on the circuit and other factors
     //Must be universally unique even if the underlying circuit stays the same
-    protected id: string = "SubTreeProof";
+    protected id: string = "SubTreeMerkleProof";
     
     protected name: string = "Sub Tree Proof";
     protected description: string = "Sub Tree Proof";

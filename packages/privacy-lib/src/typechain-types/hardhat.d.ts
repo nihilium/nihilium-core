@@ -74,13 +74,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
     getContractFactory(
+      name: "KeccakTreeEntry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.KeccakTreeEntry__factory>;
+    getContractFactory(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Opening_proof__factory>;
     getContractFactory(
-      name: "SmallerThen",
+      name: "SmallerThan",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SmallerThen__factory>;
+    ): Promise<Contracts.SmallerThan__factory>;
     getContractFactory(
       name: "SubTreeMerkleProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -90,21 +94,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue__factory>;
     getContractFactory(
-      name: "TimeAfterProof",
+      name: "TimeDelayProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TimeAfterProof__factory>;
-    getContractFactory(
-      name: "TimeBeforeProof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TimeBeforeProof__factory>;
-    getContractFactory(
-      name: "TimeBetweenOffsetProof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TimeBetweenOffsetProof__factory>;
-    getContractFactory(
-      name: "TimeBetweenProof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TimeBetweenProof__factory>;
+    ): Promise<Contracts.TimeDelayProof__factory>;
     getContractFactory(
       name: "TopLevelMerkleProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -186,15 +178,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IVerifier>;
     getContractAt(
+      name: "KeccakTreeEntry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.KeccakTreeEntry>;
+    getContractAt(
       name: "Opening_proof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Opening_proof>;
     getContractAt(
-      name: "SmallerThen",
+      name: "SmallerThan",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.SmallerThen>;
+    ): Promise<Contracts.SmallerThan>;
     getContractAt(
       name: "SubTreeMerkleProof",
       address: string | ethers.Addressable,
@@ -206,25 +203,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     getContractAt(
-      name: "TimeAfterProof",
+      name: "TimeDelayProof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.TimeAfterProof>;
-    getContractAt(
-      name: "TimeBeforeProof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TimeBeforeProof>;
-    getContractAt(
-      name: "TimeBetweenOffsetProof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TimeBetweenOffsetProof>;
-    getContractAt(
-      name: "TimeBetweenProof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TimeBetweenProof>;
+    ): Promise<Contracts.TimeDelayProof>;
     getContractAt(
       name: "TopLevelMerkleProof",
       address: string | ethers.Addressable,
@@ -292,13 +274,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "KeccakTreeEntry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.KeccakTreeEntry>;
+    deployContract(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
     deployContract(
-      name: "SmallerThen",
+      name: "SmallerThan",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SmallerThen>;
+    ): Promise<Contracts.SmallerThan>;
     deployContract(
       name: "SubTreeMerkleProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -308,21 +294,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     deployContract(
-      name: "TimeAfterProof",
+      name: "TimeDelayProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeAfterProof>;
-    deployContract(
-      name: "TimeBeforeProof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeBeforeProof>;
-    deployContract(
-      name: "TimeBetweenOffsetProof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeBetweenOffsetProof>;
-    deployContract(
-      name: "TimeBetweenProof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeBetweenProof>;
+    ): Promise<Contracts.TimeDelayProof>;
     deployContract(
       name: "TopLevelMerkleProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -404,15 +378,20 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "KeccakTreeEntry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.KeccakTreeEntry>;
+    deployContract(
       name: "Opening_proof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
     deployContract(
-      name: "SmallerThen",
+      name: "SmallerThan",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SmallerThen>;
+    ): Promise<Contracts.SmallerThan>;
     deployContract(
       name: "SubTreeMerkleProof",
       args: any[],
@@ -424,25 +403,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     deployContract(
-      name: "TimeAfterProof",
+      name: "TimeDelayProof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeAfterProof>;
-    deployContract(
-      name: "TimeBeforeProof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeBeforeProof>;
-    deployContract(
-      name: "TimeBetweenOffsetProof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeBetweenOffsetProof>;
-    deployContract(
-      name: "TimeBetweenProof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TimeBetweenProof>;
+    ): Promise<Contracts.TimeDelayProof>;
     deployContract(
       name: "TopLevelMerkleProof",
       args: any[],

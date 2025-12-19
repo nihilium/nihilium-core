@@ -189,16 +189,21 @@ async function main() {
     // Load existing deployments
     const existingDeployments = loadExistingDeployments(chainId.toString());
     const deploymentData: DeploymentData = { ...existingDeployments };
-
+//TimeDelayProof
     // --- DEPLOY VERIFIERS ---
     const verifierConfigs = [
-       // { name: "encrypt_proof", artifactPath: "contracts/encrypt_proof.sol/BaseHonkVerifier", contractPath: "contracts/encrypt_proof.sol:BaseHonkVerifier" },
+        { name: "TopLevelMerkleProof", artifactPath: "contracts/proofs/TopLevelMerkleProof.sol/TopLevelMerkleProof", contractPath: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
+        { name: "SubTreeMerkleProof", artifactPath: "contracts/proofs/SubTreeMerkleProof.sol/SubTreeMerkleProof", contractPath: "contracts/proofs/SubTreeMerkleProof.sol:SubTreeMerkleProof" },
+        { name: "KeccakTreeEntry", artifactPath: "contracts/proofs/KeccakTreeEntry.sol/KeccakTreeEntry", contractPath: "contracts/proofs/KeccakTreeEntry.sol:KeccakTreeEntry" },
+        { name: "GreaterOrEqualThen", artifactPath: "contracts/proofs/GreaterOrEqualThen.sol/GreaterOrEqualThen", contractPath: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
+        { name: "SmallerThan", artifactPath: "contracts/proofs/SmallerThan.sol/SmallerThan", contractPath: "contracts/proofs/SmallerThan.sol:SmallerThan" },
+        { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
         // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
-        { name: "opening_proof", artifactPath: "contracts/opening_proof.sol/opening_proof", contractPath: "contracts/opening_proof.sol:opening_proof" },
-        { name: "validated_sig_he_add", artifactPath: "contracts/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/validated_sig_he_add.sol:validated_sig_he_add" },
+        { name: "opening_proof", artifactPath: "contracts/proofs/opening_proof.sol/opening_proof", contractPath: "contracts/proofs/opening_proof.sol:opening_proof" },
+        // { name: "validated_sig_he_add", artifactPath: "contracts/proofs/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/proofs/validated_sig_he_add.sol:validated_sig_he_add" },
     ];
 
     const verifierAddresses: { [name: string]: string } = {};
@@ -242,35 +247,32 @@ async function main() {
         deploymentData[empheralName] = existingDeployments[empheralName];
     }
 
-    // SubTreeMerkleProof
-    const subTreeName = "SubTreeMerkleProof";
-    const subTreeBytecode = getContractBytecode(`contracts/${subTreeName}.sol/${subTreeName}`);
-    if (needsRedeployment(subTreeName, subTreeBytecode, existingDeployments)) {
-        const subTreeMerkleTree = await deployContract(subTreeName, `contracts/${subTreeName}.sol:${subTreeName}`, wallet, gasPrice);
-        deploymentData[subTreeMerkleTree.name] = {
-            address: subTreeMerkleTree.address,
-            bytecode: subTreeMerkleTree.bytecode,
-            abi: subTreeMerkleTree.abi
-        };
-    } else if (!existingDeployments[subTreeName].abi || existingDeployments[subTreeName].abi.length === 0) {
-        existingDeployments[subTreeName].abi = getContractABI(`contracts/${subTreeName}.sol/${subTreeName}`);
-        deploymentData[subTreeName] = existingDeployments[subTreeName];
-    }
+    // // SubTreeMerkleProof
+    // const subTreeName = "SubTreeMerkleProof";
+    // const subTreeBytecode = getContractBytecode(`contracts/proofs/${subTreeName}.sol/${subTreeName}`);
+    // if (needsRedeployment(subTreeName, subTreeBytecode, existingDeployments)) {
+    //     const subTreeMerkleTree = await deployContract(subTreeName, `contracts/proofs/${subTreeName}.sol:${subTreeName}`, wallet, gasPrice);
+    //     deploymentData[subTreeMerkleTree.name] = {
+    //         address: subTreeMerkleTree.address,
+    //         bytecode: subTreeMerkleTree.bytecode,
+    //         abi: subTreeMerkleTree.abi
+    //     };
+    // } else if (!existingDeployments[subTreeName].abi || existingDeployments[subTreeName].abi.length === 0) {
+    //     existingDeployments[subTreeName].abi = getContractABI(`contracts/proofs/${subTreeName}.sol/${subTreeName}`);
+    //     deploymentData[subTreeName] = existingDeployments[subTreeName];
+    // }
 
-    // TopLevelMerkleProof
-    const topLevelName = "TopLevelMerkleProof";
-    const topLevelBytecode = getContractBytecode(`contracts/${topLevelName}.sol/${topLevelName}`);
-    if (needsRedeployment(topLevelName, topLevelBytecode, existingDeployments)) {
-        const topLevelMerkleTree = await deployContract(topLevelName, `contracts/${topLevelName}.sol:${topLevelName}`, wallet, gasPrice);
-        deploymentData[topLevelMerkleTree.name] = {
-            address: topLevelMerkleTree.address,
-            bytecode: topLevelMerkleTree.bytecode,
-            abi: topLevelMerkleTree.abi
-        };
-    } else if (!existingDeployments[topLevelName].abi || existingDeployments[topLevelName].abi.length === 0) {
-        existingDeployments[topLevelName].abi = getContractABI(`contracts/${topLevelName}.sol/${topLevelName}`);
-        deploymentData[topLevelName] = existingDeployments[topLevelName];
-    }
+    // // TopLevelMerkleProof
+    // const topLevelName = "TopLevelMerkleProof";
+    // const topLevelBytecode = getContractBytecode(`contracts/proofs/${topLevelName}.sol/${topLevelName}`);
+    // if (needsRedeployment(topLevelName, topLevelBytecode, existingDeployments)) {
+    //     const topLevelMerkleTree = await deployContract(topLevelName, `contracts/proofs/${topLevelName}.sol:${topLevelName}`, wallet, gasPrice);
+    //     deploymentData[topLevelMerkleTree.name] = {
+    //         address: topLevelMerkleTree.address,prfs
+    // } else if (!existingDeployments[topLevelName].abi || existingDeployments[topLevelName].abi.length === 0) {
+    //     existingDeployments[topLevelName].abi = getContractABI(`contracts/proofs/${topLevelName}.sol/${topLevelName}`);
+    //     deploymentData[topLevelName] = existingDeployments[topLevelName];
+    // }
 
     // ChainedProof
     const chainedProofName = "ChainedProof";
@@ -296,8 +298,81 @@ async function main() {
         deploymentData[chainedProofName] = existingDeployments[chainedProofName];
     }
 
-    console.log("\n--- Deployment complete ---");
-    
+    // // KeccakTreeEntry
+    // const keccakTreeEntryName = "KeccakTreeEntry";
+    // const keccakTreeEntryBytecode = getContractBytecode(`contracts/${keccakTreeEntryName}.sol/${keccakTreeEntryName}`);
+    // if (needsRedeployment(keccakTreeEntryName, keccakTreeEntryBytecode, existingDeployments)) {
+    //     const keccakTreeEntry = await deployContract(keccakTreeEntryName, `contracts/${keccakTreeEntryName}.sol:${keccakTreeEntryName}`, wallet, gasPrice);
+    //     deploymentData[keccakTreeEntry.name] = {
+    //         address: keccakTreeEntry.address,
+    //         bytecode: keccakTreeEntry.bytecode,
+    //         abi: keccakTreeEntry.abi
+    //     };
+    // } else if (!existingDeployments[keccakTreeEntryName].abi || existingDeployments[keccakTreeEntryName].abi.length === 0) {
+    //     existingDeployments[keccakTreeEntryName].abi = getContractABI(`contracts/${keccakTreeEntryName}.sol/${keccakTreeEntryName}`);
+    //     deploymentData[keccakTreeEntryName] = existingDeployments[keccakTreeEntryName];
+    // }
+
+    // // GreaterOrEqualThen
+    // const greaterOrEqualThenName = "GreaterOrEqualThen";
+    // const greaterOrEqualThenBytecode = getContractBytecode(`contracts/${greaterOrEqualThenName}.sol/${greaterOrEqualThenName}`);
+    // if (needsRedeployment(greaterOrEqualThenName, greaterOrEqualThenBytecode, existingDeployments)) {
+    //     const greaterOrEqualThen = await deployContract(greaterOrEqualThenName, `contracts/${greaterOrEqualThenName}.sol:${greaterOrEqualThenName}`, wallet, gasPrice);
+    //     deploymentData[greaterOrEqualThen.name] = {
+    //         address: greaterOrEqualThen.address,
+    //         bytecode: greaterOrEqualThen.bytecode,
+    //         abi: greaterOrEqualThen.abi
+    //     };
+    // } else if (!existingDeployments[greaterOrEqualThenName].abi || existingDeployments[greaterOrEqualThenName].abi.length === 0) {
+    //     existingDeployments[greaterOrEqualThenName].abi = getContractABI(`contracts/${greaterOrEqualThenName}.sol/${greaterOrEqualThenName}`);
+    //     deploymentData[greaterOrEqualThenName] = existingDeployments[greaterOrEqualThenName];
+    // }
+
+    // //SmallerThan
+    // const smallerThanName = "SmallerThan";
+    // const smallerThanBytecode = getContractBytecode(`contracts/${smallerThanName}.sol/${smallerThanName}`);
+    // if (needsRedeployment(smallerThanName, smallerThanBytecode, existingDeployments)) {
+    //     const smallerThan = await deployContract(smallerThanName, `contracts/${smallerThanName}.sol:${smallerThanName}`, wallet, gasPrice);
+    //     deploymentData[smallerThan.name] = {
+    //         address: smallerThan.address,
+    //         bytecode: smallerThan.bytecode,
+    //         abi: smallerThan.abi
+    //     };
+    // } else if (!existingDeployments[smallerThanName].abi || existingDeployments[smallerThanName].abi.length === 0) {
+    //     existingDeployments[smallerThanName].abi = getContractABI(`contracts/${smallerThanName}.sol/${smallerThanName}`);
+    //     deploymentData[smallerThanName] = existingDeployments[smallerThanName];
+    // }
+
+    // //EqualTo
+    // const equalToName = "EqualTo";
+    // const equalToBytecode = getContractBytecode(`contracts/${equalToName}.sol/${equalToName}`);
+    // if (needsRedeployment(equalToName, equalToBytecode, existingDeployments)) {
+    //     const equalTo = await deployContract(equalToName, `contracts/${equalToName}.sol:${equalToName}`, wallet, gasPrice);
+    //     deploymentData[equalTo.name] = {
+    //         address: equalTo.address,
+    //         bytecode: equalTo.bytecode,
+    //         abi: equalTo.abi
+    //     };
+    // } else if (!existingDeployments[equalToName].abi || existingDeployments[equalToName].abi.length === 0) {
+    //     existingDeployments[equalToName].abi = getContractABI(`contracts/${equalToName}.sol/${equalToName}`);
+    //     deploymentData[equalToName] = existingDeployments[equalToName];
+    // }
+
+    // //NotEqualTo
+    // const notEqualToName = "NotEqualTo";
+    // const notEqualToBytecode = getContractBytecode(`contracts/${notEqualToName}.sol/${notEqualToName}`);
+    // if (needsRedeployment(notEqualToName, notEqualToBytecode, existingDeployments)) {
+    //     const notEqualTo = await deployContract(notEqualToName, `contracts/${notEqualToName}.sol:${notEqualToName}`, wallet, gasPrice);
+    //     deploymentData[notEqualTo.name] = {
+    //         address: notEqualTo.address,
+    //         bytecode: notEqualTo.bytecode,
+    //         abi: notEqualTo.abi
+    //     };
+    // } else if (!existingDeployments[notEqualToName].abi || existingDeployments[notEqualToName].abi.length === 0) {
+    //     existingDeployments[notEqualToName].abi = getContractABI(`contracts/${notEqualToName}.sol/${notEqualToName}`);
+    //     deploymentData[notEqualToName] = existingDeployments[notEqualToName];
+    // }
+
     // Convert back to simpler format for display
     const displayData: { [name: string]: string } = {};
     for (const [name, data] of Object.entries(deploymentData)) {

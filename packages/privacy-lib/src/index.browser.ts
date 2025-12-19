@@ -19,7 +19,7 @@ import {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleT
 import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';
 import * as ProtocolTypes from './types/protocol/common';
-import { DefaultAnchoredOpeningProofCollection } from './lib/unseal_conditions/collections/default_anchored_opening_proof';
+import { DefaultAnchoredOpeningProofCollection } from './lib/unseal_conditions/collections/default_anchored_opening_collection';
 import { ChainedProofCollection} from './lib/unseal_conditions/types';
 const stub = {}
 var Persistence = stub;

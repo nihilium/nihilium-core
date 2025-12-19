@@ -1,10 +1,12 @@
-import { ethers, Provider } from "ethers";
+import { ethers, keccak256, Provider } from "ethers";
 
 // import { CircuitWrapper } from "nihilium-circuits/types/circuit_wrapper";
 // import { WrappedCircuit } from "nihilium-circuits/circuit-wrapper";
 // import { circuit_KEY_HE_ADD, circuit_SEVERED_COMMITMENT, EnvSettings, get_env_settings } from "../../../../env_settings";
 import { mimcTestCircuit, topLevelMerkleTreeCircuit, WrappedNoirCircuit, top_level_merkle_proofInputType, ProofOptions } from "@nihilium/zkp-circuits";
 import { Proof, UnsealConditionProof } from "../types";
+import { toPaddedHex } from "../../../utils";
+import { hexToBytes } from "@noble/hashes/utils";
 
 
 /**
@@ -12,28 +14,21 @@ import { Proof, UnsealConditionProof } from "../types";
  * Provides a merkle proof of a datastream
  * Wraps circuit top_level_merkle_proof
  */
-export class TopLevelTreeProof extends UnsealConditionProof {
+export class KeccakTreeEntryProof extends UnsealConditionProof {
     //Proof ID is best some form of identifier based on the circuit and other factors
     //Must be universally unique even if the underlying circuit stays the same
-    
    
-    protected id: string = "TopLevelMerkleProof";
-    protected name: string = "Top Level Tree Proof";
-    protected description: string = "Top Level Tree Proof";
+    protected id: string = "KeccakTreeEntry";
+    protected name: string = "Keccak Tree Entry Proof";
+    protected description: string = "Keccak Tree Entry Proof";
     protected version: string = "1.0.0";
-    private circuit: WrappedNoirCircuit<top_level_merkle_proofInputType>;
+    
     protected proof_input_signals: {[key: string]: [number, number]} = {
-        subtree_root: [0, 1],
-        block_timestamp: [1, 1],
-        root: [2, 1],
-        path: [3, 20],
-        index_bits: [24, 20],
+        reveal_value: [0, 1], //Can be any length of data
     }
     protected public_signals: {[key: string]: [number, number]} = {
-        computed_root: [0, 1],
-        block_timestamp: [1, 1],
-        subtree_root: [2, 1],
-        index: [3, 1],
+        reveal_value: [0, 1],
+        tree_entry: [1, 1],
     }
     
     
@@ -41,25 +36,21 @@ export class TopLevelTreeProof extends UnsealConditionProof {
         
     ) {
         super();
-        this.circuit = topLevelMerkleTreeCircuit;
+        
     }
 
 
     async create_proof(inputs: {[key: string]: any}): Promise<Proof> {
-        await this.circuit.init()
-        var result = await this.circuit.generateProof({input: inputs as unknown as top_level_merkle_proofInputType});
-        if (!result) {
-            throw new Error("Failed to generate proof");
-        }
+        
         return {
-            proof: result.proof,
-            public_signals: result.publicSignals,
+            proof: 0n,
+            public_signals: [inputs.reveal_value, keccak256(toPaddedHex(BigInt(inputs.reveal_value)) + toPaddedHex(0n)).slice(2)],
         }
     }
 
     async verify_proof(proof: Proof): Promise<boolean> {
         //TODO: Implement this
-        return await this.circuit.verifyProof({proof: proof.proof, publicSignals: proof.public_signals});
+        throw new Error("Not implemented");
     }
 
 
