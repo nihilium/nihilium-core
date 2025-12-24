@@ -8,7 +8,8 @@ const config: HardhatUserConfig = {
       optimizer: {
         enabled: true,
         runs: 200
-      }
+      },
+      evmVersion: "cancun"
     }
   },
   typechain: {
@@ -23,6 +24,10 @@ const config: HardhatUserConfig = {
     
   },
   networks: {
+    anvil: {
+      url: "http://localhost:8545",
+      chainId: 31337
+    },
     hardhat: {
       chainId: 1337
     },

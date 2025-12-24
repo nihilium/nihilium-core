@@ -83,7 +83,7 @@ async function main() {
     const persistence = new Persistence.DataStreamFilePersistence('./server-stream/' + contractAddress, utils.createKeccakMerkelTree);
     
 
-    const dataStream = new DataStream.EVMDataStreamNonZK('server-stream', persistence, contractAddress, wallet, 10, 20, -1, 10);
+    const dataStream = new DataStream.EVMDataStreamNonZK('server-stream', persistence, contractAddress, wallet, 10, 20, -1, 60);
     await dataStream.initialize();
 
     const app = express();

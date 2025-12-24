@@ -4,13 +4,17 @@ import deployedContracts1337 from "../scripts/deployed-contracts-1337.json";
 import deployedContracts43113 from "../scripts/deployed-contracts-43113.json";
 // @ts-ignore
 import networkConfig from "../scripts/chain_config.json";
+// @ts-ignore
+import deployedContractsAnvil from "../scripts/deployed-contracts-31337.json";
 
 export var NETWORK_IDS = {
+  ANVIL: 31337,
   GENANCHE: 1337,
   AVAX_TESTNET: 43113,
 }
 
 export var deployedProtocolContracts = {
+  [NETWORK_IDS.ANVIL]: deployedContractsAnvil,
   [NETWORK_IDS.GENANCHE]: deployedContracts1337,
   [NETWORK_IDS.AVAX_TESTNET]: deployedContracts43113,
 }

@@ -59,6 +59,7 @@ export abstract class UnsealConditionProof {
                 action: ACTION_PREPARE_NEXT_PROOF,
                 params: {
                     verifier_address: addresses[this.id],
+                    verifier_must_be_true: true,
                 },
             },
             validate_action: {

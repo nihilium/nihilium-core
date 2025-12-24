@@ -71,10 +71,10 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         
         
         
-        this.opening_proof = new proofLibrary.standard["UnsealOpeningProof"]() as UnsealOpeningProof;
-        this.top_level_merkle_tree_proof = new proofLibrary.standard["TopLevelTreeProof"]() as TopLevelTreeProof;
-        this.sub_tree_merkle_tree_proof = new proofLibrary.standard["SubTreeProof"]() as SubTreeProof;
-        this.keccack_tree_hash_proof = new proofLibrary.standard["KeccakTreeEntryProof"]() as KeccakTreeEntryProof;
+        this.opening_proof = proofLibrary.getProof("UnsealOpeningProof") as UnsealOpeningProof;
+        this.top_level_merkle_tree_proof = proofLibrary.getProof("TopLevelTreeProof") as TopLevelTreeProof;
+        this.sub_tree_merkle_tree_proof = proofLibrary.getProof("SubTreeProof") as SubTreeProof;
+        this.keccack_tree_hash_proof = proofLibrary.getProof("KeccakTreeEntryProof") as KeccakTreeEntryProof;
 
         this.opening_proof_node = new ModuleNode("opening_proof", this.opening_proof, [this.inputs["metadata_root_hash"]]);
         this.top_level_merkle_tree_proof_node = new ModuleNode("top_level_merkle_tree_proof", this.top_level_merkle_tree_proof, []);

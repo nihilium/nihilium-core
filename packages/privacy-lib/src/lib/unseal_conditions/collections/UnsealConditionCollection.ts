@@ -2,6 +2,7 @@ import { CollectionNode, CollectionEdge, ChangedType, ChangedCallback, Collectio
 import { ProofLibraryType } from "../proofs";
 import { CompiledModule, ModuleLibraryType, UnsealConditionModule } from "../modules";
 import { ACTION_STATIC_INPUT_FROM_USER, ProvingState } from "../ChainedProof";
+import { UnsealConditionTemplate } from "./UnsealConditionTemplate";
 
 export class UnsealConditionCollection {
     public nodes: {[key: string]: CollectionNode} = {};
@@ -24,7 +25,7 @@ export class UnsealConditionCollection {
     }
 
     add_node(module: UnsealConditionModule): string {
-        var node = new CollectionNode(module.name + "_" + this.nodes.length, module, []);
+        var node = new CollectionNode(module.name + "_" + Object.keys(this.nodes).length, module, []);
         this.nodes[node.node_id] = node;
         var starting_node_changed = false;
         if(this.starting_node === undefined) {
@@ -211,7 +212,7 @@ export class UnsealConditionCollection {
         }
         return edges;
     }
-    compile(address_map: {[key: string]: string}): CompiledCollectionExport {
+    createTemplate(address_map: {[key: string]: string}): UnsealConditionTemplate {
 
         var sorted_nodes = this.sort_nodes();
         if(sorted_nodes === undefined) {
@@ -269,7 +270,7 @@ export class UnsealConditionCollection {
                 ) {
                     var input = node.module.getUserInputs()[action.params.module_input_key];
                     user_inputs.push({
-                        module_index: action.params.output_proof_index,
+                        proof_index: action.params.output_proof_index,
                         signal_indexes: action.params.public_input_index,
                         name: action.params.module_input_key,
                         description: input.description || "",
@@ -280,106 +281,63 @@ export class UnsealConditionCollection {
         }
         
         
-       
+       var toReturn = new UnsealConditionTemplate(this.name, this.description, this.proofLibrary, this.moduleLibrary, {
+        compiled_modules: compiled_modules,
+        user_inputs: user_inputs,
+       });
 
-        return {
-            compiled_modules: compiled_modules,
-            user_inputs: user_inputs,
-        };
+        return toReturn;
 
     }
 
 
-    //TODO get the datastream from a merkle proof
-    async verifySolidity(dryrun: boolean = true, dataStreamAddress: string, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
-        if(!dryrun) {           
-            if(public_inputs.length != proofs.length) {
-                throw new Error("Number of public inputs must match the number of proofs in the proof order");
-            }            
-        }
-        console.log("Data stream address: " + dataStreamAddress)
-        var proof_counter = 0;
-        var proof_state: any | ProvingState = {};
-        for(var action of this.unseal_proof_actions) {
-            console.log(action)
-            if(action.action === ACTION_START_UNSEALING) {
-                proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
-                proof_counter++;
-            }
-            if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-                proof_state = await this.chainedProof.solidity_dryrun_prepare_next_proof(proof_state, action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter])
-                proof_counter++;
-            }
-            if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
-                proof_state = await this.chainedProof.solidity_dryrun_chain_proof_verify(proof_state, dryrun)
-            }
-            if(action.action === ACTION_PASS_SIGNAL) {
-                proof_state = await this.chainedProof.solidity_dryrun_chain_pass_signal(proof_state, 
-                    action.params.public_input_indexes, 
-                    action.params.output_proof_indexes, 
-                    action.params.output_signal_indexes, dryrun)
-            }
-            if(action.action === ACTION_VALIDATE_DATA_ROOT) {
-                proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
-                    proof_state, 
-                    dataStreamAddress,                    
-                    action.params.public_input_index, 
-                    action.params.is_delayed_proof, 
-                    action.params.optional_dual_tree_proof, 
-                    action.params.optional_dual_tree_public_inputs,
-                    action.params.merkle_root_index)
-            }
-            console.log(action.action, proof_state.current_hash)
-        }
+    // //TODO get the datastream from a merkle proof
+    // async verifySolidity(dryrun: boolean = true, dataStreamAddress: string, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
+    //     if(!dryrun) {           
+    //         if(public_inputs.length != proofs.length) {
+    //             throw new Error("Number of public inputs must match the number of proofs in the proof order");
+    //         }            
+    //     }
+    //     console.log("Data stream address: " + dataStreamAddress)
+    //     var proof_counter = 0;
+    //     var proof_state: any | ProvingState = {};
+    //     for(var action of this.unseal_proof_actions) {
+    //         console.log(action)
+    //         if(action.action === ACTION_START_UNSEALING) {
+    //             proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
+    //             proof_counter++;
+    //         }
+    //         if(action.action === ACTION_PREPARE_NEXT_PROOF) {
+    //             proof_state = await this.chainedProof.solidity_dryrun_prepare_next_proof(proof_state, action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter])
+    //             proof_counter++;
+    //         }
+    //         if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
+    //             proof_state = await this.chainedProof.solidity_dryrun_chain_proof_verify(proof_state, dryrun)
+    //         }
+    //         if(action.action === ACTION_PASS_SIGNAL) {
+    //             proof_state = await this.chainedProof.solidity_dryrun_chain_pass_signal(proof_state, 
+    //                 action.params.public_input_indexes, 
+    //                 action.params.output_proof_indexes, 
+    //                 action.params.output_signal_indexes, dryrun)
+    //         }
+    //         if(action.action === ACTION_VALIDATE_DATA_ROOT) {
+    //             proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
+    //                 proof_state, 
+    //                 dataStreamAddress,                    
+    //                 action.params.public_input_index, 
+    //                 action.params.is_delayed_proof, 
+    //                 action.params.optional_dual_tree_proof, 
+    //                 action.params.optional_dual_tree_public_inputs,
+    //                 action.params.merkle_root_index)
+    //         }
+    //         console.log(action.action, proof_state.current_hash)
+    //     }
 
-        //TODO make sure it is within field
-        return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n)
-    }
+    //     //TODO make sure it is within field
+    //     return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n)
+    // }
 
-    async getUnsealRoot(dryrun: boolean = true, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
-        //Make sure proofs and inputs are correct
-        if(!dryrun) {
-            if(proofs.length != public_inputs.length) {
-                throw new Error("Number of public inputs must match the number of proofs in the proof order");
-            }            
-        }
-        
-        var proof_counter = 0;
-        var proof_state: any | ProvingState = {};
-        for(var action of this.unseal_proof_actions) {      
-            if(action.action === ACTION_START_UNSEALING) {
-                proof_state = await this.chainedProof.dryrun_start_proving(action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
-                proof_counter++;
-            }
-            if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-                proof_state = await this.chainedProof.dryrun_prepare_next_proof(proof_state, action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
-                proof_counter++;
-            }
-            if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
-                proof_state = await this.chainedProof.dryrun_chain_proof_verify(proof_state, dryrun)
-            }
-            if(action.action === ACTION_PASS_SIGNAL) {
-                proof_state = await this.chainedProof.dryrun_chain_pass_signal(proof_state, 
-                    action.params.public_input_indexes, 
-                    action.params.output_proof_indexes, 
-                    action.params.output_signal_indexes, dryrun)
-            }
-            if(action.action === ACTION_VALIDATE_DATA_ROOT) {
-                proof_state = await this.chainedProof.dryrun_validate_data_root(
-                    proof_state,                     
-                    action.params.public_input_index, 
-                    action.params.is_delayed_proof, 
-                    action.params.optional_dual_tree_proof, 
-                    action.params.optional_dual_tree_public_inputs,
-                    action.params.merkle_root_index)
-            }
-            console.log(action.action, proof_state.current_hash)
-            
-        }
-
-      
-        return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n);
-    }
+   
 
     // getProofOrder(): string[] {
     //     return this.proof_order;

@@ -1,6 +1,6 @@
 import { ethers, Signer } from "ethers";
 import { IDataStream } from "../../data_stream/types";
-import { CompiledModule, IOMap, UnsealConditionModule } from "../modules/types";
+import { CompiledModule, IOMap, ModuleOutputMap, UnsealConditionModule } from "../modules/types";
 import { ProofLibraryType } from "../proofs";
 import { ModuleLibraryType } from "../modules";
 
@@ -49,7 +49,7 @@ export class CollectionNode {
         }, null, 2);
     }
 
-    get_outputs(): IOMap {
+    get_outputs(): ModuleOutputMap {
         return this.module.getOutputs();
     }
 
@@ -183,13 +183,14 @@ export type ChangedCallback = (changes: {
 
 
 export type RequiredUserInput = { 
-    module_index: number;
+    proof_index: number;
     signal_indexes: [number, number];
     name: string;
     description: string;
 }
 
 export type CompiledCollectionExport = {
+    // 256 bits, a 1 represents a proof must be true, a 0 represents a proof must be false
     compiled_modules: CompiledModule[];
     user_inputs: RequiredUserInput[];
 }

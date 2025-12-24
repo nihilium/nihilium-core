@@ -29,15 +29,18 @@ async function deployContract(
     factoryName: string,
     deployer: ethersjs.Wallet,
     gasPrice: bigint,
+    nonce: number,
     ...args: any[]
 ): Promise<DeployedContract> {
     console.log(`Deploying ${contractName}...`);
+    //const nonce = await deployer.provider?.getTransactionCount(deployer.address, "pending");
     const factory = await (hre as any).ethers.getContractFactory(factoryName, deployer);
-    
+    console.log(`Nonce: ${nonce}`);
     // Deploy with explicit gas settings
     const contract = await factory.deploy(...args, {
         gasPrice: gasPrice,
-        gasLimit: 6000000
+        gasLimit: 6000000,
+        nonce: nonce
     });
     await contract.waitForDeployment();
     const address = await contract.getAddress();
@@ -190,6 +193,7 @@ async function main() {
     const existingDeployments = loadExistingDeployments(chainId.toString());
     const deploymentData: DeploymentData = { ...existingDeployments };
 //TimeDelayProof
+    var nonce = (await wallet.provider?.getTransactionCount(wallet.address, "pending")) || 0;
     // --- DEPLOY VERIFIERS ---
     const verifierConfigs = [
         { name: "TopLevelMerkleProof", artifactPath: "contracts/proofs/TopLevelMerkleProof.sol/TopLevelMerkleProof", contractPath: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
@@ -198,6 +202,7 @@ async function main() {
         { name: "GreaterOrEqualThen", artifactPath: "contracts/proofs/GreaterOrEqualThen.sol/GreaterOrEqualThen", contractPath: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
         { name: "SmallerThan", artifactPath: "contracts/proofs/SmallerThan.sol/SmallerThan", contractPath: "contracts/proofs/SmallerThan.sol:SmallerThan" },
         { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
+        { name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
@@ -212,13 +217,14 @@ async function main() {
         const contractBytecode = getContractBytecode(config.artifactPath);
         
         if (needsRedeployment(config.name, contractBytecode, existingDeployments)) {
-            const verifier = await deployContract(config.name, config.contractPath, wallet, gasPrice);
+            const verifier = await deployContract(config.name, config.contractPath, wallet, gasPrice, nonce);
             deploymentData[verifier.name] = {
                 address: verifier.address,
                 bytecode: verifier.bytecode,
                 abi: verifier.abi
             };
             verifierAddresses[config.name] = verifier.address;
+            nonce++;
         } else {
             // If ABI is missing from existing deployment, add it
             const existing = existingDeployments[config.name];
@@ -236,12 +242,13 @@ async function main() {
     const empheralName = "EmpheralMerkleTreeKeccak";
     const empheralBytecode = getContractBytecode(`contracts/${empheralName}.sol/${empheralName}`);
     if (needsRedeployment(empheralName, empheralBytecode, existingDeployments)) {
-        const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, wallet.address, 24);
+        const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, nonce, wallet.address, 24);
         deploymentData[empheralMerkleTree.name] = {
             address: empheralMerkleTree.address,
             bytecode: empheralMerkleTree.bytecode,
             abi: empheralMerkleTree.abi
         };
+        nonce++;
     } else if (!existingDeployments[empheralName].abi || existingDeployments[empheralName].abi.length === 0) {
         existingDeployments[empheralName].abi = getContractABI(`contracts/${empheralName}.sol/${empheralName}`);
         deploymentData[empheralName] = existingDeployments[empheralName];
@@ -285,6 +292,7 @@ async function main() {
             `contracts/${chainedProofName}.sol:${chainedProofName}`,
             wallet,
             gasPrice,
+            nonce,
             verifierAddresses["opening_proof"],
             verifierAddresses["opening_proof"]
         );

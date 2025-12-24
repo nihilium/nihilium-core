@@ -28,6 +28,7 @@ export type ModuleOutputMap = {
 
 export type CompiledModule = {
     module_id: string;
+    module_name: string; //Used for proving function lookup
     new_depth: number;
     actions: UnsealProofAction[];
     outputs: {[key: string]: {
@@ -425,11 +426,11 @@ export abstract class UnsealConditionModule {
         //TODO implement
         return {
             module_id: external_node_id,
-            //We subtract 1 to account as the depth is where the first node is inserted
+            module_name: this.name,
             new_depth: current_proof_depth + nodes.length,
             actions: return_actions,
             outputs: output_map,
-        }
+        };
     }
 }
     

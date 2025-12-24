@@ -1,13 +1,14 @@
 import { ethers, Signer } from "ethers";
 import { IDataStream } from "../data_stream/types";
 import { ACTION_CHAIN_PROOF_FORK, ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT_FROM_USER, ACTION_STATIC_INPUT, ACTION_VALIDATE_DATA_ROOT } from "./ChainedProof";
-import { ACTION_PREPARE_NEXT_PROOF, ACTION_START_UNSEALING } from "./ChainedProof";
+import { ACTION_PREPARE_NEXT_PROOF } from "./ChainedProof";
 import { ProvingState } from "./ChainedProof";
 import { ChainedProof } from "./ChainedProof";
 import { ProcessorEndpoint } from "../../types/protocol/common";
 import { toPaddedHex } from "../utils";
 
 export type ProofMode = "PROOF" | "BRANCH" | "MERGE"
+
 
 export abstract class CompiledChainedProofCollection {
     protected unseal_proof_actions: UnsealProofAction[] = [];
@@ -52,12 +53,12 @@ export abstract class CompiledChainedProofCollection {
         var proof_state: any | ProvingState = {};
         for(var action of this.unseal_proof_actions) {
             console.log(action)
-            if(action.action === ACTION_START_UNSEALING) {
-                proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
-                proof_counter++;
-            }
+            // if(action.action === ACTION_START_UNSEALING) {
+            //     proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
+            //     proof_counter++;
+            // }
             if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-                proof_state = await this.chainedProof.solidity_dryrun_prepare_next_proof(proof_state, action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter])
+                proof_state = await this.chainedProof.solidity_dryrun_prepare_next_proof(proof_state, action.params.verifier_address, action.params.verifier_must_be_true, public_inputs[proof_counter], proofs[proof_counter])
                 proof_counter++;
             }
             if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
@@ -66,8 +67,13 @@ export abstract class CompiledChainedProofCollection {
             if(action.action === ACTION_PASS_SIGNAL) {
                 proof_state = await this.chainedProof.solidity_dryrun_chain_pass_signal(proof_state, 
                     action.params.public_input_indexes, 
-                    action.params.output_proof_indexes, 
+                    action.params.output_proof_index, 
                     action.params.output_signal_indexes, dryrun)
+            }
+            if(action.action === ACTION_STATIC_INPUT) {
+                proof_state = await this.chainedProof.solidity_dryrun_chain_static_input(proof_state,
+                    action.params.inputs,
+                    action.params.public_input_indexes)
             }
             if(action.action === ACTION_VALIDATE_DATA_ROOT) {
                 proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
@@ -97,13 +103,14 @@ export abstract class CompiledChainedProofCollection {
         var proof_counter = 0;
         var proof_state: any | ProvingState = {};
         for(var action of this.unseal_proof_actions) {      
-            if(action.action === ACTION_START_UNSEALING) {
-                proof_state = await this.chainedProof.dryrun_start_proving(action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
-                proof_counter++;
-            }
+            // if(action.action === ACTION_START_UNSEALING) {
+            //     proof_state = await this.chainedProof.dryrun_start_proving(action.params.verifier_address, dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
+            //     proof_counter++;
+            // }
             if(action.action === ACTION_PREPARE_NEXT_PROOF) {
                 proof_state = await this.chainedProof.dryrun_prepare_next_proof(proof_state,
                      action.params.verifier_address, 
+                     action.params.verifier_must_be_true,
                      dryrun ? [] : public_inputs[proof_counter], dryrun ? [] : proofs[proof_counter])
                 proof_counter++;
             }
@@ -118,8 +125,8 @@ export abstract class CompiledChainedProofCollection {
             }
             if(action.action === ACTION_STATIC_INPUT) {
                 proof_state = await this.chainedProof.dryrun_chain_static_input(proof_state,
-                    action.params.public_input_index,
-                    action.params.value)
+                    action.params.value,
+                    action.params.public_input_index)
             }
             if(action.action === ACTION_VALIDATE_DATA_ROOT) {
                 proof_state = await this.chainedProof.dryrun_validate_data_root(
@@ -154,17 +161,12 @@ export type UnsealProofAction = {
 export type UnsealProofActionPrepareNextProof = UnsealProofAction & {
     action: typeof ACTION_PREPARE_NEXT_PROOF;
     params: {
-        verifier_address: string;    
+        verifier_address: string;
+        verifier_must_be_true: boolean;
     }
 }
 export type UnsealProofActionChainProofVerify = UnsealProofAction & {
     action: typeof ACTION_CHAIN_PROOF_VERIFY;
-    params: {
-        
-    }
-}
-export type UnsealProofActionChainProofFork = UnsealProofAction & {
-    action: typeof ACTION_CHAIN_PROOF_FORK;
     params: {
         
     }
