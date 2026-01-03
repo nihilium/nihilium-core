@@ -29,19 +29,18 @@
             "name": "Test Privacy Lib full",
             "type": "node",
             "request": "launch",
-            
+            "env": {
+                "TS_NODE_PROJECT": "${workspaceRoot}/packages/privacy-lib/test/tsconfig.json"
+            },
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
             "args": [
                 "--timeout",
                 "5000000",
+                "--no-config",
                 "--require",
                 "mocha-suppress-logs",
                 "${workspaceRoot}/packages/privacy-lib/test/full.test.ts",
-                "--exit",
-                "--reporter",
-                "spec",
-                "--bail"
-
+                "--exit"
             ],
             "cwd": "${workspaceRoot}/packages/privacy-lib",
             "internalConsoleOptions": "openOnSessionStart",

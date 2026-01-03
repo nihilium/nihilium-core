@@ -314,6 +314,11 @@ export abstract class UnsealConditionModule {
         throw new Error("Not implemented");
     }
 
+    async transform_user_inputs(input_mapping: {[key: string]: any}): Promise<{[key: string]: any}> {
+
+        return input_mapping;
+    }
+
     compile(external_node_id: string, address_map: {[key: string]: string}, input_mapping: {[key: string]: {        
         output_proof_index: number;
         output_signal_indexes: number[];
@@ -377,7 +382,7 @@ export abstract class UnsealConditionModule {
                     return_actions.push({
                         action: ACTION_PASS_SIGNAL,
                         params: {
-                            public_input_indexes: node.proof.getProofInputSignalIndex(input_edge.mapping[1]),
+                            public_input_indexes: node.proof.getSignalIndex(input_edge.mapping[1]),
                             output_proof_index: input_mapping[input_edge.mapping[0]].output_proof_index,
                             output_signal_indexes: input_mapping[input_edge.mapping[0]].output_signal_indexes,
                         }
@@ -388,7 +393,7 @@ export abstract class UnsealConditionModule {
                     return_actions.push({
                         action: ACTION_PASS_SIGNAL,
                         params: {
-                            public_input_indexes: node.proof.getProofInputSignalIndex(input_edge.mapping[1]),
+                            public_input_indexes: node.proof.getSignalIndex(input_edge.mapping[1]),
                             output_proof_index: current_proof_depth +(nodes.indexOf(input_edge.from?.node_id || "")), //Length 1 for default, TODO make this dynamic
                             output_signal_indexes: input_edge.from?.get_outputs()[input_edge.mapping[0]],
                         }

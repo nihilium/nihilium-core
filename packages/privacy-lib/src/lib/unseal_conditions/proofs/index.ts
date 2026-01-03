@@ -31,7 +31,7 @@ export abstract class ProofLibraryType {
     }
 }
 
-export class ProofLibrary extends ProofLibraryType {
+export class StandardProofLibrary extends ProofLibraryType {
     public standard: {[key: string]: new (...args: any[]) => UnsealConditionProof} = {
         ["UnsealOpeningProof"]: UnsealOpeningProof,
         ["TopLevelTreeProof"]: TopLevelTreeProof,

@@ -1,7 +1,10 @@
 import { SelectableDataStream, SelectableProcessor } from "./types";
 
 import { API_PATHS } from "../api-endpoints";
-const apiEndpoint = "https://api.nihilium.io";
+import * as nhsdk from "@nihilium/privacy-lib";
+import axios from "axios";
+//const apiEndpoint = "https://api.nihilium.io";
+const apiEndpoint = "http://localhost:8080";
 export async function getProcessors(): Promise<SelectableProcessor[]>{
     const response = await fetch(`${apiEndpoint}/${API_PATHS.GET_PROCESSORS}`);
     const data = await response.json();
@@ -56,4 +59,28 @@ export async function getDatastreams(): Promise<SelectableDataStream[]>{
         
         
     // ]
+}
+
+
+export async function getProcessorEndpoint(url:string) {
+    const response = await axios.get(url + "/get_public_keys");
+    const data = response.data;
+    const addsPubKey = [data.signing_public_key[0], data.signing_public_key[1]];
+    const he_encryption = [data.he_public_key[0], data.he_public_key[1]]
+    return {
+        url: url,
+        is_tor: false,
+        public_verification_key: [BigInt(addsPubKey[0]), BigInt(addsPubKey[1])] as [bigint, bigint],
+        public_he_encryption_key: [BigInt(he_encryption[0]), BigInt(he_encryption[1])] as [bigint, bigint],
+        server_address: "0x0000000000000000000000000000000000000000000000000000000000000000"
+    }
+}
+
+export async function getFullDatastreams(): Promise<nhsdk.DataStreamClient[]> {
+    const dataStreams = await getDatastreams();
+    return dataStreams.map(dataStream => new nhsdk.DataStreamClient(dataStream.url));
+}
+export async function getFullProcessors(): Promise<nhsdk.ProtocolTypes.ProcessorEndpoint[]> {
+    const processors = await getProcessors();
+    return Promise.all(processors.map(async processor => await getProcessorEndpoint(processor.url)));
 }

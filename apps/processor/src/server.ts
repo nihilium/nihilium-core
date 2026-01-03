@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { router as apiRouter } from './routes/api';
-import { Processor } from '@nihilium/privacy-lib';
+//import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/privacy-lib';
+import { Processor, deployedProtocolContracts, NETWORK_IDS } from '../../../packages/privacy-lib/src/index';
+//import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/privacy-lib/src/index';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { ethers, Network } from 'ethers';
@@ -51,15 +53,16 @@ async function main() {
 
     const privateKey = (argv.privateKey || process.env.PRIVATE_KEY) as string;
     const privateKeyHE = (argv.privateKeyHE || process.env.PRIVATE_KEY_HE) as string;
-    const contractAddress = (argv.contractAddress || process.env.CHAINED_PROOF_CONTRACT_ADDRESS) as string;
-    const openingProofAddress = (argv.openingProofAddress || process.env.OPENING_PROOF_ADDRESS) as string;
+    const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;  
+    const contractAddress = deployedProtocolContracts[chainId]["ChainedProof"].address;
+    const openingProofAddress = deployedProtocolContracts[chainId]["opening_proof"].address;
     // const rpcUrl = (argv.rpcUrl || process.env.RPC_URL) as string;
     // const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;
     // const port = (argv.port || process.env.PORT || 3005) as number;
   // Load environment variables
   
   const rpcUrl = (argv.rpcUrl || process.env.RPC_URL) as string;
-  const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;
+  
   const port = (argv.port || process.env.PORT || 3006) as number;
 
   if (!privateKey || !contractAddress || !rpcUrl) {

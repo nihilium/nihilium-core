@@ -15,7 +15,7 @@ export const ACTION_PASS_SIGNAL = "pass_signal";
 //Place holder for user input, should be replaced with static_input
 export const ACTION_STATIC_INPUT_FROM_USER = "static_input_from_user";
 
-export const ACTION_VALIDATE_TIMESTAMP = "validate_timestamp";
+export const ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT = "validate_data_root";
 export const ACTION_VALIDATE_DATA_ROOT = "validate_data_root";
 
 
@@ -95,21 +95,20 @@ export class ChainedProof {
         return new_state;
     }
 
-    async solidity_dryrun_validate_data_root(state: ProvingState, datastream: string, publicInputIndex: number, isDelayedProof: boolean, optionalDualTreeProof: string, optionalDualTreePublicInputs: string[], merkleRootIndex: number): Promise<ProvingState> {
+    async solidity_dryrun_validate_data_root(state: ProvingState, datastream: string, output_proof_index: number, output_signal_index: number): Promise<ProvingState> {
         if (this.chainedProofWrapper) {
-            return await this.chainedProofWrapper.dryrunValidateDataRoot(state, datastream, publicInputIndex, isDelayedProof, optionalDualTreeProof, optionalDualTreePublicInputs, merkleRootIndex);
+            return await this.chainedProofWrapper.dryrunValidateDataRoot(state, datastream, output_proof_index, output_signal_index);
         }else{
             throw new Error("ChainedProofWrapper not initialized");
         }
     }
 
     static async dryrun_validate_data_root(
-        state: ProvingState,        
-        public_input_index: number,
-        is_delayed_proof: boolean,
-        optional_dual_tree_proof: string,
-        optional_dual_tree_public_inputs: string[],
-        merkle_root_index: number
+        state: ProvingState, 
+        address: string,       
+        output_proof_index: number,
+        output_signal_index: number,
+        
     ): Promise<ProvingState> {
         const new_state = { ...state };
         // if (!new_state.prepared_proof || !new_state.prepared_public_inputs.length || !new_state.proof_verifier) {
@@ -117,17 +116,12 @@ export class ChainedProof {
         // }
 
         new_state.current_hash = keccak256(ethers.solidityPacked(
-            ["bytes32", "string", "uint256"],
-            [new_state.current_hash, ACTION_VALIDATE_DATA_ROOT, public_input_index]
+            ["bytes32", "string","address", "uint256", "uint256"],
+            [new_state.current_hash, ACTION_VALIDATE_DATA_ROOT, address, output_proof_index, output_signal_index]
         ));
 
 
-        if (is_delayed_proof) {
-            // Implementation would depend on contract interactions
-            // await this.verifyForcedOpening(optional_dual_tree_proof, optional_dual_tree_public_inputs);
-        } else {
-            // await this.has_data_stream_root(datastream, new_state.prepared_public_inputs[public_input_index]);
-        }
+      
 
         return new_state;
     }
@@ -192,15 +186,15 @@ export class ChainedProof {
             ["bytes32", "string"],
             [new_state.current_hash, ACTION_PASS_SIGNAL]
         ));
-        for (let i = 0; i < public_input_indexes.length; i++) {
+        for (let i = 0; i < public_input_indexes[1]; i++) {
             if (!dryrun_mode) {
-                new_state.prepared_public_inputs[public_input_indexes[i]] = 
-                    new_state.outputs[output_proof_index][output_signal_indexes[i]];
+                new_state.prepared_public_inputs[public_input_indexes[0] + i] = 
+                    new_state.outputs[output_proof_index][output_signal_indexes[0] + i];
             }
            
             new_state.current_hash = keccak256(ethers.solidityPacked(
                 ["bytes32", "uint256", "uint256", "uint256"],
-                [new_state.current_hash, public_input_indexes[i], output_proof_index, output_signal_indexes[i]]
+                [new_state.current_hash, public_input_indexes[0] + i, output_proof_index, output_signal_indexes[0] + i]
             ));
         }
 
@@ -273,11 +267,10 @@ static async calculateUnsealRoot(unseal_proof_actions: UnsealProofAction[]): Pro
         if(action.action === ACTION_VALIDATE_DATA_ROOT) {
             proof_state = await ChainedProof.dryrun_validate_data_root(
                 proof_state,                     
-                action.params.public_input_index, 
-                action.params.is_delayed_proof, 
-                action.params.optional_dual_tree_proof, 
-                action.params.optional_dual_tree_public_inputs,
-                action.params.merkle_root_index)
+                action.params.address, 
+                action.params.output_proof_index, 
+                action.params.output_signal_index, 
+            )
         }
         console.log(action.action, proof_state.current_hash)
         

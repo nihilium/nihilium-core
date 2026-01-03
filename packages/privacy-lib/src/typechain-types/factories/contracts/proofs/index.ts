@@ -11,5 +11,6 @@ export { SubTreeMerkleProof__factory } from "./SubTreeMerkleProof__factory";
 export { TestVerifyAlwaysTrue__factory } from "./TestVerifyAlwaysTrue__factory";
 export { TimeDelayProof__factory } from "./TimeDelayProof__factory";
 export { TopLevelMerkleProof__factory } from "./TopLevelMerkleProof__factory";
+export { VerifyEDDSA__factory } from "./VerifyEDDSA__factory";
 export { ZKPassport_7__factory } from "./ZKPassport_7__factory";
 export { Opening_proof__factory } from "./Opening_proof__factory";

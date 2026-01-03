@@ -49,7 +49,7 @@ describe("ChainedProofs", () => {
        // assert.equal(compiledModule.actions.length, 1);
     });
 
-    it("should compile a collection", async () => {
+    it("should compile and run collection", async () => {
         const changedCallback = (changes: {action: ChangedType, nodes?: CollectionNode[], edges?: CollectionEdge[], starting_node?: CollectionNode|undefined}) => {
             console.log(changes);
         }
@@ -60,13 +60,16 @@ describe("ChainedProofs", () => {
         const afterTimeNodeId = collection.add_node(afterTimeModule);
         collection.add_edge(openingNodeId, afterTimeNodeId, ["timestamp", "timestamp"], 
             CollectionEdgeInput.signal_pass);
+        collection.add_data_stream("test_data_stream", openingNodeId, "metadata_root_hash");
         const compiledTemplate = collection.createTemplate(addressMap);
         compiledTemplate.compile({
             "threshold": 1234567890n,
             "metadata_root_hash": 1234567890n,
+        }, {
+            "test_data_stream": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
         });
         var unsealRoot = await compiledTemplate.getUnsealRoot();
-        
+        var compiledTemplateJson = compiledTemplate.export_compiled_to_json();
         console.log(compiledTemplate);
     });
     it("should hash equilivantly", async () => {

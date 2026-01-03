@@ -78,6 +78,34 @@ export function import_collectionedge_from_json(json: string, nodes: {[key: stri
          nodes[data.to_node_id], data.mapping, data.input_type);
 }
 
+
+export class CollectionDataStream {
+    //Unique identifier for the data stream
+    //Used for mapping datastream inputs
+    datastream_id: string;
+    from: CollectionNode;
+    
+    field_name: string; //Key is the from node output key, the value node to input key
+    
+    constructor(datastream_id: string, from: CollectionNode, field_name: string) {
+        this.datastream_id = datastream_id;
+
+        this.from = from;
+        this.field_name = field_name;
+    }
+
+    export_to_json(): string {
+        return JSON.stringify({
+            datastream_id: this.datastream_id,
+            from_node_id: this.from?.node_id,
+            field_name: this.field_name,
+        }, null, 2);
+    }
+    
+
+
+}
+
 export class CollectionEdge {
     edge_id: string;
     from: CollectionNode|undefined;
@@ -177,6 +205,7 @@ export type ChangedCallback = (changes: {
     action: ChangedType,
     nodes?: CollectionNode[],
     edges?: CollectionEdge[],
+    data_streams?: CollectionDataStream[],
     starting_node?: CollectionNode|undefined,
     
 }) => void;
@@ -189,8 +218,19 @@ export type RequiredUserInput = {
     description: string;
 }
 
+
+export type DataStreamInput = { 
+    datastream_id: string;
+    output_proof_index: number;
+    output_signal_index: number;
+    
+}
+
 export type CompiledCollectionExport = {
     // 256 bits, a 1 represents a proof must be true, a 0 represents a proof must be false
-    compiled_modules: CompiledModule[];
-    user_inputs: RequiredUserInput[];
+    compiled_modules: CompiledModule[][];
+    user_inputs: RequiredUserInput[][];
+    data_stream_inputs: DataStreamInput[][];
+    collection_id: string;
+    collection_export: any;
 }

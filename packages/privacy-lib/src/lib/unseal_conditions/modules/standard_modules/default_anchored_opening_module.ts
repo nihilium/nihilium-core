@@ -14,6 +14,7 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
+import { cryptoTools } from "@nihilium/zkp-circuits";
 
 
 
@@ -60,7 +61,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             //     user_input: false,
             //     description: "A simple link to define ordering",
             //     required: true
-            // },
+            // },           
             metadata_root_hash: {
                 type_order: ["String"],
                 user_input: true,
@@ -202,20 +203,21 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
      * @returns 
      */
     async produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<{proofs: any[], public_inputs: any[][]}> {
+       // var oproof =typeof opening_proof !== "string" ? opening_proof : cryptoTools.hexString2Buffer(opening_proof);
         var return_proofs = [opening_proof];
         var return_public_inputs = [opening_public_inputs];
-        var reveal_value = opening_public_inputs[this.opening_proof.getProofInputSignalIndex("reveal_value")[0]];
+        var reveal_value = opening_public_inputs[this.opening_proof.getSignalIndex("reveal_value")[0]];
         var data_stream_merkle_proof:[ProofPath, ProofPath, number, number, number] = await dataStream.getProof(reveal_value); //global, subtree
         
         var reveal_value_hash = keccakTreeHasher(reveal_value, 0n)
-     
+        var ph = toPaddedHex;
 
         return_proofs.push("0x");
         return_public_inputs.push([
             toPaddedHex(BigInt(reveal_value)), 
             toPaddedHex(BigInt(reveal_value_hash)),
         ])
-        return_proofs.push(hexToBytes(data_stream_merkle_proof[1].pathElements.map(element => toPaddedHex(BigInt(element.toString())).slice(2)).join("")))
+        return_proofs.push("0x" + data_stream_merkle_proof[1].pathElements.map(element => toPaddedHex(BigInt(element.toString())).slice(2)).join(""))
         return_public_inputs.push([
              toPaddedHex(BigInt(data_stream_merkle_proof[1].pathRoot.toString())), 
              toPaddedHex(BigInt(reveal_value_hash)), 
@@ -223,7 +225,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         ])
         
         
-        return_proofs.push(hexToBytes(data_stream_merkle_proof[0].pathElements.map(element => toPaddedHex(BigInt(element.toString())).slice(2)).join("")))
+        return_proofs.push("0x" + data_stream_merkle_proof[0].pathElements.map(element => toPaddedHex(BigInt(element.toString())).slice(2)).join(""))
         //TODO DO THIS=========set the public inputs
         //return_public_inputs.push(top_level_merkle_proof.publicSignals)
         return_public_inputs.push([

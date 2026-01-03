@@ -72,12 +72,13 @@ export declare function coordinatesToExtPointBigint(x: bigint, y: bigint): BabyJ
  * @returns Uint8Array of random bytes.
  */
 export declare function portableRandomBytes(length: number): Buffer;
-export declare function HEEncryptFromPoint(message: bigint, pubKey: ExtPointType, exportNonces?: boolean): {
+export declare function generateNonces(): bigint[];
+export declare function HEEncryptFromPoint(message: bigint, pubKey: ExtPointType, nonces?: bigint[], exportNonces?: boolean): {
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
     nonces: bigint[];
 };
-export declare function HEEncrypt(message: bigint, pubKey: bigint[], exportNonces?: boolean): {
+export declare function HEEncrypt(message: bigint, pubKey: bigint[], nonces?: bigint[], exportNonces?: boolean): {
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
     nonces: bigint[];

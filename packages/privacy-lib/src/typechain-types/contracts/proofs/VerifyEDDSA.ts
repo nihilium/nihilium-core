@@ -19,30 +19,22 @@ import type {
   TypedContractMethod,
 } from "../../common";
 
-export interface KeccakTreeEntryInterface extends Interface {
-  getFunction(nameOrSignature: "_efficientHash" | "verify"): FunctionFragment;
+export interface VerifyEDDSAInterface extends Interface {
+  getFunction(nameOrSignature: "verify"): FunctionFragment;
 
-  encodeFunctionData(
-    functionFragment: "_efficientHash",
-    values: [BytesLike, BytesLike]
-  ): string;
   encodeFunctionData(
     functionFragment: "verify",
     values: [BytesLike, BytesLike[]]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "_efficientHash",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "verify", data: BytesLike): Result;
 }
 
-export interface KeccakTreeEntry extends BaseContract {
-  connect(runner?: ContractRunner | null): KeccakTreeEntry;
+export interface VerifyEDDSA extends BaseContract {
+  connect(runner?: ContractRunner | null): VerifyEDDSA;
   waitForDeployment(): Promise<this>;
 
-  interface: KeccakTreeEntryInterface;
+  interface: VerifyEDDSAInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -81,12 +73,6 @@ export interface KeccakTreeEntry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  _efficientHash: TypedContractMethod<
-    [a: BytesLike, b: BytesLike],
-    [string],
-    "view"
-  >;
-
   verify: TypedContractMethod<
     [proof: BytesLike, publicSignals: BytesLike[]],
     [boolean],
@@ -97,9 +83,6 @@ export interface KeccakTreeEntry extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(
-    nameOrSignature: "_efficientHash"
-  ): TypedContractMethod<[a: BytesLike, b: BytesLike], [string], "view">;
   getFunction(
     nameOrSignature: "verify"
   ): TypedContractMethod<

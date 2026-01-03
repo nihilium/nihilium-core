@@ -15,6 +15,17 @@ contract KeccakTreeEntry is IVerifier {
   constructor() {
   }
 
+  function _efficientHash(bytes32 a, bytes32 b)
+    public
+    pure
+    returns (bytes32 value)
+    {
+        assembly {
+            mstore(0x00, a)
+            mstore(0x20, b)
+            value := keccak256(0x00, 0x40)
+        }
+    }
   /**
    * @dev proof is empty
    * @param proof proof is empty
@@ -26,7 +37,7 @@ contract KeccakTreeEntry is IVerifier {
     assert(publicSignals.length == 2);
     assert(proof.length == 0);    
     
-    return keccak256(abi.encodePacked(publicSignals[0], bytes32(0))) == publicSignals[1];
+    return _efficientHash(publicSignals[0], bytes32(0)) == publicSignals[1];
   }
 
 

@@ -287,26 +287,35 @@ export function portableRandomBytes(length: number): Buffer {
     }
 }
 
-export function HEEncryptFromPoint(message:bigint, pubKey: ExtPointType, exportNonces:boolean = false): {    
+export function generateNonces(): bigint[] {
+    return [generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber()];
+}
+
+export function HEEncryptFromPoint(message:bigint, pubKey: ExtPointType, nonces: bigint[] = [], exportNonces:boolean = false): {    
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
     nonces: bigint[]; //NOTE: nonces are private and should not be shared
 } {
-    
+    var noncesToUse = nonces;
+    if(nonces.length > 0) {
+        noncesToUse = nonces;
+    } else {
+        noncesToUse = generateNonces();
+    }
     var splitValueToEncrypt = splitLargeNumber(message);    
-    var encryptedCyphertexts = splitValueToEncrypt.map(value => encrypt(pubKey, encode(babyJub.BASE, value), generateRandom248BitNumber()))
+    var encryptedCyphertexts = splitValueToEncrypt.map((value, i) => encrypt(pubKey, encode(babyJub.BASE, value), noncesToUse[i]))
     var encryptedCyphertextsMessages = encryptedCyphertexts.map(value => value.encrypted_message)
     var encryptedCyphertextsEphemeralKeys = encryptedCyphertexts.map(value => value.ephemeral_key)
-    var nonces = encryptedCyphertexts.map(value => value.nonce)
+   // var nonces = encryptedCyphertexts.map(value => value.nonce)
     return {
         ephemeral_keys: encryptedCyphertextsEphemeralKeys,
         encrypted_messages: encryptedCyphertextsMessages,
-        nonces: exportNonces ? nonces : []
+        nonces: exportNonces ? noncesToUse : []
     }
 }
 
-export function HEEncrypt(message: bigint, pubKey: bigint[], exportNonces:boolean = false) {
-    return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), exportNonces);
+export function HEEncrypt(message: bigint, pubKey: bigint[], nonces: bigint[] = [], exportNonces:boolean = false) {
+    return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
 }
 
 

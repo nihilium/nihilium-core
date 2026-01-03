@@ -239,20 +239,30 @@ export function portableRandomBytes(length) {
         throw new Error("Secure random number generation is not available in this environment.");
     }
 }
-export function HEEncryptFromPoint(message, pubKey, exportNonces = false) {
+export function generateNonces() {
+    return [generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber()];
+}
+export function HEEncryptFromPoint(message, pubKey, nonces = [], exportNonces = false) {
+    var noncesToUse = nonces;
+    if (nonces.length > 0) {
+        noncesToUse = nonces;
+    }
+    else {
+        noncesToUse = generateNonces();
+    }
     var splitValueToEncrypt = splitLargeNumber(message);
-    var encryptedCyphertexts = splitValueToEncrypt.map(value => encrypt(pubKey, encode(babyJub.BASE, value), generateRandom248BitNumber()));
+    var encryptedCyphertexts = splitValueToEncrypt.map((value, i) => encrypt(pubKey, encode(babyJub.BASE, value), noncesToUse[i]));
     var encryptedCyphertextsMessages = encryptedCyphertexts.map(value => value.encrypted_message);
     var encryptedCyphertextsEphemeralKeys = encryptedCyphertexts.map(value => value.ephemeral_key);
-    var nonces = encryptedCyphertexts.map(value => value.nonce);
+    // var nonces = encryptedCyphertexts.map(value => value.nonce)
     return {
         ephemeral_keys: encryptedCyphertextsEphemeralKeys,
         encrypted_messages: encryptedCyphertextsMessages,
-        nonces: exportNonces ? nonces : []
+        nonces: exportNonces ? noncesToUse : []
     };
 }
-export function HEEncrypt(message, pubKey, exportNonces = false) {
-    return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), exportNonces);
+export function HEEncrypt(message, pubKey, nonces = [], exportNonces = false) {
+    return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
 }
 // Optimized HEDecrypt with parallel processing
 export async function HEDecrypt(privKey, cypherTexts, ephemeralKeys) {

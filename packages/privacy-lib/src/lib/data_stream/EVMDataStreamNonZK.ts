@@ -44,7 +44,7 @@ export class EVMDataStreamNonZK implements IDataStream {
     constructor(id:string, persistence:IDataStreamPersistence, global_tree_address:string, 
         signer: Signer,
         publishing_interval_in_seconds: number = 10,
-        depth: number = 20, max_local_tree_elements: number = -1,
+        depth: number = 24, max_local_tree_elements: number = -1,
         forced_publication_interval_in_seconds: number = -1) {
         this.depth = depth
         this.id = id
@@ -112,11 +112,12 @@ export class EVMDataStreamNonZK implements IDataStream {
         var hasher = keccakTreeHasher;
 
         if(force || currentContractGlobalRoot != this.globalValueTree.root) {
+            try{
             const lastInsertEvent = await this.global_evm_merkle_tree.getLastInsertEvent()
-            const minusTree = await this.persistence.getLocalTree(this.getGlobalTreeIndex() - 1)
-            const minusTreeRoot = minusTree.root
-            const minusTreeLeaf = hasher(minusTreeRoot, lastInsertEvent.timestamp)
-            const localRoot = this.merkleTree.root
+            //const minusTree = await this.persistence.getLocalTree(this.getGlobalTreeIndex() - 1)
+            //const minusTreeRoot = minusTree.root
+            // const minusTreeLeaf = hasher(minusTreeRoot, lastInsertEvent.timestamp)
+            // const localRoot = this.merkleTree.root
             const localLeaf = hasher(lastInsertEvent.newValueRoot, lastInsertEvent.timestamp)
             this.globalValueTree.insert(localLeaf)
             if(this.globalValueTree.root != currentContractGlobalRoot) {
@@ -132,6 +133,10 @@ export class EVMDataStreamNonZK implements IDataStream {
                 //await this.persistence.storeGlobalRootTreeLeaf(event.newMerkleRoot.toString())
                 //TODO implement this
                 // this.globalTree.insert(event.newValueRoot.toString(16))
+            } catch (error) {
+                console.error("Error getting last insert event", error)
+                force = true
+            }
         }
 
         
@@ -222,7 +227,7 @@ export class EVMDataStreamNonZK implements IDataStream {
                 var previousLeaf = this.globalValueTree.elements.at(-1)?.toString()
                 var insert_value_proof = this.globalValueTree.path(this.globalValueTree.elements.length - 1).pathElements.map((element:any) => toPaddedHex(BigInt(element)));
                 var newSubTreeRoot = toPaddedHex(BigInt(localTree.root))
-                
+                console.log("Inserting value proof",newSubTreeRoot, previousLeaf, this.globalValueTree.path(this.globalValueTree.elements.length - 1))
                 var {index, timestamp, newValueRoot, leafHash, gasUsed} = await this.global_evm_merkle_tree.insert(
                     previousLeaf || "",
                     newSubTreeRoot, 

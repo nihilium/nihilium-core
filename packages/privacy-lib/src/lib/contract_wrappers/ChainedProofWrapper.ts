@@ -179,42 +179,19 @@ export class ChainedProofWrapper {
   async dryrunValidateDataRoot(
     state: any,
     datastream: string,
-    publicInputIndex: number,
-    isDelayedProof: boolean = false,
-    optionalDualTreeProof: string = toPaddedHex(0n),
-    optionalDualTreePublicInputs: string[] = [],
-    merkleRootIndex: number = 0
+    outputProofIndex: number,
+    outputSignalIndex: number,
   ): Promise<ProvingState> {
     const result = await this.executeStaticCall("dryrun_validate_data_root", [
       state,
       datastream,
-      publicInputIndex,
-      isDelayedProof,
-      optionalDualTreeProof,
-      optionalDualTreePublicInputs,
-      toPaddedHex(BigInt(merkleRootIndex))
+      outputProofIndex, 
+      outputSignalIndex, 
     ], true); //Force remote call as the data streams is filled by another service
     return this.getStateFromResult(result);
   }
 
-  async dryrunValidateTimestamp(
-    state: any,
-    outputProofIndex: number,
-    outputIndex: number,
-    publicInputIndex: number,
-    timestampWindow: number
-  ): Promise<ProvingState> {
-    
-    const result = await this.executeStaticCall("dryrun_validate_timestamp", [
-      state,
-      outputProofIndex,
-      outputIndex,
-      publicInputIndex,
-      timestampWindow
-    ]);
-    return this.getStateFromResult(result);
-  }
-
+ 
   async dryrunChainStaticInput(
     state: any,
     value: bigint,
@@ -228,16 +205,16 @@ export class ChainedProofWrapper {
 
   async dryrunChainPassSignal(
     state: any,
-    publicInputIndexes: number[],
-    outputProofIndex: number,
-    outputIndexes: number[],
+    public_input_indexes: number[],
+    output_proof_index: number, 
+    output_signal_indexes: number[],
     dryrunMode: boolean = false
   ): Promise<ProvingState> {
     const result = await this.executeStaticCall("dryrun_chain_pass_signal", [
       state,
-      publicInputIndexes,
-      outputProofIndex,
-      outputIndexes
+      public_input_indexes,
+      output_proof_index,
+      output_signal_indexes
     ]);
     return this.getStateFromResult(result);
   }

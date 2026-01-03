@@ -11,8 +11,10 @@
       "browser": "./dist/browser/index.browser.mjs",
       "import": "./dist/index.js",
       "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
+      "default": "./dist/index.js",
+      "index": "./src/index.ts"
+    },
+    "./src/*": "./src/*"
   },
   "directories": {
     "test": "tests"

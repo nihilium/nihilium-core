@@ -142,10 +142,15 @@ export class Processor {
        this.signer.provider!,
        this.signer)
     await verification_collection.initialize();
-    var toCheck = await verification_collection.getUnsealRoot(true, request.proofs.map(proof => hexToBytes(proof)), request.public_signals)
+    
+    var path = request.unseal_root_proof.pathRoot;
+    //TODO This is a temp fix, we should consider how we handle keccack hashes as inputs in circuits
+    var correctedPathRoot = "0x" + (BigInt(path) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n).toString(16); //babyjub modulus
+    var unseal_condition_root = request.public_signals[0][1];
+    var toCheck = await verification_collection.getUnsealRoot(true, request.proofs.map(proof => hexToBytes(proof.slice(2))), request.public_signals)
     var proofs = await verification_collection.verifySolidity(false, 
-      request.data_stream_address, request.proofs.map(proof => hexToBytes(proof)), request.public_signals)
-    var proofsCorrect = (toCheck === proofs && toCheck === request.public_signals[0][1])
+      request.data_stream_address, request.proofs.map(proof => hexToBytes(proof.slice(2))), request.public_signals)
+    var proofsCorrect = (toCheck === proofs && correctedPathRoot === unseal_condition_root)
     if(!proofsCorrect) {
       throw new Error(`Invalid chained proof: expected ${request.public_signals[0][1]} but got ${toCheck}`)
     }

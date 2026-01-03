@@ -5,7 +5,7 @@ import MerkleTree from 'fixed-merkle-tree';
 import { IDataStreamPersistence, OnChainPublishingState } from './types';
 import { createMimcMerkelTree, treeHasher, keccakTreeHasher } from '../utils';
 import { Level } from 'level';
-
+const defaultDepth = 24;
 export class DataStreamFilePersistence implements IDataStreamPersistence {
     private folderPath: string;
     private createMerkelTree: (depth: number, leaves: string[]) => Promise<MerkleTree>;
@@ -125,11 +125,11 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
         try {
             const content = await fs.readFile(filePath, 'utf-8');
             const leaves = content.split('\n').filter(line => line.trim());
-            const depth = 20//Math.ceil(Math.log2(leaves.length + 1));
+            const depth = defaultDepth//Math.ceil(Math.log2(leaves.length + 1));
             return await this.createMerkelTree(depth, leaves);
         } catch (e) {
             console.log(e)
-            return await this.createMerkelTree(20, []);
+            return await this.createMerkelTree(defaultDepth, []);
         }
     }
 
@@ -150,19 +150,19 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
                 }
             }
 
-            return await this.createMerkelTree(20, leaves);
+            return await this.createMerkelTree(defaultDepth, leaves);
             } catch (e) {
                 console.log(e)
-                return await this.createMerkelTree(20, []);
+                return await this.createMerkelTree(defaultDepth, []);
         }
         // try {
         //     const content = await fs.readFile(filePath, 'utf-8');
         //     const leaves = content.split('\n')
         //         .filter(line => line.trim())
         //         .map(line => line.split(',')[0]);
-        //     return await createMimcMerkelTree(20, leaves);
+        //     return await createMimcMerkelTree(defaultDepth, leaves);
         // } catch {
-        //     return await createMimcMerkelTree(20, []);
+        //     return await createMimcMerkelTree(defaultDepth, []);
         // }
     }
 
@@ -171,9 +171,9 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
         try {
             const content = await fs.readFile(filePath, 'utf-8');
             const leaves = content.split('\n').filter(line => line.trim());
-            return await this.createMerkelTree(20, leaves);
+            return await this.createMerkelTree(defaultDepth, leaves);
         } catch {
-            return await this.createMerkelTree(20, []);
+            return await this.createMerkelTree(defaultDepth, []);
         }
     }
 

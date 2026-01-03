@@ -102,6 +102,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TopLevelMerkleProof__factory>;
     getContractFactory(
+      name: "VerifyEDDSA",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.VerifyEDDSA__factory>;
+    getContractFactory(
       name: "ZKPassport_7",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZKPassport_7__factory>;
@@ -217,6 +221,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TopLevelMerkleProof>;
     getContractAt(
+      name: "VerifyEDDSA",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.VerifyEDDSA>;
+    getContractAt(
       name: "ZKPassport_7",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -311,6 +320,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
     deployContract(
+      name: "VerifyEDDSA",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.VerifyEDDSA>;
+    deployContract(
       name: "ZKPassport_7",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZKPassport_7>;
@@ -425,6 +438,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
+    deployContract(
+      name: "VerifyEDDSA",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.VerifyEDDSA>;
     deployContract(
       name: "ZKPassport_7",
       args: any[],

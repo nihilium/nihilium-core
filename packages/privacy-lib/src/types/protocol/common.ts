@@ -1,5 +1,8 @@
 import { IDataStream } from "../../lib/data_stream/types";
-import { ChainedProofCollection, UnsealProofAction } from "../../lib/unseal_conditions/types";
+import { CompiledCollectionExport, RequiredUserInput } from "../../lib/unseal_conditions/collections/types";
+
+import { UnsealProofAction } from "../../lib/unseal_conditions/types";
+import { ProofPath } from "fixed-merkle-tree";
 
 export type HexString = string ;//& { __brand: 'HexString' };
 
@@ -63,7 +66,7 @@ export enum ClientProcessorSealingPhase {
     ERROR = -99
 }
 export interface IClientSingleShareSealingProcess {
-    initialize(secret: bigint, metadata_root: bigint): Promise<void>
+    initialize(secret: bigint, metadata_root: bigint, template_inputs: {[key:string]:any}): Promise<void>
     request_commitment(call_processor: boolean): Promise<SingleSealRequest>
     process_seal_response(processor_response: SingleSealRequestResponse): Promise<SingleSealStoragePackage>
     get_phase(): ClientProcessorSealingPhase
@@ -73,12 +76,12 @@ export interface IClientSingleShareSealingProcess {
 
 export interface IClientSingleShareUnsealingProcess {
     initialize(seal: SingleSealStoragePackage): Promise<void>
-    validate_elligble_for_unsealing(): Promise<boolean>
+    reveal_value_published(): Promise<boolean>
     get_unsealing_status(): Promise<UnsealingStatus>
     get_processor_status(): Promise<ProcessorStatus>
     display_reveal_conditions(): Promise<void>
     publish_reveal_value(data_stream_id: string): Promise<void>
-    start_unsealing(): Promise<SingleUnsealRequest>
+    start_unsealing(proof_index: number, proofs: any[], public_inputs: any[][]): Promise<SingleUnsealRequest>
     process_unseal_response(processor_response: SingleSealUnsealRequestResponse): Promise<bigint>
 
 }
@@ -241,7 +244,8 @@ export type SingleUnsealRequest = {
     public_signals: HexString[][],
     proofs:HexString[],
     data_stream_address: HexString, //TODO make this an array of possible addresses
-    unseal_proof_actions: UnsealProofAction[]
+    unseal_proof_actions: UnsealProofAction[],
+    unseal_root_proof: ProofPath
 }
 
 export type SingleSealStoragePackage = {
@@ -260,6 +264,15 @@ export type ECCEncryptedMessage = {
     };
 }
 
+export type UnsealConditionTemplateExport = {
+    name: string;
+    description: string;
+    unseal_proof_actions: UnsealProofAction[][];
+    user_inputs: RequiredUserInput[][];
+    used_input_mapping: {[key: string]: string};
+    compiled_collection: CompiledCollectionExport;
+    collection_id: string;
+}
 export type SingleShareSealPrivatePackage = PrivatePackage & {
     cyphertexts: HexString[],
     empheral_keys: HexString[],
@@ -271,9 +284,10 @@ export type SingleShareSealPrivatePackage = PrivatePackage & {
     reveal_value: HexString,
     unseal_condition_root: HexString,
     metadata_root: HexString,
-    reveal_conditions: UnsealProofAction[]
-    reveal_collection_id: string,
-    reveal_collection_inputs: {[key:string]:any}
+    unseal_template: UnsealConditionTemplateExport,
+    
+    unseal_collection_id: string
+    
 }
 
 export type SingleShareSealPublicPackage = PublicPackage & {

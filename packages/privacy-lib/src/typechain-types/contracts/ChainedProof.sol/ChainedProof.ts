@@ -93,7 +93,12 @@ export interface ChainedProofInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_chain_pass_signal",
-    values: [ProvingStateStruct, BigNumberish[], BigNumberish, BigNumberish[]]
+    values: [
+      ProvingStateStruct,
+      [BigNumberish, BigNumberish],
+      BigNumberish,
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_chain_proof_verify",
@@ -109,15 +114,7 @@ export interface ChainedProofInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_validate_data_root",
-    values: [
-      ProvingStateStruct,
-      AddressLike,
-      BigNumberish,
-      boolean,
-      BytesLike,
-      BytesLike[],
-      BigNumberish
-    ]
+    values: [ProvingStateStruct, AddressLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "forced_opening_verifier",
@@ -250,9 +247,9 @@ export interface ChainedProof extends BaseContract {
   dryrun_chain_pass_signal: TypedContractMethod<
     [
       state: ProvingStateStruct,
-      public_input_indexes: BigNumberish[],
+      public_input_indexes: [BigNumberish, BigNumberish],
       output_proof_index: BigNumberish,
-      output_indexes: BigNumberish[]
+      output_indexes: [BigNumberish, BigNumberish]
     ],
     [ProvingStateStructOutput],
     "view"
@@ -290,11 +287,8 @@ export interface ChainedProof extends BaseContract {
     [
       state: ProvingStateStruct,
       datastream: AddressLike,
-      public_input_index: BigNumberish,
-      is_delayed_proof: boolean,
-      optional_dual_tree_proof: BytesLike,
-      optional_dual_tree_public_inputs: BytesLike[],
-      merkle_root_index: BigNumberish
+      output_proof_index: BigNumberish,
+      output_signal_index: BigNumberish
     ],
     [ProvingStateStructOutput],
     "view"
@@ -349,9 +343,9 @@ export interface ChainedProof extends BaseContract {
   ): TypedContractMethod<
     [
       state: ProvingStateStruct,
-      public_input_indexes: BigNumberish[],
+      public_input_indexes: [BigNumberish, BigNumberish],
       output_proof_index: BigNumberish,
-      output_indexes: BigNumberish[]
+      output_indexes: [BigNumberish, BigNumberish]
     ],
     [ProvingStateStructOutput],
     "view"
@@ -393,11 +387,8 @@ export interface ChainedProof extends BaseContract {
     [
       state: ProvingStateStruct,
       datastream: AddressLike,
-      public_input_index: BigNumberish,
-      is_delayed_proof: boolean,
-      optional_dual_tree_proof: BytesLike,
-      optional_dual_tree_public_inputs: BytesLike[],
-      merkle_root_index: BigNumberish
+      output_proof_index: BigNumberish,
+      output_signal_index: BigNumberish
     ],
     [ProvingStateStructOutput],
     "view"

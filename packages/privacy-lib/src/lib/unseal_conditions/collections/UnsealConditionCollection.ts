@@ -1,12 +1,16 @@
-import { CollectionNode, CollectionEdge, ChangedType, ChangedCallback, CollectionEdgeInput, import_collectionnode_from_json, import_collectionedge_from_json, CompiledCollectionExport, RequiredUserInput } from "./types";
+import { CollectionNode, CollectionEdge, ChangedType, ChangedCallback, CollectionEdgeInput, import_collectionnode_from_json, import_collectionedge_from_json, CompiledCollectionExport, RequiredUserInput, CollectionDataStream, DataStreamInput } from "./types";
 import { ProofLibraryType } from "../proofs";
 import { CompiledModule, ModuleLibraryType, UnsealConditionModule } from "../modules";
 import { ACTION_STATIC_INPUT_FROM_USER, ProvingState } from "../ChainedProof";
 import { UnsealConditionTemplate } from "./UnsealConditionTemplate";
 
+import { sha256 } from "@noble/hashes/sha2";
+import { cryptoTools } from "@nihilium/zkp-circuits";
+
 export class UnsealConditionCollection {
     public nodes: {[key: string]: CollectionNode} = {};
     public edges: {[key: string]: CollectionEdge} = {};
+    public data_streams: CollectionDataStream[] = [];
     public name: string;
     public description: string;
     public starting_node: CollectionNode|undefined = undefined;
@@ -22,6 +26,26 @@ export class UnsealConditionCollection {
         this.proofLibrary = proofLibrary;
         this.moduleLibrary = moduleLibrary;
         this.changed_callback = changed_callback;
+    }
+
+    add_data_stream(datastream_id: string, from_node_id: string, field_name: string): void {
+        if(this.nodes[from_node_id] === undefined) {
+            throw new Error("From node not found");
+        }
+        var from = this.nodes[from_node_id];
+        var data_stream = new CollectionDataStream(datastream_id, from, field_name);
+        this.data_streams.push(data_stream);
+        this.changed_callback({
+            action: ChangedType.added,
+            data_streams: [data_stream],
+        });
+    }
+    remove_data_stream(datastream_id: string): void {
+        this.data_streams = this.data_streams.filter(data_stream => data_stream.datastream_id !== datastream_id);
+    }
+
+    get_data_stream(datastream_id: string): CollectionDataStream | undefined {
+        return this.data_streams.find(data_stream => data_stream.datastream_id === datastream_id);
     }
 
     add_node(module: UnsealConditionModule): string {
@@ -212,6 +236,11 @@ export class UnsealConditionCollection {
         }
         return edges;
     }
+
+    getCollectionId(): string {
+        return cryptoTools.uint8ArrayToHex(sha256(Buffer.from(this.export_to_json())));
+    }
+    //TODO handle branching
     createTemplate(address_map: {[key: string]: string}): UnsealConditionTemplate {
 
         var sorted_nodes = this.sort_nodes();
@@ -220,6 +249,8 @@ export class UnsealConditionCollection {
         }
         var compiled_modules: CompiledModule[] = [];
         var user_inputs: RequiredUserInput[] = [];
+        
+        var data_stream_inputs: DataStreamInput[] = [];
         var module_index = 0;
         for(var node_id of sorted_nodes) {
             var input_mapping: {[key: string]: {        
@@ -277,13 +308,33 @@ export class UnsealConditionCollection {
                     });
                 }
             }
+
+            //TODO Validate
+            for(var data_stream of this.data_streams) {
+                if(data_stream.from.node_id === node_id) {
+                    var compiled_from_node = compiled_modules.find(module => module.module_id === data_stream.from?.node_id);
+                    var output_signal_index = compiled_from_node?.outputs[data_stream.field_name]?.output_signal_index[0] || 0;
+                    var output_proof_index = compiled_from_node?.outputs[data_stream.field_name]?.output_proof_index || 0;
+                    data_stream_inputs.push({
+                        datastream_id: data_stream.datastream_id,
+                        output_proof_index: output_proof_index,
+                        output_signal_index: output_signal_index,
+                    });
+                }
+              
+            }
             module_index += 1;
         }
+
+       
         
         
        var toReturn = new UnsealConditionTemplate(this.name, this.description, this.proofLibrary, this.moduleLibrary, {
-        compiled_modules: compiled_modules,
-        user_inputs: user_inputs,
+        compiled_modules: [compiled_modules],
+        user_inputs: [user_inputs],
+        data_stream_inputs: [data_stream_inputs],
+        collection_id: this.getCollectionId(),
+        collection_export: this.export_to_json(),
        });
 
         return toReturn;
@@ -291,56 +342,5 @@ export class UnsealConditionCollection {
     }
 
 
-    // //TODO get the datastream from a merkle proof
-    // async verifySolidity(dryrun: boolean = true, dataStreamAddress: string, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
-    //     if(!dryrun) {           
-    //         if(public_inputs.length != proofs.length) {
-    //             throw new Error("Number of public inputs must match the number of proofs in the proof order");
-    //         }            
-    //     }
-    //     console.log("Data stream address: " + dataStreamAddress)
-    //     var proof_counter = 0;
-    //     var proof_state: any | ProvingState = {};
-    //     for(var action of this.unseal_proof_actions) {
-    //         console.log(action)
-    //         if(action.action === ACTION_START_UNSEALING) {
-    //             proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
-    //             proof_counter++;
-    //         }
-    //         if(action.action === ACTION_PREPARE_NEXT_PROOF) {
-    //             proof_state = await this.chainedProof.solidity_dryrun_prepare_next_proof(proof_state, action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter])
-    //             proof_counter++;
-    //         }
-    //         if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
-    //             proof_state = await this.chainedProof.solidity_dryrun_chain_proof_verify(proof_state, dryrun)
-    //         }
-    //         if(action.action === ACTION_PASS_SIGNAL) {
-    //             proof_state = await this.chainedProof.solidity_dryrun_chain_pass_signal(proof_state, 
-    //                 action.params.public_input_indexes, 
-    //                 action.params.output_proof_indexes, 
-    //                 action.params.output_signal_indexes, dryrun)
-    //         }
-    //         if(action.action === ACTION_VALIDATE_DATA_ROOT) {
-    //             proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
-    //                 proof_state, 
-    //                 dataStreamAddress,                    
-    //                 action.params.public_input_index, 
-    //                 action.params.is_delayed_proof, 
-    //                 action.params.optional_dual_tree_proof, 
-    //                 action.params.optional_dual_tree_public_inputs,
-    //                 action.params.merkle_root_index)
-    //         }
-    //         console.log(action.action, proof_state.current_hash)
-    //     }
-
-    //     //TODO make sure it is within field
-    //     return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n)
-    // }
-
-   
-
-    // getProofOrder(): string[] {
-    //     return this.proof_order;
-    // }
     
 }
