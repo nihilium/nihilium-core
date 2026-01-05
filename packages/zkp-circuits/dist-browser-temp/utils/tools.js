@@ -24,7 +24,7 @@ import * as zkJub from "@zk-kit/baby-jubjub";
 import { blake2b } from "@noble/hashes/blake2b";
 import { poseidon16, poseidon8 } from "poseidon-lite";
 import CryptoJS from "crypto-js";
-export { babyJub };
+export { babyJub, SNARK_FIELD_SIZE };
 var aaa = CURVE;
 const CHUNK_SIZE = 31n; // Each chunk is 31 bits allowing for a 32 bit carry when combining chunks
 const CHUNK_MASK = (1n << CHUNK_SIZE) - 1n; // Mask for 32 bits: 0xFFFFFFFF
@@ -263,6 +263,23 @@ export function HEEncryptFromPoint(message, pubKey, nonces = [], exportNonces = 
 }
 export function HEEncrypt(message, pubKey, nonces = [], exportNonces = false) {
     return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
+}
+// Optimized HEDecrypt with parallel processing
+export async function HEDecryptExternalSolver(privKey, cypherTexts, ephemeralKeys, solve) {
+    const numChunks = cypherTexts.length / 2;
+    // Parallel coordinate conversion
+    const [cypherTextsEncoded, empheralKeysEncoded] = await Promise.all([
+        Promise.all(Array.from({ length: numChunks }, (_, i) => Promise.resolve(coordinatesToExtPointBigint(cypherTexts[i * 2], cypherTexts[(i * 2) + 1])))),
+        Promise.all(Array.from({ length: numChunks }, (_, i) => Promise.resolve(coordinatesToExtPointBigint(ephemeralKeys[i * 2], ephemeralKeys[(i * 2) + 1]))))
+    ]);
+    // Parallel decryption and decode operations
+    const decrypted_p = await Promise.all(cypherTextsEncoded.map(async (ciphertext, i) => {
+        const decrypted = decrypt(privKey, empheralKeysEncoded[i], ciphertext);
+        var [base_x, base_y] = toBigIntArray(babyJub.BASE);
+        var [encoded_x, encoded_y] = toBigIntArray(decrypted);
+        return solve(base_x, base_y, encoded_x, encoded_y);
+    }));
+    return combineChunksWithCarry(decrypted_p);
 }
 // Optimized HEDecrypt with parallel processing
 export async function HEDecrypt(privKey, cypherTexts, ephemeralKeys) {

@@ -43,19 +43,39 @@ function optimizedDecode(babyJubBase: ExtPointType, encoded: ExtPointType, preco
     // Cache the encoded point's affine representation
     const encodedAffine = encoded.toAffine();
     const encodedX = encodedAffine.x;
+    const encodedY = encodedAffine.y;
+    
+    // Get base point affine coordinates for debugging
+    const baseAffine = babyJubBase.toAffine();
+    const baseX = baseAffine.x;
+    const baseY = baseAffine.y;
+    
+    // Debug logging
+    console.log(`[Decode] Range: ${range}, RangeBound: ${rangeBound.toString()}`);
+    console.log(`[Decode] Base point x: ${baseX.toString()}, y: ${baseY.toString()}`);
+    console.log(`[Decode] Encoded point x: ${encodedX.toString()}, y: ${encodedY.toString()}`);
     
     // Optimized search with cached base points
     for (let xlo = BigInt(0); xlo < rangeBound; xlo++) {
         const loBase = getOrComputeBasePoint(babyJubBase, xlo);
         const subtracted = encoded.subtract(loBase);
-        const key = subtracted.toAffine().x.toString();
+        const subtractedAffine = subtracted.toAffine();
+        const key = subtractedAffine.x.toString();
+        const inTable = lookupTableMap.has(key);
 
-        if (lookupTableMap.has(key)) {
+        // Debug logging for each iteration
+        if(xlo < 10n){
+            console.log(`[Decode] xlo=${xlo.toString()}, key=${key}, in_table=${inTable}`);
+        }
+        if (inTable) {
             const tableValue = lookupTableMap.get(key)!;
-            return xlo + rangeBound * BigInt("0x" + tableValue);
+            const result = xlo + rangeBound * BigInt("0x" + tableValue);
+            console.log(`[Decode] FOUND at xlo=${xlo.toString()}, result=${result.toString()}`);
+            return result;
         }
     }
     
+    console.log(`[Decode] Not Found after ${rangeBound.toString()} iterations`);
     throw new Error("Not Found!");
 }
 

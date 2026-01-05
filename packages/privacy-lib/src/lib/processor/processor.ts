@@ -1,17 +1,18 @@
 import { cryptoTools } from '@nihilium/zkp-circuits';
-
+import { DlogSolver } from '@nihilium/dlog-solver-rs';
 // import { babyJub, Keypair, PubKey } from "../types/index";
 // import { bigInt2Buffer, bufferToBigInt, coordinatesToExtPointBigint, generateRandom248BitNumber, stringifyBigInts, toBigIntArray, uint8ArrayToHex } from '@nihilium/noir-circuits/utils/tools';
 // import { Environment } from 'nihilium-circuits/types/circuit_wrapper';
 import { SingleSealRequest, SingleSealRequestResponse, SingleUnsealRequest, SingleSealUnsealRequestResponse } from '../../types/protocol/common';
-import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
+//import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
 //import { circuit_ENCRYPT_PROOF, circuit_KEY_HE_ADD } from '../env_settings';
 import { hexToBytes } from '@noble/hashes/utils';
-import { poseidon2 } from "poseidon-lite";
+
 import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
 import { GenericVerifyCollection } from '../unseal_conditions/generic_verify_collection';
 import { Signer } from 'ethers';
-import { IDataStream } from '../data_stream/types';
+
+import path from 'path';
 import { toPaddedHex } from '../utils';
 // import { stringifyBigInts, toBigIntArray, generateRandom248BitNumber, coordinatesToExtPoint } from 'nihilium-circuits'
 /**
@@ -81,6 +82,7 @@ export class Processor {
   private forced_opening_address: string;
   private signer: Signer;
   //private managed_data_stream: IDataStream;
+  private dlogSolver: DlogSolver;
   /**
    * Create a new ProcessorStageOne instance
    * 
@@ -101,6 +103,7 @@ export class Processor {
     this.chained_proof_address = chained_proof_address;
     this.forced_opening_address = forced_opening_address;
     this.signer = signer;
+    this.dlogSolver = new DlogSolver(19, path.join(__dirname, '../../lookupTables/x19xlookupTable.json'));
   }
   
   get_chain_id(): number {
@@ -146,7 +149,7 @@ export class Processor {
     //TODO actually verify the merkle proof
     var path = request.unseal_root_proof.pathRoot;
     //TODO This is a temp fix, we should consider how we handle keccack hashes as inputs in circuits
-    var correctedPathRoot = toPaddedHex(BigInt(path) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n); //babyjub modulus
+    var correctedPathRoot = toPaddedHex(BigInt(path) % cryptoTools.SNARK_FIELD_SIZE); //babyjub modulus
     var unseal_condition_root = request.public_signals[0][1];
     var toCheck = await verification_collection.getUnsealRoot(true, request.proofs.map(proof => hexToBytes(proof.slice(2))), request.public_signals)
     var proofs = await verification_collection.verifySolidity(false, 
@@ -177,12 +180,17 @@ export class Processor {
     // if (!valid) {
     //   throw new Error("Invalid proof")
     // }
-    console.time("HEDecrypt")
-    var decrypted_private_scalar = await cryptoTools.HEDecrypt(this.privateHEKey, cyphertexts, ephemeral_keys)
-    console.timeEnd("HEDecrypt")
-    
+    // console.time("HEDecrypt")
+    // var decrypted_private_scalar = await cryptoTools.HEDecrypt(this.privateHEKey, cyphertexts, ephemeral_keys)
+    // console.timeEnd("HEDecrypt")
+    console.time("DlogSolver")
+    var dlog_solver_result = await cryptoTools.HEDecryptExternalSolver(this.privateHEKey, cyphertexts, ephemeral_keys, 
+      (base_x: bigint, base_y: bigint, encoded_x: bigint, encoded_y: bigint) => this.dlogSolver.solve(base_x.toString(), base_y.toString(), encoded_x.toString(), encoded_y.toString()))
+    console.timeEnd("DlogSolver")
+   // console.log("DlogSolver result: ", dlog_solver_result.toString(), "Decrypted private scalar: ", decrypted_private_scalar.toString());
+   // console.log("DlogSolver result === Decrypted private scalar: ", dlog_solver_result === decrypted_private_scalar);
     return {
-      unpacked_private_scalar: decrypted_private_scalar.toString(),
+      unpacked_private_scalar: dlog_solver_result.toString(),
     }
      
   }

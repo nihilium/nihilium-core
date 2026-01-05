@@ -30,7 +30,7 @@ import { ExtPointType } from "@noble/curves/abstract/edwards";
 import { poseidon16, poseidon8 } from "poseidon-lite";
 import CryptoJS from "crypto-js";
 
-export { babyJub };
+export { babyJub, SNARK_FIELD_SIZE };
 export type { BabyJubAffinePoint, BabyJubExtPoint, PrivKey, PubKey, Keypair };
 
 var aaa = CURVE;
@@ -318,6 +318,36 @@ export function HEEncrypt(message: bigint, pubKey: bigint[], nonces: bigint[] = 
     return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
 }
 
+
+
+
+// Optimized HEDecrypt with parallel processing
+export async function HEDecryptExternalSolver(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[], 
+    solve: (base_x:bigint, base_y: bigint, encoded_x: bigint, encoded_y: bigint) => bigint): Promise<bigint> {
+    const numChunks = cypherTexts.length / 2;
+    
+    // Parallel coordinate conversion
+    const [cypherTextsEncoded, empheralKeysEncoded] = await Promise.all([
+        Promise.all(Array.from({length: numChunks}, (_, i) => 
+            Promise.resolve(coordinatesToExtPointBigint(cypherTexts[i*2], cypherTexts[(i*2)+1]))
+        )),
+        Promise.all(Array.from({length: numChunks}, (_, i) => 
+            Promise.resolve(coordinatesToExtPointBigint(ephemeralKeys[i*2], ephemeralKeys[(i*2)+1]))
+        ))
+    ]);
+    
+    // Parallel decryption and decode operations
+    const decrypted_p = await Promise.all(
+        cypherTextsEncoded.map(async (ciphertext, i) => {
+            const decrypted = decrypt(privKey, empheralKeysEncoded[i], ciphertext);
+            var [base_x, base_y] = toBigIntArray(babyJub.BASE);
+            var [encoded_x, encoded_y] = toBigIntArray(decrypted);
+            return solve(base_x, base_y, encoded_x, encoded_y);
+        })
+    );
+    
+    return combineChunksWithCarry(decrypted_p);
+}
 
 // Optimized HEDecrypt with parallel processing
 export async function HEDecrypt(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[]): Promise<bigint> {
