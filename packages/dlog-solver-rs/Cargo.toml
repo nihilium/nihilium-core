@@ -20,6 +20,7 @@ ark-std = "0.4"
 num-bigint = "0.4"
 hex = "0.4"
 thiserror = "1.0"
+ahash = "0.8"
 lazy_static = "1.4"
 blake2 = "0.10"
 

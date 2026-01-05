@@ -34,6 +34,7 @@ use ark_std::{One, Zero};
 use num_bigint::BigUint;
 use std::ops::{Add, Neg};
 use thiserror::Error;
+use ahash::AHashMap;
 
 #[derive(Error, Debug)]
 pub enum CryptoError {
@@ -491,17 +492,24 @@ pub fn decode(
     base_point: &Point,
     encoded: &Point,
     precompute_size: usize,
-    lookup_table: &std::collections::HashMap<String, String>,
+    lookup_table: &ahash::AHashMap<String, String>,
 ) -> Result<FieldElement> {
     // Calculate range
     let range = 32 - precompute_size;
     let range_bound = 1u64 << range; // 2^range
 
-    // BSGS search
+    // Optimized BSGS search with incremental point multiplication
+    // Instead of computing xlo * base_point from scratch each time,
+    // we incrementally add base_point: lo_point = (xlo-1) * base + base = xlo * base
+    let mut lo_point = Point::identity(); // Start at 0 * base = identity
+
     for xlo in 0..range_bound {
-        // Compute xlo * base_point
-        let xlo_scalar = Fq::from(xlo);
-        let lo_point = base_point.mul_scalar(&xlo_scalar);
+        // Incrementally add base point: lo_point = xlo * base
+        // For xlo=0: lo_point is already identity (0 * base)
+        // For xlo>0: add base_point once to get xlo * base
+        if xlo > 0 {
+            lo_point = lo_point.add_affine(base_point);
+        }
 
         // Subtract from encoded: temp = encoded - (xlo * base)
         let temp = encoded.sub(&lo_point);

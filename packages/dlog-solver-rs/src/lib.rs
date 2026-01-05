@@ -1,10 +1,11 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use num_bigint::BigUint;
 use thiserror::Error;
+use ahash::AHashMap;
+use std::collections::HashMap as StdHashMap;
 
 mod babyjubjub;
 use babyjubjub::{Point, decode as babyjub_decode, fq_to_string, scalar_mul_biguint, point_sub};
@@ -23,7 +24,7 @@ pub enum DlogSolverError {
 
 #[napi]
 pub struct DlogSolver {
-    lookup: HashMap<String, String>,
+    lookup: AHashMap<String, String>,
     precompute_size: u32,
 }
 
@@ -135,7 +136,7 @@ impl DlogSolver {
     }
 }
 
-fn load_lookup_table(path: &str) -> std::result::Result<HashMap<String, String>, DlogSolverError> {
+fn load_lookup_table(path: &str) -> std::result::Result<AHashMap<String, String>, DlogSolverError> {
     let file_path = Path::new(path);
     if !file_path.exists() {
         return Err(DlogSolverError::LoadError(format!(
@@ -147,10 +148,12 @@ fn load_lookup_table(path: &str) -> std::result::Result<HashMap<String, String>,
     let content = fs::read_to_string(file_path)
         .map_err(|e| DlogSolverError::LoadError(format!("Failed to read file: {}", e)))?;
 
-    let table: HashMap<String, String> = serde_json::from_str(&content)
+    // Deserialize into standard HashMap first (for serde compatibility)
+    let table: StdHashMap<String, String> = serde_json::from_str(&content)
         .map_err(|e| DlogSolverError::LoadError(format!("Failed to parse JSON: {}", e)))?;
 
-    Ok(table)
+    // Convert to AHashMap for faster lookups
+    Ok(table.into_iter().collect())
 }
 
 fn parse_point(x_str: &str, y_str: &str) -> std::result::Result<Point, DlogSolverError> {
