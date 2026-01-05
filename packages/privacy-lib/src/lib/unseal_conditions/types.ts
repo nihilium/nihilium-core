@@ -131,8 +131,8 @@ export abstract class CompiledChainedProofCollection {
             }
             if(action.action === ACTION_STATIC_INPUT) {
                 proof_state = await this.chainedProof.solidity_dryrun_chain_static_input(proof_state,
-                    action.params.inputs,
-                    action.params.public_input_indexes)
+                    action.params.value,
+                    action.params.public_input_index)
             }
             if(action.action === ACTION_VALIDATE_DATA_ROOT) {
                 proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
@@ -141,9 +141,9 @@ export abstract class CompiledChainedProofCollection {
                     action.params.output_proof_index, 
                     action.params.output_signal_index, )
             }
-            console.log(action.action, proof_state.current_hash)
+            console.log('Solidity dryrun',action.action, proof_state.current_hash)
         }
-
+        console.log('Solidity dryrun final root: ', toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n))
         //TODO make sure it is within field
         return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n)
     }

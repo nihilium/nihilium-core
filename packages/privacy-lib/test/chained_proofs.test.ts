@@ -3,7 +3,7 @@
 import { assert, expect } from "chai";
 import { ChainedProof } from "../src/lib/unseal_conditions/ChainedProof";
 import { DefaultAnchoredOpeningProofModule } from "../src/lib/unseal_conditions/modules";
-import { ProofLibrary } from "../src/lib/unseal_conditions/proofs";
+import { ProofLibrary, StandardProofLibrary } from "../src/lib/unseal_conditions/proofs";
 import { StandardModuleLibrary } from "../src/lib/unseal_conditions/modules";
 import * as staticContracts from "../src/static_contracts";
 import { ChainedProofWrapper } from "../src/lib/contract_wrappers/ChainedProofWrapper";
@@ -53,9 +53,9 @@ describe("ChainedProofs", () => {
         const changedCallback = (changes: {action: ChangedType, nodes?: CollectionNode[], edges?: CollectionEdge[], starting_node?: CollectionNode|undefined}) => {
             console.log(changes);
         }
-        const collection = new UnsealConditionCollection("Test", "Test", new ProofLibrary(), new StandardModuleLibrary(), changedCallback);
-        const openingModule = new DefaultAnchoredOpeningProofModule(new ProofLibrary());
-        const afterTimeModule = new AfterTimeModule(new ProofLibrary());
+        const collection = new UnsealConditionCollection("Test", "Test", new StandardProofLibrary(), new StandardModuleLibrary(), changedCallback);
+        const openingModule = new DefaultAnchoredOpeningProofModule(new StandardProofLibrary());
+        const afterTimeModule = new AfterTimeModule(new StandardProofLibrary());
         const openingNodeId = collection.add_node(openingModule);
         const afterTimeNodeId = collection.add_node(afterTimeModule);
         collection.add_edge(openingNodeId, afterTimeNodeId, ["timestamp", "timestamp"], 

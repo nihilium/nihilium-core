@@ -179,7 +179,9 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
         //this.env_settings = await get_env_settings();
         //this.babyJub = await buildBabyjub();
         var enhanced_template_inputs = Object.assign({}, template_inputs)
-        enhanced_template_inputs["metadata_root_hash"] = poseidon1([this.metadata_root]).toString();
+        enhanced_template_inputs["metadata_root_hash"] = poseidon1([cryptoTools.shrinkToBits(this.metadata_root, 247)]);
+        console.log("Metadata root: " + this.metadata_root.toString(16));
+        console.log("Metadata root hash: " , enhanced_template_inputs );
         //TODO: this should be caluclated from the reveal conditions
         this.unsealConditionTemplate.compile(enhanced_template_inputs, data_stream_mapping);
         var r = await this.unsealConditionTemplate.getUnsealRoot();

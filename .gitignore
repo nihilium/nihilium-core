@@ -10,7 +10,7 @@ lerna-debug.log*
 */build/*
 target/
 .ipfs-cache/
-
+anvil-state.json
 */node_modules/*
 *.ptau
 # Diagnostic reports (https://nodejs.org/api/report.html)
@@ -144,3 +144,4 @@ circom/circuits/test/*
 node_modules/*
 
 apps/datastream-server/.env-ganache
+packages/privacy-lib/anvil-state.json

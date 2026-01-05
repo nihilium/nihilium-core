@@ -15,7 +15,7 @@ export const ACTION_PASS_SIGNAL = "pass_signal";
 //Place holder for user input, should be replaced with static_input
 export const ACTION_STATIC_INPUT_FROM_USER = "static_input_from_user";
 
-export const ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT = "validate_data_root";
+export const ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT = "validate_data_root_from_user_input";
 export const ACTION_VALIDATE_DATA_ROOT = "validate_data_root";
 
 
@@ -272,11 +272,17 @@ static async calculateUnsealRoot(unseal_proof_actions: UnsealProofAction[]): Pro
                 action.params.output_signal_index, 
             )
         }
+        if(action.action === ACTION_STATIC_INPUT_FROM_USER) {
+                throw new Error("ACTION_STATIC_INPUT_FROM_USER should have been handled before this point");
+        }
+        if(action.action === ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT) {
+            throw new Error("ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT should have been handled before this point");
+    }
         console.log(action.action, proof_state.current_hash)
         
     }
 
-  
+    console.log("Final root: ", toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n))
     return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n);
 }
 
