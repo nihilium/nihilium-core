@@ -4,7 +4,7 @@ import axios from "axios";
 import { SelectableDataStream, SelectableProcessor,  } from "./lib/types";
 import { getDatastreams, getProcessors, getProcessorEndpoint } from './lib/endpoint-selection';
 import { DataStream } from '@nihilium/privacy-lib';
-export type SingleSealStoragePackage = nhsdk.ProtocolTypes.SingleSealStoragePackage;
+export type SingleSealStoragePackage = nhsdk.protocolTypes.SingleSealStoragePackage;
 export { getFullDatastreams, getFullProcessors } from './lib/endpoint-selection';
 export { getProcessorEndpoint } from './lib/endpoint-selection';
 export const cryptoTools = nhsdk.cryptoTools;
@@ -56,7 +56,7 @@ export async function getDefaultSealingProcess(chainId: number = nhsdk.NETWORK_I
     return sealingProcess;
 }
 
-export async function getDefaultUnsealingProcess(seal: nhsdk.ProtocolTypes.SingleSealStoragePackage,
+export async function getDefaultUnsealingProcess(seal: nhsdk.protocolTypes.SingleSealStoragePackage,
     chainId: number = nhsdk.NETWORK_IDS.ANVIL
 ) {
     
@@ -66,7 +66,7 @@ export async function getDefaultUnsealingProcess(seal: nhsdk.ProtocolTypes.Singl
     
     const proofCollectionClass = nhsdk.createRevealOnlyCollection(chainId)
     // Spread the fields of reveal_collection_inputs as constructor arguments, then add [dataStream] as the last argument
-    proofCollectionClass.template = nhsdk.unseal_condition_template_from_json(seal.private_package.unseal_template, 
+    proofCollectionClass.template = nhsdk.CollectionTemplateTypes.from_json(seal.private_package.unseal_template, 
         nhsdk.proofLibrary, nhsdk.moduleLibrary);
     var unsealingProcess = new nhsdk.ClientSingleShareUnsealingProcess(
         processorEndpoint, proofCollectionClass.collection, proofCollectionClass.template,

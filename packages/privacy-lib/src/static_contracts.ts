@@ -33,5 +33,6 @@ export function toAddressMap(networkId: number) {
     "KeccakTreeEntry": deployedProtocolContracts[networkId]?.KeccakTreeEntry?.address,
     "GreaterOrEqualThen": deployedProtocolContracts[networkId]?.GreaterOrEqualThen?.address,
     "SmallerThan": deployedProtocolContracts[networkId]?.SmallerThan?.address,
+    "TimeDelayProof": deployedProtocolContracts[networkId]?.TimeDelayProof?.address,
   }
 }

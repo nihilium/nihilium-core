@@ -13,7 +13,7 @@ export function createRevealOnlyCollection(chaindId: number, changedCallback: Ch
 
     var collection: UnsealConditionCollection = new UnsealConditionCollection("RevealOnlyValue", "Test", new StandardProofLibrary(), new StandardModuleLibrary(), changedCallback);
     var openingModule: DefaultAnchoredOpeningProofModule = new DefaultAnchoredOpeningProofModule(new StandardProofLibrary());
-    var openingNodeId = collection.add_node(openingModule);    
+    var openingNodeId = collection.add_node(openingModule);
     collection.add_data_stream("datastream", openingNodeId, "top_level_merkle_root");
     var template = collection.createTemplate(staticContracts.toAddressMap(chaindId));
     return {collection: collection, template: template};

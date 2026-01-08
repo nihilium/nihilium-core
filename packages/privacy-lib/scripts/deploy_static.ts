@@ -202,7 +202,7 @@ async function main() {
         { name: "GreaterOrEqualThen", artifactPath: "contracts/proofs/GreaterOrEqualThen.sol/GreaterOrEqualThen", contractPath: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
         { name: "SmallerThan", artifactPath: "contracts/proofs/SmallerThan.sol/SmallerThan", contractPath: "contracts/proofs/SmallerThan.sol:SmallerThan" },
         { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
-        { name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
+       // { name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },

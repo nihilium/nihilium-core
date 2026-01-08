@@ -7,46 +7,58 @@
 // Export the main components
 
 import type * as types from './types';
-import {cryptoTools} from '@nihilium/zkp-circuits';
+//Expose cryptoTools from zkp-circuits
+export {cryptoTools} from '@nihilium/zkp-circuits';
 import * as utils from './lib/utils';
+
 //import { Processor } from './lib/processor/processor';
-import * as ProtocolTypes from './types/protocol/common';
-import {DataStreamClient} from './lib/data_stream/DataStreamClient';
+import * as protocolTypes from './types/protocol/common';
+export {DataStreamClient} from './lib/data_stream/DataStreamClient';
 //import * as DataStream from './lib/data_stream/EVMDataStreamNonZK';
 //import * as Persistence from './lib/persistence/DataStreamFilePersistence';
-import {ClientSingleShareSealingProcess} from './lib/client/client_single_share_sealing'
-import {ClientSingleShareUnsealingProcess} from './lib/client/client_single_share_unsealing'
-import {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
-import {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
-import {NETWORK_IDS, deployedProtocolContracts} from './static_contracts';
-import { StandardProofLibrary } from './lib/unseal_conditions/proofs';
-export {ProofLibraryType, StandardProofLibrary as StandardProofLibrary} from './lib/unseal_conditions/proofs';
-export {ModuleLibraryType, StandardModuleLibrary as StandardModuleLibrary} from './lib/unseal_conditions/modules';
-import { StandardModuleLibrary } from './lib/unseal_conditions/modules';
+//Network selection
+export {NETWORK_IDS, deployedProtocolContracts, toAddressMap} from './static_contracts';
+//Protocol interaction interfaces
+export {ClientSingleShareSealingProcess} from './lib/client/client_single_share_sealing'
+export {ClientSingleShareUnsealingProcess} from './lib/client/client_single_share_unsealing'
 export { createRevealOnlyCollection } from './lib/unseal_conditions/templates/reveal_only_template';
-export { UnsealConditionCollection  } from './lib/unseal_conditions/collections/UnsealConditionCollection';
-export { UnsealConditionTemplate, from_json as unseal_condition_template_from_json } from './lib/unseal_conditions/collections/UnsealConditionTemplate';
-var contracts = {
-  EmpheralMerkleTree: EmpheralMerkleTreeWrapper,
-  ChainedProofWrapper: ChainedProofWrapper
-} 
+export {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
 
 
+export {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
+
+
+//Proof, Module and collection constructions
+export {ProofLibraryType, StandardProofLibrary, standardProofs} from './lib/unseal_conditions/proofs';
+export {ModuleLibraryType, StandardModuleLibrary, standardModules} from './lib/unseal_conditions/modules';
+import * as ProofTypes from './lib/unseal_conditions/proofs/types';
+export { ProofTypes };
+import * as ModuleTypes from './lib/unseal_conditions/modules/types';
+export { ModuleTypes };
+
+import * as CollectionTypes from './lib/unseal_conditions/collections/types';
+export { CollectionTypes };
+
+import * as UnsealConditionCollectionTypes from './lib/unseal_conditions/collections/UnsealConditionCollection';
+export { UnsealConditionCollectionTypes };
+
+
+import * as CollectionTemplateTypes from './lib/unseal_conditions/collections/UnsealConditionTemplate';
+export { CollectionTemplateTypes };
+// var contracts = {
+//   EmpheralMerkleTree: EmpheralMerkleTreeWrapper,
+//   ChainedProofWrapper: ChainedProofWrapper
+// } 
+
+import { StandardModuleLibrary } from './lib/unseal_conditions/modules';
+import { StandardProofLibrary } from './lib/unseal_conditions/proofs';
+//instances of the libraries
 export var proofLibrary = new StandardProofLibrary();
 export var moduleLibrary = new StandardModuleLibrary();
 export { 
-  cryptoTools,
-  ClientSingleShareSealingProcess,
-  ClientSingleShareUnsealingProcess, 
-  
-  ProtocolTypes,
-  
-  DataStreamClient,
-  
-  contracts, 
   utils,
+  protocolTypes,
   
   
-  deployedProtocolContracts,
-  NETWORK_IDS,
+  
   types }

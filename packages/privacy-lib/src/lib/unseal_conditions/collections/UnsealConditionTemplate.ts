@@ -142,11 +142,19 @@ if(unseal_proof_action.action === ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT) {
                                         value: toPaddedHex(input_mapping[user_input.name], 32),
                                     }
                                 };
+                                //TODO fix now with the same 
+                                //we break because of multiple inputs with the same name
+                                break;
+                            }else{
+                                console.log("User input " + user_input.name + " is not a static input from user for action ", unseal_proof_action);
+                                console.log(this.user_inputs)
                             }
                         }
                     }
                     if (!found_action) {
                         throw new Error("User input " + user_input.name + " is not a static input from user");
+                    }else{
+                        break;
                     }
                 }
             }

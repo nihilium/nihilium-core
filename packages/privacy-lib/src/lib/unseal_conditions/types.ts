@@ -5,6 +5,8 @@ import { ACTION_PREPARE_NEXT_PROOF } from "./ChainedProof";
 import { ProvingState } from "./ChainedProof";
 import { ChainedProof } from "./ChainedProof";
 import { ProcessorEndpoint } from "../../types/protocol/common";
+import { cryptoTools } from "@nihilium/zkp-circuits";
+
 import { toPaddedHex } from "../utils";
 
 export type ProofMode = "PROOF" | "BRANCH" | "MERGE"
@@ -111,7 +113,8 @@ export abstract class CompiledChainedProofCollection {
             verifier_must_be_true: false,
         };
         for(var action of this.unseal_proof_actions) {
-            console.log(action)
+            console.log(proof_counter, action)
+            console.log(proof_state, public_inputs[proof_counter])
             // if(action.action === ACTION_START_UNSEALING) {
             //     proof_state = await this.chainedProof.solidity_dryrun_start_proving(action.params.verifier_address, public_inputs[proof_counter], proofs[proof_counter], true)
             //     proof_counter++;
@@ -143,9 +146,9 @@ export abstract class CompiledChainedProofCollection {
             }
             console.log('Solidity dryrun',action.action, proof_state.current_hash)
         }
-        console.log('Solidity dryrun final root: ', toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n))
+        console.log('Solidity dryrun final root: ', toPaddedHex(BigInt(proof_state.current_hash) % cryptoTools.SNARK_FIELD_SIZE))
         //TODO make sure it is within field
-        return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n)
+        return toPaddedHex(BigInt(proof_state.current_hash) % cryptoTools.SNARK_FIELD_SIZE)
     }
 
     async getUnsealRoot(dryrun: boolean = true, proofs: any[] = [], public_inputs: any[][] = []): Promise<string> {
@@ -198,7 +201,7 @@ export abstract class CompiledChainedProofCollection {
         // }
 
       
-        // return toPaddedHex(BigInt(proof_state.current_hash) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n);
+        // return toPaddedHex(BigInt(proof_state.current_hash) % cryptoTools.SNARK_FIELD_SIZE);
     }
 
     getProofOrder(): string[] {

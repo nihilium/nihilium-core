@@ -2,7 +2,7 @@ import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROO
 import { UnsealProofAction, CompiledChainedProofCollection } from "./types";
 import { IDataStream } from "../data_stream/types";
 import { ethers, Signer } from "ethers";
-import { UnsealOpeningProof } from "./proofs/zk_proofs/000_unseal_opening_proof";
+//import { UnsealOpeningProof } from "./proofs/zk_proofs/000_unseal_opening_proof";
 import { ProcessorEndpoint } from "../../types/protocol/common";
 
 
@@ -21,7 +21,7 @@ export class GenericVerifyCollection extends CompiledChainedProofCollection {
     
    
     protected chainedProof:ChainedProof;
-    private opening_proof:UnsealOpeningProof;
+    //private opening_proof:UnsealOpeningProof;
    
  
     protected unseal_proof_actions: UnsealProofAction[] = []
@@ -36,7 +36,7 @@ export class GenericVerifyCollection extends CompiledChainedProofCollection {
     ){
         super(opening_proof_address, datastreams, provider, signer);
         this.opening_proof_address = opening_proof_address;
-        this.opening_proof = new UnsealOpeningProof(this.opening_proof_address);
+        //this.opening_proof = new UnsealOpeningProof(this.opening_proof_address);
         this.chainedProof = new ChainedProof(this.opening_proof_address, forced_opening_address, provider, signer);
         
         this.unseal_proof_actions =unseal_proof_actions;

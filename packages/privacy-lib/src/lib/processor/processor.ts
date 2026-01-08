@@ -8,7 +8,7 @@ import { SingleSealRequest, SingleSealRequestResponse, SingleUnsealRequest, Sing
 //import { circuit_ENCRYPT_PROOF, circuit_KEY_HE_ADD } from '../env_settings';
 import { hexToBytes } from '@noble/hashes/utils';
 
-import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
+// import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
 import { GenericVerifyCollection } from '../unseal_conditions/generic_verify_collection';
 import { Signer } from 'ethers';
 
@@ -46,7 +46,7 @@ const genCircuitInputsEncrypt = (
   
   
   var bigIntXY = cryptoTools.toBigIntArray(pubKey)
-  let input_encrypt: encrypt_proofInputType = {
+  let input_encrypt: any = {
       privateKeyScalar: p.toString(),
       
       nonceKey_p: noncesP.map(nonce => nonce.toString()),
@@ -123,7 +123,7 @@ export class Processor {
   async initialize(): Promise<void> {
     this.zkeddsa = await import("@zk-kit/eddsa-poseidon");
     this.signing_PublicKey = this.zkeddsa.derivePublicKey(Buffer.from(BigInt(this.signingPrivateKey).toString(16), 'hex'))
-    await encryptProofCircuit.init()
+    //await encryptProofCircuit.init()
     //await validatedSigHeAddCircuit.init()
   
   }
@@ -206,7 +206,8 @@ export class Processor {
     var proof: any = null;
     if(request.require_proof) {
       console.log(input.encoded);
-      proof = await encryptProofCircuit.generateProof({input: input.encoded});
+      
+      //proof = await encryptProofCircuit.generateProof({input: input.encoded});
         //var encrypted_message =
 
      

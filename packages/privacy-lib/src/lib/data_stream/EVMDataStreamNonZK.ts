@@ -319,11 +319,15 @@ export class EVMDataStreamNonZK implements IDataStream {
         return [globalProof, toPaddedHex(BigInt(localTree.root)), timestamp, this.getGlobalTreeIndex() - 1]
     }
 
+
+    //TODO make this a proper return type
+    //Return type: [globalProof: ProofPath, localProof: ProofPath, timestamp: number, globalIndex: number, localIndex: number][]
     async getProof(value: HexString): Promise<[ProofPath, ProofPath, number, number, number]> {
         if(!(await this.isProvable( value))){
             throw new Error("Not provable")
         }
         //We can assume it exists because of isProvable
+        //It also returns a list, TODO: make sure this function also returns a list
         var indexes = (await this.persistence.getIndexedLocalLeaf(keccakTreeHasher(BigInt(value), 0n)))
         var indexes2 = indexes[0]
         var localTree = await this.persistence.getLocalTree(indexes2 [0])

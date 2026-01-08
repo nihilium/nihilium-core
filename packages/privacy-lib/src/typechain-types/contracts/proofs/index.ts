@@ -13,5 +13,4 @@ export type { TestVerifyAlwaysTrue } from "./TestVerifyAlwaysTrue";
 export type { TimeDelayProof } from "./TimeDelayProof";
 export type { TopLevelMerkleProof } from "./TopLevelMerkleProof";
 export type { VerifyEDDSA } from "./VerifyEDDSA";
-export type { ZKPassport_7 } from "./ZKPassport_7";
 export type { Opening_proof } from "./Opening_proof";

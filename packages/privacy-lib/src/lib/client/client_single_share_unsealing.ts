@@ -23,11 +23,11 @@ export type UnsealingState = {
 
 export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnsealingProcess {
    
-    private processor: ProcessorEndpoint;
-    private phase: UnsealingStatus;
+    public processor: ProcessorEndpoint;
+    public phase: UnsealingStatus;
     private seal: SingleSealStoragePackage;
-    private dataStreams: IDataStream[] = [];
-    private unsealingState: UnsealingState;
+    public dataStreams: IDataStream[] = [];
+    public unsealingState: UnsealingState;
     public unsealConditionCollection: UnsealConditionCollection;
     public unsealConditionTemplate: UnsealConditionTemplate;
     private storageKey: string;

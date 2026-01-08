@@ -11,7 +11,7 @@ import { ProofPath } from "fixed-merkle-tree";
 import { ProcessorEndpoint } from "../../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../../utils";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, UnsealConditionModule } from "../types";
+import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
 import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
@@ -29,17 +29,6 @@ import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
 export class AfterTimeModule extends UnsealConditionModule {
     
    
-    
-    
-    private smaller_than_proof:SmallerThanProof;
-
-    private smaller_than_proof_node: ModuleNode;
-    // private inputs: IOMap;
-    // private outputs: IOMap;
-    
-    // protected unseal_proofs: UnsealConditionProof[] = [
-
-    // ];
     constructor(
         proofLibrary: ProofLibraryType,
     ){
@@ -72,32 +61,12 @@ export class AfterTimeModule extends UnsealConditionModule {
         
         
         
-        this.smaller_than_proof = new proofLibrary.standard["SmallerThanProof"]() as SmallerThanProof;
+        var smaller_than_proof = proofLibrary.getProof("SmallerThan");
+        var smaller_than_proof_id = this.addProof(smaller_than_proof);
 
-        this.smaller_than_proof_node = new ModuleNode(this.smaller_than_proof.getName(), this.smaller_than_proof, [this.inputs["timestamp"], this.inputs["threshold"]]);
-        this.startingNode = this.smaller_than_proof_node;
-        //Required by super class for compilation
-        this.nodes[this.smaller_than_proof_node.node_id] = this.smaller_than_proof_node;
+        this.addSignalEdge(undefined, smaller_than_proof_id, ["timestamp", "timestamp"], ModuleEdgeInput.external_input);
+        this.addSignalEdge(undefined, smaller_than_proof_id, ["threshold", "threshold"], ModuleEdgeInput.user_input);
         
-        
-        //Represents a static input from the user
-        var timestamp_edge =  new ModuleEdge( 
-            undefined,
-            this.smaller_than_proof_node, 
-            ["timestamp", "timestamp"], 
-            ModuleEdgeInput.external_input);
-        var threshold_edge =  new ModuleEdge( 
-            undefined,
-            this.smaller_than_proof_node, 
-            ["threshold", "threshold"], 
-            ModuleEdgeInput.user_input);
-
-     
-        
-            //Required by super class for compilation
-        this.edges[timestamp_edge.edge_id] = timestamp_edge;
-        // this.edges[link_edge.edge_id] = link_edge;
-        this.edges[threshold_edge.edge_id] = threshold_edge;
     
         this.outputs = {
            
@@ -105,14 +74,14 @@ export class AfterTimeModule extends UnsealConditionModule {
     }
   
 
-    async produce_proofs(timestamp: bigint, threshold: bigint): Promise<{proofs: any[], public_inputs: any[][]}> {
+    async produce_proofs(timestamp: bigint, threshold: bigint): Promise<ModuleProof> {
         var return_proofs = ["0x"];
         if(timestamp >= threshold) {
             throw new Error("Timestamp is not smaller than threshold");
         }
         var return_public_inputs = [[toPaddedHex(timestamp), toPaddedHex(threshold)]];
         
-        return {proofs: return_proofs, public_inputs: return_public_inputs}
+        return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: {}}
 
     }
 

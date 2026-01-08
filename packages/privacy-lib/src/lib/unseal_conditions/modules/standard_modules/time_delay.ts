@@ -11,7 +11,7 @@ import { ProofPath } from "fixed-merkle-tree";
 import { ProcessorEndpoint } from "../../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../../utils";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, UnsealConditionModule } from "../types";
+import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
 import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
@@ -30,18 +30,9 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
 
 export class TimeDelayModule extends UnsealConditionModule {
     
-   
     
     
-    private time_delay_proof:TimeDelayProof;
 
-    private time_delay_proof_node: ModuleNode;
-    // private inputs: IOMap;
-    // private outputs: IOMap;
-    
-    // protected unseal_proofs: UnsealConditionProof[] = [
-
-    // ];
     constructor(
         proofLibrary: ProofLibraryType,
     ){
@@ -80,38 +71,13 @@ export class TimeDelayModule extends UnsealConditionModule {
         
         
         
-        this.time_delay_proof = new proofLibrary.standard["TimeDelayProof"]() as TimeDelayProof;
-
-        this.time_delay_proof_node = new ModuleNode(this.time_delay_proof.getName(), this.time_delay_proof, [this.inputs["timestamp_low"], this.inputs["timestamp_high"], this.inputs["offset"]]);
-        this.startingNode = this.time_delay_proof_node;
-        //Required by super class for compilation
-        this.nodes[this.time_delay_proof_node.node_id] = this.time_delay_proof_node;
+        var time_delay_proof = proofLibrary.getProof("TimeDelayProof");
         
-        
-        //Represents a static input from the user
-        var timestamp_edge =  new ModuleEdge( 
-            undefined,
-            this.time_delay_proof_node, 
-            ["timestamp_low", "timestamp_low"], 
-            ModuleEdgeInput.external_input);
-        var timestamp_high_edge =  new ModuleEdge( 
-                undefined,
-                this.time_delay_proof_node, 
-                ["timestamp_high", "timestamp_high"], 
-                ModuleEdgeInput.external_input);
-        var offset_edge =  new ModuleEdge( 
-            undefined,
-            this.time_delay_proof_node, 
-            ["offset", "offset"], 
-            ModuleEdgeInput.user_input);
-
-     
-        
-            //Required by super class for compilation
-        this.edges[timestamp_edge.edge_id] = timestamp_edge;
-        // this.edges[link_edge.edge_id] = link_edge;
-        this.edges[timestamp_high_edge.edge_id] = timestamp_high_edge;
-        this.edges[offset_edge.edge_id] = offset_edge;
+        var time_delay_proof_id = this.addProof(time_delay_proof);
+        this.addSignalEdge(undefined, time_delay_proof_id, ["timestamp_low", "timestamp_low"], ModuleEdgeInput.external_input);
+        this.addSignalEdge(undefined, time_delay_proof_id, ["timestamp_high", "timestamp_high"], ModuleEdgeInput.external_input);
+        this.addSignalEdge(undefined, time_delay_proof_id, ["offset", "offset"], ModuleEdgeInput.user_input);
+       
     
         this.outputs = {
            
@@ -119,14 +85,14 @@ export class TimeDelayModule extends UnsealConditionModule {
     }
   
 
-    async produce_proofs(timestamp: bigint, threshold: bigint): Promise<{proofs: any[], public_inputs: any[][]}> {
+    async produce_proofs(timestamp: bigint, threshold: bigint): Promise<ModuleProof> {
         var return_proofs = ["0x"];
         if(timestamp >= threshold) {
             throw new Error("Timestamp is not smaller than threshold");
         }
         var return_public_inputs = [[toPaddedHex(timestamp), toPaddedHex(threshold)]];
         
-        return {proofs: return_proofs, public_inputs: return_public_inputs}
+        return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: {}}
 
     }
 

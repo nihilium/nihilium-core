@@ -268,7 +268,7 @@ export class UnsealConditionCollection {
                 }else {
                     var found_edge: CollectionEdge | undefined = undefined;
                     for(var edge of edges_to_node) {
-                        if(edge.mapping[0] === input_key) {
+                        if(edge.mapping[1] === input_key) {
                             found_edge = edge;
                             break;
                         }

@@ -11,7 +11,7 @@ import { ProofPath } from "fixed-merkle-tree";
 import { ProcessorEndpoint } from "../../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../../utils";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, UnsealConditionModule } from "../types";
+import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
 import { cryptoTools } from "@nihilium/zkp-circuits";
@@ -30,21 +30,11 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     
    
     
-    private opening_proof:UnsealOpeningProof;
-    private top_level_merkle_tree_proof:TopLevelTreeProof;
-    private sub_tree_merkle_tree_proof:SubTreeProof;
-    private keccack_tree_hash_proof:KeccakTreeEntryProof;
+    private opening_proof:UnsealConditionProof;
+    private top_level_merkle_tree_proof:UnsealConditionProof;
+    private sub_tree_merkle_tree_proof:UnsealConditionProof;
+    private keccack_tree_hash_proof:UnsealConditionProof;
 
-    private opening_proof_node: ModuleNode;
-    private top_level_merkle_tree_proof_node: ModuleNode;
-    private sub_tree_merkle_tree_proof_node: ModuleNode;
-    private keccack_tree_hash_proof_node: ModuleNode;
-    // private inputs: IOMap;
-    // private outputs: IOMap;
-    
-    // protected unseal_proofs: UnsealConditionProof[] = [
-
-    // ];
     constructor(
         proofLibrary: ProofLibraryType,
     ){
@@ -72,69 +62,41 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         
         
         
-        this.opening_proof = proofLibrary.getProof("UnsealOpeningProof") as UnsealOpeningProof;
-        this.top_level_merkle_tree_proof = proofLibrary.getProof("TopLevelTreeProof") as TopLevelTreeProof;
-        this.sub_tree_merkle_tree_proof = proofLibrary.getProof("SubTreeProof") as SubTreeProof;
-        this.keccack_tree_hash_proof = proofLibrary.getProof("KeccakTreeEntryProof") as KeccakTreeEntryProof;
+        this.opening_proof = proofLibrary.getProof("opening_proof");
+        this.top_level_merkle_tree_proof = proofLibrary.getProof("TopLevelMerkleProof");
+        this.sub_tree_merkle_tree_proof = proofLibrary.getProof("SubTreeMerkleProof");
+        this.keccack_tree_hash_proof = proofLibrary.getProof("KeccakTreeEntry");
 
-        this.opening_proof_node = new ModuleNode("opening_proof", this.opening_proof, [this.inputs["metadata_root_hash"]]);
-        this.top_level_merkle_tree_proof_node = new ModuleNode("top_level_merkle_tree_proof", this.top_level_merkle_tree_proof, []);
-        this.sub_tree_merkle_tree_proof_node = new ModuleNode("sub_tree_merkle_tree_proof", this.sub_tree_merkle_tree_proof, []);
-        this.keccack_tree_hash_proof_node = new ModuleNode("keccack_tree_hash_proof", this.keccack_tree_hash_proof, []);
-        this.startingNode = this.opening_proof_node;
-        //Required by super class for compilation
-        this.nodes[this.opening_proof_node.node_id] = this.opening_proof_node;
-        this.nodes[this.keccack_tree_hash_proof_node.node_id] = this.keccack_tree_hash_proof_node;
-        this.nodes[this.top_level_merkle_tree_proof_node.node_id] = this.top_level_merkle_tree_proof_node;
-        this.nodes[this.sub_tree_merkle_tree_proof_node.node_id] = this.sub_tree_merkle_tree_proof_node;
+        var opening_proof_id = this.addProof(this.opening_proof);
         
+        var keccack_tree_hash_proof_id = this.addProof(this.keccack_tree_hash_proof);
+        var sub_tree_merkle_tree_proof_id = this.addProof(this.sub_tree_merkle_tree_proof);
+        var top_level_merkle_tree_proof_id = this.addProof(this.top_level_merkle_tree_proof);
         
+
+        this.addSignalEdge(undefined, opening_proof_id, ["metadata_root_hash", "metadata_root_hash"], ModuleEdgeInput.user_input);
+        this.addSignalEdge(opening_proof_id, keccack_tree_hash_proof_id, ["reveal_value", "plain_value"], ModuleEdgeInput.signal_pass);
+        this.addSignalEdge(keccack_tree_hash_proof_id, sub_tree_merkle_tree_proof_id, ["tree_entry", "leaf_value"], ModuleEdgeInput.signal_pass);
+        this.addSignalEdge(sub_tree_merkle_tree_proof_id, top_level_merkle_tree_proof_id, ["computed_root", "subtree_root"], ModuleEdgeInput.signal_pass);
+
         //Represents a static input from the user
-        var opening_edge =  new ModuleEdge( 
-            undefined,
-            this.opening_proof_node, 
-            ["metadata_root_hash", "metadata_root_hash"], 
-            ModuleEdgeInput.user_input);
-
-     
-        var keccack_tree_hash_edge =  new ModuleEdge( 
-            this.opening_proof_node,
-            this.keccack_tree_hash_proof_node, 
-            ["reveal_value", "reveal_value"], ModuleEdgeInput.signal_pass);
-        
-        var sub_tree_entry_edge =  new ModuleEdge( 
-            this.keccack_tree_hash_proof_node,
-            this.sub_tree_merkle_tree_proof_node, 
-            ["tree_entry", "leaf_value"], ModuleEdgeInput.signal_pass);
-              
-
-        var top_level_edge =  new ModuleEdge( 
-            this.sub_tree_merkle_tree_proof_node,
-            this.top_level_merkle_tree_proof_node, 
-            ["computed_root", "subtree_root"], ModuleEdgeInput.signal_pass);
+       
         
         
-            //Required by super class for compilation
-        this.edges[opening_edge.edge_id] = opening_edge;
-        // this.edges[link_edge.edge_id] = link_edge;
-        this.edges[keccack_tree_hash_edge.edge_id] = keccack_tree_hash_edge;
-        this.edges[sub_tree_entry_edge.edge_id] = sub_tree_entry_edge;
-        //this.edges[sub_tree_edge.edge_id] = sub_tree_edge;
-        this.edges[top_level_edge.edge_id] = top_level_edge;
     
         this.outputs = {
             link: {
                 name: "link",
                 type_order: ["Other"],                
                 description: "A simple link to define ordering",
-                proof_key: this.opening_proof_node.node_id,
+                proof_key: opening_proof_id,
                 signal_key: "link",
                 
             },
             reveal_value: {
                 name: "reveal_value",
                 type_order: ["String"],
-                proof_key: this.opening_proof_node.node_id,
+                proof_key: opening_proof_id,
                 signal_key: "reveal_value",
                 description: "The reveal value",
                 
@@ -142,7 +104,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             reveal_value_tree_hash: {
                 name: "reveal_value_tree_hash",
                 type_order: ["String"],
-                proof_key: this.keccack_tree_hash_proof_node.node_id,
+                proof_key: keccack_tree_hash_proof_id,
                 signal_key: "tree_entry",
                 description: "The reveal value tree hash",
                 
@@ -150,7 +112,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             sub_tree_merkle_root: {
                 name: "sub_tree_merkle_root",
                 type_order: ["String"], //Not randomness as influencable by datastream
-                proof_key: this.sub_tree_merkle_tree_proof_node.node_id,
+                proof_key: sub_tree_merkle_tree_proof_id,
                 signal_key: "computed_root",
                 description: "The sub tree merkle root",
                 
@@ -158,7 +120,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             top_level_merkle_root: {
                 name: "top_level_merkle_root",
                 type_order: ["String", "Randomness"], //This root is defined by a mined block
-                proof_key: this.top_level_merkle_tree_proof_node.node_id,
+                proof_key: top_level_merkle_tree_proof_id,
                 signal_key: "computed_root",
                 description: "The top level merkle root",
                 
@@ -166,7 +128,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             metadata_root_hash: {
                 name: "metadata_root_hash",
                 type_order: ["String"],
-                proof_key: this.opening_proof_node.node_id,
+                proof_key: opening_proof_id,
                 signal_key: "metadata_root_hash", //TODO not actually there
                 description: "The metadata root hash",
                 
@@ -174,7 +136,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             timestamp: {
                 name: "timestamp",
                 type_order: ["Timestamp", "Number"],
-                proof_key: this.top_level_merkle_tree_proof_node.node_id,
+                proof_key: top_level_merkle_tree_proof_id,
                 signal_key: "block_timestamp",
                 description: "The timestamp",
                 
@@ -202,7 +164,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
      * @param opening_public_inputs 
      * @returns 
      */
-    async produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<{proofs: any[], public_inputs: any[][]}> {
+    async produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<ModuleProof> {
        // var oproof =typeof opening_proof !== "string" ? opening_proof : cryptoTools.hexString2Buffer(opening_proof);
         var return_proofs = [opening_proof];
         var return_public_inputs = [opening_public_inputs];
@@ -235,7 +197,17 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             toPaddedHex(BigInt(data_stream_merkle_proof[3]))
         ])
 
-        return {proofs: return_proofs, public_inputs: return_public_inputs}
+        return {proofs: return_proofs, 
+            public_inputs: return_public_inputs, 
+            //TODO: automate this from the signals
+            outputs: {
+                ["top_level_merkle_root"]: toPaddedHex(BigInt(data_stream_merkle_proof[0].pathRoot.toString()))
+                // ["sub_tree_merkle_root"]: sub_tree_merkle_tree_proof_id,
+                // ["reveal_value_tree_hash"]: keccack_tree_hash_proof_id,
+                // ["reveal_value"]: opening_proof_id,
+                // ["metadata_root_hash"]: opening_proof_id,
+                // ["timestamp"]: top_level_merkle_tree_proof_id,
+            }}
 
     }
 

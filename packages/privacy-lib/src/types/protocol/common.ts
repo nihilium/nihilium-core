@@ -285,7 +285,7 @@ export type SingleShareSealPrivatePackage = PrivatePackage & {
     unseal_condition_root: HexString,
     metadata_root: HexString,
     unseal_template: UnsealConditionTemplateExport,
-    
+    proving_hints: any,
     unseal_collection_id: string
     
 }

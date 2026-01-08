@@ -4,6 +4,7 @@
  * A TypeScript library for privacy-preserving computations using Circom
  */
 export * from './common_index';
+
 // Export the main components
 const stub = {}
 var Persistence = stub;

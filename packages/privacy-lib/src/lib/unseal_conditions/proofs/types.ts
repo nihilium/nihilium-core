@@ -6,74 +6,61 @@ export type Proof = {
     public_signals: any[];
 }
 
-export abstract class UnsealConditionProof {
-    protected id: string = "";
-    protected name: string = "";
-    protected description: string = "";
-    // protected addresses: {[key: string]: string} = {}; //chainID: address
-    protected version: string = "";
-    protected proof_input_signals: {[key: string]: [number, number]} = {}; //index_range
-    protected public_signals: {[key: string]: [number, number]} = {}; //index_range
-    protected total_signal_length: number = 0;
+export type UnsealConditionProofData = {
+   // id: string;
+    name: string;
+    addressMapKey: string;
+    description?: string;
+    version: string;
+    public_signals: {[key: string]: [number, number]};
+    complexity_hint?: number;
+}
+
+
+export class UnsealConditionProof {
+    public data: UnsealConditionProofData;
    
-    getId(): string {
-        return this.id;
+    constructor(data: UnsealConditionProofData) {
+        this.data = data;
     }
-    getProofInputSignalIndex(signal: string): [number, number] {
-        return this.proof_input_signals[signal];
-    }
-    getProofInputSignals(): {[key: string]: [number, number]} {
-        return this.proof_input_signals;
-    }
-    getProofInputSignalKeys(): string[] {
-        return Object.keys(this.proof_input_signals);
-    }
+   
     getSignalIndex(signal: string): [number, number] {
-        return this.public_signals[signal];
+        return this.data.public_signals[signal];
     }
     getPublicSignals(): {[key: string]: [number, number]}  {
-        return this.public_signals;
+        return this.data.public_signals;
     }
-    getSignalLength(): number {
-        //Compute this in the constructor
-        return this.total_signal_length;
-    }
-    // getAddress(chainID: string): string {
-    //     return this.addresses[chainID];
-    // }
+ 
     getVersion(): string {
-        return this.version;
+        return this.data.version;
     }
     getDescription(): string {
-        return this.description;
+        return this.data.description || "";
     }
     getName(): string {
-        return this.name;
+        return this.data.name;
     }
     compile(addresses: {[key: string]: string}): CompiledProof {
-        if(!addresses[this.id]) {
-            throw new Error("Address not found for proof " + this.id);
+        if(!addresses[this.data.addressMapKey]) {
+            throw new Error("Address not found for proof " + this.data.name);
         }
         return {
             prepare_action: {
                 action: ACTION_PREPARE_NEXT_PROOF,
                 params: {
-                    verifier_address: addresses[this.id],
+                    verifier_address: addresses[this.data.addressMapKey],
                     verifier_must_be_true: true,
                 },
             },
             validate_action: {
                 action: ACTION_CHAIN_PROOF_VERIFY,
                 params: {
-                    verifier_address: addresses[this.id],
+                    verifier_address: addresses[this.data.addressMapKey],
                 },
             },
         }
     }
-    abstract create_proof_from_signals(inputs: any[]): Promise<Proof>;
-    abstract create_proof(inputs: {[key: string]: any}): Promise<Proof>;
-    abstract verify_proof(proof: Proof): Promise<boolean>;
-    abstract verify_onchain_proof(proof: Proof): Promise<boolean>;
+   
 }
 
 export type CompiledProof = {

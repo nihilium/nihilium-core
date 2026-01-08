@@ -105,10 +105,6 @@ declare module "hardhat/types/runtime" {
       name: "VerifyEDDSA",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.VerifyEDDSA__factory>;
-    getContractFactory(
-      name: "ZKPassport_7",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZKPassport_7__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -225,11 +221,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.VerifyEDDSA>;
-    getContractAt(
-      name: "ZKPassport_7",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ZKPassport_7>;
 
     deployContract(
       name: "Ownable",
@@ -323,10 +314,6 @@ declare module "hardhat/types/runtime" {
       name: "VerifyEDDSA",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.VerifyEDDSA>;
-    deployContract(
-      name: "ZKPassport_7",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ZKPassport_7>;
 
     deployContract(
       name: "Ownable",
@@ -443,11 +430,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.VerifyEDDSA>;
-    deployContract(
-      name: "ZKPassport_7",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ZKPassport_7>;
 
     // default types
     getContractFactory(

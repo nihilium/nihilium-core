@@ -12,7 +12,7 @@ import axios from "axios";
 // import { PubKey } from "@nihilium/noir-circuits";
 import { hexToBytes } from "@noble/hashes/utils";
 import { IDataStream } from "../data_stream/types";
-import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
+// /import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
 //import { encryptProofCircuit } from "@nihilium/zkp-circuits";
 import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
@@ -61,7 +61,7 @@ const genCircuitInputsHEAdd = (
         y: pubKeyXY[1].toString()
     }
     
-    let input_encrypt: validated_sig_he_addInputType = {
+    let input_encrypt: any = {
         input_add: value.toString(),
         nonceKey: noncesAdd.map(n => n.toString()),
         point_org: points.map(point => {    
@@ -135,7 +135,7 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
     // private unsealConditionCollection: UnsealConditionCollection;
     private secret: bigint;
     private data_streams: IDataStream[];
-    
+    private proving_hints: any;
     private reveal_value_preimage: bigint;
     private data_stream_group_preimage: bigint;
     private metadata_root: bigint;
@@ -148,6 +148,7 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
         processor: ProcessorEndpoint,        
         dataStreams: IDataStream[],
         unsealConditionTemplate: UnsealConditionTemplate,
+        proving_hints: any = {},
         // unsealConditionCollection: UnsealConditionCollection
     ) {
         this.data_streams = dataStreams;
@@ -159,7 +160,7 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
         this.data_stream_group_preimage = 0n;
         this.metadata_root = 0n;
         //this.severed_commitment_preimage = 0n;
-        
+        this.proving_hints = proving_hints;
         this.unsealConditionTemplate = unsealConditionTemplate;
         //this.unsealConditionCollection = unsealConditionCollection;
                 // this.env_settings = {
@@ -431,7 +432,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
                 metadata_root: this.metadata_root.toString(), //This metadata root can be hashed or even encrypted to create password protection
                 reveal_value: BigInt(proof.publicSignals[0]).toString(),
                 unseal_collection_id: this.unsealConditionTemplate.collection_id,
-                
+                proving_hints: this.proving_hints,
             },
             public_package: { //TODO should be different proof of the severed commitment
                 reveal_value: BigInt(proof.publicSignals[0] ).toString(),

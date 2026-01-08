@@ -57,6 +57,15 @@ export async function createKeccakMerkelTree(depth: number, leaves: string[]): P
 }
 
 
+export function createKeccakMerkelTreeSync(depth: number, leaves: string[]): MerkleTree {
+    
+    const tree = new MerkleTree(depth, [ZERO_KECCAK], {hashFunction: keccakTreeHasher, zeroElement: ZERO_KECCAK});
+    tree.bulkInsert(leaves)
+   
+    return tree;
+}
+
+
 export async function signDataInsertRequestJWT(data:  HexString[], global_tree_index: number, inserted_at: number ,secret: Signer): Promise<string> {
 
 

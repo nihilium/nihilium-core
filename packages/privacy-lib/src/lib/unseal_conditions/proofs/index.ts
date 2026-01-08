@@ -10,21 +10,21 @@ import { TimeDelayProof } from "./lib/006_time_delay";
 
 export abstract class ProofLibraryType {
     standard: {
-        [key: string]: new (...args: any[]) => UnsealConditionProof;
+        [key: string]: UnsealConditionProof;
     } = {};
     custom: {
-        [key: string]: new (...args: any[]) => UnsealConditionProof;
+        [key: string]: UnsealConditionProof;
     } = {};
   
-    addCustomProof(name: string, proof: new (...args: any[]) => UnsealConditionProof): void {
+    addCustomProof(name: string, proof: UnsealConditionProof): void {
         this.custom[name] = proof;
     }
     getProof(name: string): UnsealConditionProof {
         if(this.standard[name]) {
-            return new this.standard[name]();
+            return this.standard[name];
         }
         if(this.custom[name]) {
-            return new this.custom[name]();
+            return this.custom[name];
         }
         throw new Error("Proof " + name + " not found");
         
@@ -32,17 +32,30 @@ export abstract class ProofLibraryType {
 }
 
 export class StandardProofLibrary extends ProofLibraryType {
-    public standard: {[key: string]: new (...args: any[]) => UnsealConditionProof} = {
-        ["UnsealOpeningProof"]: UnsealOpeningProof,
-        ["TopLevelTreeProof"]: TopLevelTreeProof,
-        ["SubTreeProof"]: SubTreeProof,
-        ["KeccakTreeEntryProof"]: KeccakTreeEntryProof,
-        ["SmallerThanProof"]: SmallerThanProof,
-        ["GreaterOrEqualThenProof"]: GreaterOrEqualThenProof,
-        ["TimeDelayProof"]: TimeDelayProof,
+    public standard: {[key: string]: UnsealConditionProof} = {
+        // ["UnsealOpeningProof"]: UnsealOpeningProof,
+        // ["TopLevelTreeProof"]: TopLevelTreeProof,
+        // ["SubTreeProof"]: SubTreeProof,
+        // ["KeccakTreeEntryProof"]: KeccakTreeEntryProof,
+        // ["SmallerThanProof"]: SmallerThanProof,
+        // ["GreaterOrEqualThenProof"]: GreaterOrEqualThenProof,
+        // ["TimeDelayProof"]: TimeDelayProof,
     };
-    public custom: {[key: string]: new (...args: any[]) => UnsealConditionProof} = {};
+    public custom: {[key: string]: UnsealConditionProof} = {};
     constructor() {
         super();
+        for(const proof of Object.values(standardProofs)) {
+            this.standard[proof.data.addressMapKey] = proof;
+        }
     }
+}
+
+export const standardProofs = {
+    UnsealOpeningProof,
+    TopLevelTreeProof,
+    SubTreeProof,
+    KeccakTreeEntryProof,
+    SmallerThanProof,
+    GreaterOrEqualThenProof,
+    TimeDelayProof,
 }

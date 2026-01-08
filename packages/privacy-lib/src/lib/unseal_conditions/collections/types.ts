@@ -171,7 +171,7 @@ export class CollectionEdge {
                 console.log("From is not undefined");
                 return false;
             }
-            if(!this.to.get_output_keys().includes(this.mapping[1])) {
+            if(!this.to.get_input_keys().includes(this.mapping[1])) {
                 console.log("To input key not found");
                 return false;
             }

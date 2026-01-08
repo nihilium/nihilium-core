@@ -47,3 +47,10 @@ export class StandardModuleLibrary extends ModuleLibraryType {
         super();
     }
 }
+
+export const standardModules = {
+    DefaultAnchoredOpeningModule: DefaultAnchoredOpeningProofModule,
+    AfterTimeModule: AfterTimeModule,
+    TimeDelayModule: TimeDelayModule,
+    BeforeTimeModule: BeforeTimeModule,
+}

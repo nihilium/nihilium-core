@@ -48,5 +48,3 @@ export type { TopLevelMerkleProof } from "./contracts/proofs/TopLevelMerkleProof
 export { TopLevelMerkleProof__factory } from "./factories/contracts/proofs/TopLevelMerkleProof__factory";
 export type { VerifyEDDSA } from "./contracts/proofs/VerifyEDDSA";
 export { VerifyEDDSA__factory } from "./factories/contracts/proofs/VerifyEDDSA__factory";
-export type { ZKPassport_7 } from "./contracts/proofs/ZKPassport_7";
-export { ZKPassport_7__factory } from "./factories/contracts/proofs/ZKPassport_7__factory";
