@@ -27,8 +27,9 @@ WORKDIR /app/apps/processor
 RUN groupadd -g 1001 nodejs \
   && useradd -u 1001 -g nodejs -m -s /bin/bash processor
 
-# Ensure the processor user has write permissions to the working directory
-RUN chown -R processor:nodejs /app/apps/processor
+# Ensure the processor user has write permissions for runtime-generated files
+RUN chown -R processor:nodejs /app/apps/processor \
+  && chown -R processor:nodejs /app/packages/privacy-lib/dist/lib/processor
 
 USER processor
 
