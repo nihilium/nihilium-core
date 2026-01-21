@@ -1,5 +1,5 @@
-# Use Node.js 18 LTS (glibc) to match linux-x64-gnu native modules
-FROM node:18-bullseye-slim
+# Use Node.js 18 LTS with newer glibc for linux-x64-gnu native modules
+FROM node:18-bookworm-slim
 
 # Set working directory
 WORKDIR /app
