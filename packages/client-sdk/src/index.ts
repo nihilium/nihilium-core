@@ -6,8 +6,10 @@ import { getDatastreams, getProcessors, getProcessorEndpoint } from './lib/endpo
 import { DataStream } from '@nihilium/privacy-lib';
 export type SingleSealStoragePackage = nhsdk.protocolTypes.SingleSealStoragePackage;
 export { getFullDatastreams, getFullProcessors } from './lib/endpoint-selection';
-export { getProcessorEndpoint } from './lib/endpoint-selection';
+export { getProcessorEndpoint, setApiEndpoint } from './lib/endpoint-selection';
+
 export const cryptoTools = nhsdk.cryptoTools;
+
 // export const devProcessorUrl:string = "https://processor1.nihilium.io";
 // export const devDataStreamUrl:string = "https://datastream1.nihilium.io";
 
