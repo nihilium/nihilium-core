@@ -3,11 +3,11 @@
   "private": true,
   "version": "1.0.1",
   "workspaces": [
-   
+    "./packages/dlog-solver-rs",
     "./packages/zkp-circuits",    
     "./packages/privacy-lib",
     "./packages/client-sdk",
-    "./packages/dlog-solver-rs",
+    
     "./apps/datastream-server",
     "./apps/processor",
     "./apps/test-ui"
