@@ -1,11 +1,15 @@
-# Use Node.js 18 LTS as base image
-FROM node:18-alpine
+# Use Node.js 18 LTS (glibc) to match linux-x64-gnu native modules
+FROM node:18-bullseye-slim
 
 # Set working directory
 WORKDIR /app
 
 # Install build dependencies for native modules and RocksDB
-RUN apk add --no-cache python3 make g++ snappy-dev zlib-dev bzip2-dev lz4-dev zstd-dev
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+    libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy the entire monorepo (node_modules and all)
 COPY . .
@@ -20,8 +24,8 @@ EXPOSE 3006
 WORKDIR /app/apps/processor
 
 # Create a non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S processor -u 1001
+RUN groupadd -g 1001 nodejs \
+  && useradd -u 1001 -g nodejs -m -s /bin/bash processor
 
 # Ensure the processor user has write permissions to the working directory
 RUN chown -R processor:nodejs /app/apps/processor
