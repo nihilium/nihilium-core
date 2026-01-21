@@ -4,7 +4,11 @@ import { API_PATHS } from "../api-endpoints";
 import * as nhsdk from "@nihilium/privacy-lib";
 import axios from "axios";
 //const apiEndpoint = "https://api.nihilium.io";
-const apiEndpoint = "http://localhost:8080";
+var apiEndpoint = "http://localhost:8080";
+export function setApiEndpoint(endpoint: string) {
+    apiEndpoint = endpoint;
+}
+
 export async function getProcessors(): Promise<SelectableProcessor[]>{
     const response = await fetch(`${apiEndpoint}/${API_PATHS.GET_PROCESSORS}`);
     const data = await response.json();
