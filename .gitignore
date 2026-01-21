@@ -145,3 +145,6 @@ node_modules/*
 
 apps/datastream-server/.env-ganache
 packages/privacy-lib/anvil-state.json
+packages/privacy-lib/scripts/deployed-contracts-bytecode-31337.json
+packages/privacy-lib/scripts/deployed-contracts-bytecode-43113.json
+x19xlookupTable.json

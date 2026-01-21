@@ -37,6 +37,7 @@ export const circomOpeningProof = WrappedCircomCircuit.fromIPFS(openingProofIPFS
 // export const genericAdjacentTreeProofCircuit = new WrappedNoirCircuit<generic_adjacent_tree_proofInputType>(genericAdjacentTreeProofJson as any);
 
 import * as cryptoTools from "./utils/tools";
+import { precompute } from "./utils/precompute";
 // import * as decodeCypherText from "./utils/decode";
 //import * as ec from "./ecelgamal";
 //import type { generic_adjacent_tree_proofInputType } from './tscircuits/generic_adjacent_tree_proof';
@@ -53,5 +54,6 @@ export {
     // generic_adjacent_tree_proofInputType,
     cryptoTools, decodeCypherText,
     WrappedCircomCircuit,
-    IPFSConfig
+    IPFSConfig,
+    precompute
 }

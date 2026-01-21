@@ -1,5 +1,5 @@
 // @ts-ignore
-import deployedContracts1337 from "../scripts/deployed-contracts-1337.json";
+//import deployedContracts1337 from "../scripts/deployed-contracts-1337.json";
 // @ts-ignore
 import deployedContracts43113 from "../scripts/deployed-contracts-43113.json";
 // @ts-ignore
@@ -16,7 +16,7 @@ export var NETWORK_IDS = {
 
 export var deployedProtocolContracts = {
   [NETWORK_IDS.ANVIL]: deployedContractsAnvil,
-  [NETWORK_IDS.GENANCHE]: deployedContracts1337,
+  //[NETWORK_IDS.GENANCHE]: deployedContracts1337,
   [NETWORK_IDS.AVAX_TESTNET]: deployedContracts43113,
   [NETWORK_IDS.CUSTOM]: {},
 }

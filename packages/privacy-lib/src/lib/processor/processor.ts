@@ -1,5 +1,6 @@
-import { cryptoTools } from '@nihilium/zkp-circuits';
+import { cryptoTools, precompute } from '@nihilium/zkp-circuits';
 import { DlogSolver } from '@nihilium/dlog-solver-rs';
+import fs from 'fs';
 // import { babyJub, Keypair, PubKey } from "../types/index";
 // import { bigInt2Buffer, bufferToBigInt, coordinatesToExtPointBigint, generateRandom248BitNumber, stringifyBigInts, toBigIntArray, uint8ArrayToHex } from '@nihilium/noir-circuits/utils/tools';
 // import { Environment } from 'nihilium-circuits/types/circuit_wrapper';
@@ -103,7 +104,14 @@ export class Processor {
     this.chained_proof_address = chained_proof_address;
     this.forced_opening_address = forced_opening_address;
     this.signer = signer;
-    this.dlogSolver = new DlogSolver(19, path.join(__dirname, '../../lookupTables/x19xlookupTable.json'));
+    var lookupPath = path.join(__dirname, './x19xlookupTable.json')
+    if(!fs.existsSync(lookupPath)) {
+      var lookupTable = precompute(19);
+      fs.writeFileSync(lookupPath, JSON.stringify(lookupTable));
+    }else{
+      console.log(`Lookup table found at ${lookupPath}`);
+    }
+    this.dlogSolver = new DlogSolver(19, lookupPath);
   }
   
   get_chain_id(): number {

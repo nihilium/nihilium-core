@@ -28,6 +28,7 @@
 
 import * as cryptoTools from "./utils/tools";
 import * as decodeCypherText from "./utils/decode";
+import { precompute } from "./utils/precompute";
 //import * as ec from "./ecelgamal";
 //import { generic_adjacent_tree_proofInputType } from './tscircuits/generic_adjacent_tree_proof';
 import { WrappedCircomCircuit, IPFSConfig } from './circom-wrapper';
@@ -46,5 +47,6 @@ export {
    
     cryptoTools, decodeCypherText,
     WrappedCircomCircuit,
-    IPFSConfig
+    IPFSConfig,
+    precompute
 }

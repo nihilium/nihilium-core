@@ -10,10 +10,11 @@ const stub = {}
 var Persistence = stub;
 var Processor = stub;
 var DataStream = stub;
-
+var precompute = (stub: any) => { return stub; };
 export { 
   
   Processor, 
   DataStream,
-  Persistence
+  Persistence,
+  precompute
  }

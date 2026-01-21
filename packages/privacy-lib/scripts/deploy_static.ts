@@ -14,13 +14,17 @@ interface DeployedContract {
     contract?: any;
 }
 
-// Interface for deployment file format
+// Interface for deployment file format (without bytecode)
 interface DeploymentData {
     [contractName: string]: {
         address: string;
-        bytecode: string;
         abi: any[];
     };
+}
+
+// Interface for bytecode map
+interface BytecodeMap {
+    [contractName: string]: string;
 }
 
 // A helper to deploy contracts and log the address
@@ -93,47 +97,61 @@ function getContractABI(contractPath: string): any[] {
 }
 
 // Helper to load existing deployment data
-function loadExistingDeployments(chainId: string): DeploymentData {
+function loadExistingDeployments(chainId: string): { deploymentData: DeploymentData; bytecodeMap: BytecodeMap } {
     const deploymentFilename = `deployed-contracts-${chainId}.json`;
+    const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
     const deploymentPath = path.join(__dirname, deploymentFilename);
+    const deploymentByteCodePath = path.join(__dirname, deploymentByteCodeFilename);
+    
+    const deploymentData: DeploymentData = {};
+    const bytecodeMap: BytecodeMap = {};
+    
+    // Load bytecode from separate file if it exists
+    if (fs.existsSync(deploymentByteCodePath)) {
+        const existingBytecode = JSON.parse(fs.readFileSync(deploymentByteCodePath, "utf-8"));
+        Object.assign(bytecodeMap, existingBytecode);
+    }
     
     if (fs.existsSync(deploymentPath)) {
         const existingData = JSON.parse(fs.readFileSync(deploymentPath, "utf-8"));
         
         // Convert old format to new format if needed
-        const deploymentData: DeploymentData = {};
         for (const [name, value] of Object.entries(existingData)) {
             if (typeof value === 'string') {
                 // Old format: just addresses - need to fill in missing data
-                deploymentData[name] = { address: value, bytecode: "", abi: [] };
+                deploymentData[name] = { address: value, abi: [] };
             } else if (typeof value === 'object' && value !== null) {
                 const existing = value as any;
-                // New format: ensure all fields exist
+                // New format: remove bytecode from deployment data
                 deploymentData[name] = {
                     address: existing.address || "",
-                    bytecode: existing.bytecode || "",
                     abi: existing.abi || []
                 };
+                // If bytecode exists in old format, migrate it to bytecode map
+                if (existing.bytecode && !bytecodeMap[name]) {
+                    bytecodeMap[name] = existing.bytecode;
+                }
             }
         }
         
         console.log(`Loaded existing deployments for chain ${chainId}`);
-        return deploymentData;
+        return { deploymentData, bytecodeMap };
     }
     
     console.log(`No existing deployments found for chain ${chainId}`);
-    return {};
+    return { deploymentData, bytecodeMap };
 }
 
 // Helper to check if contract needs redeployment
-function needsRedeployment(contractName: string, newBytecode: string, existingDeployments: DeploymentData): boolean {
+function needsRedeployment(contractName: string, newBytecode: string, existingDeployments: DeploymentData, bytecodeMap: BytecodeMap): boolean {
     const existing = existingDeployments[contractName];
     if (!existing || !existing.address) {
         console.log(`${contractName}: No existing deployment found - needs deployment`);
         return true;
     }
     
-    if (!existing.bytecode || existing.bytecode !== newBytecode) {
+    const existingBytecode = bytecodeMap[contractName];
+    if (!existingBytecode || existingBytecode !== newBytecode) {
         console.log(`${contractName}: Bytecode changed - needs redeployment`);
         return true;
     }
@@ -190,8 +208,9 @@ async function main() {
     console.log("Compilation complete.");
 
     // Load existing deployments
-    const existingDeployments = loadExistingDeployments(chainId.toString());
+    const { deploymentData: existingDeployments, bytecodeMap: existingBytecodeMap } = loadExistingDeployments(chainId.toString());
     const deploymentData: DeploymentData = { ...existingDeployments };
+    const bytecodeMap: BytecodeMap = { ...existingBytecodeMap };
 //TimeDelayProof
     var nonce = (await wallet.provider?.getTransactionCount(wallet.address, "pending")) || 0;
     // --- DEPLOY VERIFIERS ---
@@ -216,13 +235,13 @@ async function main() {
     for (const config of verifierConfigs) {
         const contractBytecode = getContractBytecode(config.artifactPath);
         
-        if (needsRedeployment(config.name, contractBytecode, existingDeployments)) {
+        if (needsRedeployment(config.name, contractBytecode, existingDeployments, existingBytecodeMap)) {
             const verifier = await deployContract(config.name, config.contractPath, wallet, gasPrice, nonce);
             deploymentData[verifier.name] = {
                 address: verifier.address,
-                bytecode: verifier.bytecode,
                 abi: verifier.abi
             };
+            bytecodeMap[verifier.name] = verifier.bytecode;
             verifierAddresses[config.name] = verifier.address;
             nonce++;
         } else {
@@ -241,13 +260,13 @@ async function main() {
     // EmpheralMerkleTreeKeccak
     const empheralName = "EmpheralMerkleTreeKeccak";
     const empheralBytecode = getContractBytecode(`contracts/${empheralName}.sol/${empheralName}`);
-    if (needsRedeployment(empheralName, empheralBytecode, existingDeployments)) {
+    if (needsRedeployment(empheralName, empheralBytecode, existingDeployments, existingBytecodeMap)) {
         const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, nonce, wallet.address, 24);
         deploymentData[empheralMerkleTree.name] = {
             address: empheralMerkleTree.address,
-            bytecode: empheralMerkleTree.bytecode,
             abi: empheralMerkleTree.abi
         };
+        bytecodeMap[empheralMerkleTree.name] = empheralMerkleTree.bytecode;
         nonce++;
     } else if (!existingDeployments[empheralName].abi || existingDeployments[empheralName].abi.length === 0) {
         existingDeployments[empheralName].abi = getContractABI(`contracts/${empheralName}.sol/${empheralName}`);
@@ -284,7 +303,7 @@ async function main() {
     // ChainedProof
     const chainedProofName = "ChainedProof";
     const chainedProofBytecode = getContractBytecode(`contracts/${chainedProofName}.sol/${chainedProofName}`);
-    if (needsRedeployment(chainedProofName, chainedProofBytecode, existingDeployments)) {
+    if (needsRedeployment(chainedProofName, chainedProofBytecode, existingDeployments, existingBytecodeMap)) {
         // We need to provide two verifier addresses for ChainedProof.
         // We'll use validated_sig_he_add for both as a default. This can be changed later.
         const chainedProof = await deployContract(
@@ -298,9 +317,9 @@ async function main() {
         );
         deploymentData[chainedProof.name] = {
             address: chainedProof.address,
-            bytecode: chainedProof.bytecode,
             abi: chainedProof.abi
         };
+        bytecodeMap[chainedProof.name] = chainedProof.bytecode;
     } else if (!existingDeployments[chainedProofName].abi || existingDeployments[chainedProofName].abi.length === 0) {
         existingDeployments[chainedProofName].abi = getContractABI(`contracts/${chainedProofName}.sol/${chainedProofName}`);
         deploymentData[chainedProofName] = existingDeployments[chainedProofName];
@@ -389,11 +408,21 @@ async function main() {
     console.log(JSON.stringify(displayData, null, 2));
 
     const deploymentFilename = `deployed-contracts-${chainId}.json`;
+    const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
+    
+    // Save deployment data (without bytecode)
     fs.writeFileSync(
         path.join(__dirname, deploymentFilename),
         JSON.stringify(deploymentData, null, 2)
     );
     console.log(`\nDeployment data saved to ${deploymentFilename} in privacy-lib/scripts/`);
+    
+    // Save bytecode separately
+    fs.writeFileSync(
+        path.join(__dirname, deploymentByteCodeFilename),
+        JSON.stringify(bytecodeMap, null, 2)
+    );
+    console.log(`Bytecode data saved to ${deploymentByteCodeFilename} in privacy-lib/scripts/`);
 }
 
 main().catch((error) => {
