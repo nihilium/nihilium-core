@@ -1,7 +1,7 @@
 import { Contract, Signer, ethers } from "ethers";
 import { ChainedProof } from "../../typechain-types"; // auto-generated
 import { ChainedProof__factory } from "../../typechain-types";
-import { ProvingState } from "../reveal_methods/base_functions/ChainedProof";
+import { ProvingState } from "../unseal_conditions/ChainedProof";
 import { toPaddedHex } from "../utils";
 import { LocalVMExecutor } from "./LocalVMExecutor";
 
@@ -11,7 +11,7 @@ function createMutableState(state: ProvingState): ProvingState {
         ...state,
         outputs: state.outputs.map(arr => [...arr]),
         prepared_public_inputs: [...state.prepared_public_inputs],
-        commited_processor_public_key: [...state.commited_processor_public_key]
+        
     };
 }
 
@@ -92,13 +92,14 @@ export class ChainedProofWrapper {
     
     return createMutableState({
       current_hash: result.current_hash,
-      expected_hash: result.expected_hash,
-      current_index: result.current_index,
+      verifier_must_be_true: result.verifier_must_be_true,
+      // expected_hash: result.expected_hash,
+      current_index: Number(result.current_index), // Convert bigint to number
       outputs: result.outputs,
       prepared_public_inputs: result.prepared_public_inputs,
       prepared_proof: result.prepared_proof,
       proof_verifier: result.proof_verifier,
-      commited_processor_public_key: result.commited_processor_public_key,
+      // commited_processor_public_key: result.commited_processor_public_key,
       initiator: result.initiator
     });
   }
@@ -152,7 +153,7 @@ export class ChainedProofWrapper {
     }
   }
 
-  async dryrunPrepareNextProof(state: any, verifier: string, publicInputs: string[], proof: string): Promise<ProvingState> {
+  async dryrunPrepareNextProof(state: any, verifier: string, verifierMustBeTrue: boolean, publicInputs: string[], proof: string): Promise<ProvingState> {
     // Ensure verifier is loaded if using local VM
     if (this.useLocalVM && this.localExecutor && !this.loadedVerifiers.has(verifier)) {
       // Try to load a generic verifier ABI - you might want to customize this
@@ -171,55 +172,32 @@ export class ChainedProofWrapper {
       await this.loadVerifierContract(verifier, genericVerifierAbi);
     }
 
-    const result = await this.executeStaticCall("dryrun_prepare_next_proof", [state, verifier, publicInputs, proof]);
+    const result = await this.executeStaticCall("dryrun_prepare_next_proof", [state, verifier, verifierMustBeTrue, publicInputs, proof]);
     return this.getStateFromResult(result);
   }
 
   async dryrunValidateDataRoot(
     state: any,
     datastream: string,
-    publicInputIndex: number,
-    isDelayedProof: boolean = false,
-    optionalDualTreeProof: string = toPaddedHex(0n),
-    optionalDualTreePublicInputs: string[] = [],
-    merkleRootIndex: number = 0
+    outputProofIndex: number,
+    outputSignalIndex: number,
   ): Promise<ProvingState> {
     const result = await this.executeStaticCall("dryrun_validate_data_root", [
       state,
       datastream,
-      publicInputIndex,
-      isDelayedProof,
-      optionalDualTreeProof,
-      optionalDualTreePublicInputs,
-      toPaddedHex(BigInt(merkleRootIndex))
+      outputProofIndex, 
+      outputSignalIndex, 
     ], true); //Force remote call as the data streams is filled by another service
     return this.getStateFromResult(result);
   }
 
-  async dryrunValidateTimestamp(
-    state: any,
-    outputProofIndex: number,
-    outputIndex: number,
-    publicInputIndex: number,
-    timestampWindow: number
-  ): Promise<ProvingState> {
-    
-    const result = await this.executeStaticCall("dryrun_validate_timestamp", [
-      state,
-      outputProofIndex,
-      outputIndex,
-      publicInputIndex,
-      timestampWindow
-    ]);
-    return this.getStateFromResult(result);
-  }
-
+ 
   async dryrunChainStaticInput(
     state: any,
-    inputs: string[],
-    indexes: number[]
+    value: bigint,
+    public_input_index: number
   ): Promise<ProvingState> {
-    const result = await this.executeStaticCall("dryrun_chain_static_input", [state, inputs, indexes]);
+    const result = await this.executeStaticCall("dryrun_chain_static_input", [state, toPaddedHex(value, 32), public_input_index]);
     return this.getStateFromResult(result);
   }
 
@@ -227,16 +205,16 @@ export class ChainedProofWrapper {
 
   async dryrunChainPassSignal(
     state: any,
-    publicInputIndexes: number[],
-    outputProofIndexes: number[],
-    outputIndexes: number[],
+    public_input_indexes: number[],
+    output_proof_index: number, 
+    output_signal_indexes: number[],
     dryrunMode: boolean = false
   ): Promise<ProvingState> {
     const result = await this.executeStaticCall("dryrun_chain_pass_signal", [
       state,
-      publicInputIndexes,
-      outputProofIndexes,
-      outputIndexes
+      public_input_indexes,
+      output_proof_index,
+      output_signal_indexes
     ]);
     return this.getStateFromResult(result);
   }
@@ -271,36 +249,6 @@ export class ChainedProofWrapper {
     return this.getStateFromResult(result);
   }
 
-  async dryrunStartProving(
-    verifier: string,
-    publicInputs: string[],
-    proof: string,
-    verifyProof: boolean
-  ): Promise<ProvingState> {
-    // Ensure verifier is loaded if using local VM
-    if (this.useLocalVM && this.localExecutor && !this.loadedVerifiers.has(verifier)) {
-      const genericVerifierAbi = [
-        {
-          "inputs": [
-            {"internalType": "bytes", "name": "proof", "type": "bytes"},
-            {"internalType": "bytes32[]", "name": "publicInputs", "type": "bytes32[]"}
-          ],
-          "name": "verify",
-          "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-          "stateMutability": "view",
-          "type": "function"
-        }
-      ];
-      await this.loadVerifierContract(verifier, genericVerifierAbi);
-    }
-
-    // const tx = await this.contract.dryrun_start_proving(verifier, publicInputs, proof, verifyProof);
-    // const receipt = await tx.wait();
-    // if (!receipt) throw new Error("Transaction failed");
-    
-    const result = await this.executeStaticCall("dryrun_start_proving", [verifier, publicInputs, proof, verifyProof]);
-    return this.getStateFromResult(result);
-  }
 
   // Helper methods for cache management
   clearCache(): void {

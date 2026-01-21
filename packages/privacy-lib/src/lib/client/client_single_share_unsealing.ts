@@ -5,9 +5,11 @@ import { EnvSettings, get_env_settings } from "../../env_settings";
 import { IDataStream } from "../data_stream/types";
 import axios from "axios";
 import { cryptoTools } from "@nihilium/zkp-circuits";
-import { ChainedProofCollection } from "../reveal_methods/collections/types";
-
+// import { ChainedProofCollection } from "../unseal_conditions/types";
+import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
+import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { hexToBytes } from "@noble/hashes/utils";
+import { CompiledModule, UnsealConditionModule } from "../unseal_conditions/modules";
 
 
 export type UnsealingState = { 
@@ -21,24 +23,37 @@ export type UnsealingState = {
 
 export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnsealingProcess {
    
-    private processor: ProcessorEndpoint;
-    private phase: UnsealingStatus;
+    public processor: ProcessorEndpoint;
+    public phase: UnsealingStatus;
     private seal: SingleSealStoragePackage;
-    private dataStreams: IDataStream[];
-    private unsealingState: UnsealingState;
-    private chainedProofCollection: ChainedProofCollection;
+    public dataStreams: IDataStream[] = [];
+    public unsealingState: UnsealingState;
+    public unsealConditionCollection: UnsealConditionCollection;
+    public unsealConditionTemplate: UnsealConditionTemplate;
     private storageKey: string;
     private awaiting_reveal_value_to_be_provable: boolean;
     constructor(
         processor: ProcessorEndpoint,
-        chainedProofCollection: ChainedProofCollection,
+        unsealConditionCollection: UnsealConditionCollection,
+        unsealConditionTemplate: UnsealConditionTemplate,
+        data_stream_mapping: {[address:string]:IDataStream},
         seal: SingleSealStoragePackage
     ) {
         this.processor = processor;
         this.seal = seal;
-        this.chainedProofCollection = chainedProofCollection;
+        this.unsealConditionCollection = unsealConditionCollection;
         this.phase = UnsealingStatus.NOT_STARTED;
-        this.dataStreams = this.chainedProofCollection.getDatastreams();
+        this.unsealConditionTemplate = unsealConditionTemplate;
+        if(!unsealConditionTemplate.isCompiled()) {
+            throw new Error("Unseal condition template not compiled");
+        }
+        for(var data_stream_address of this.unsealConditionTemplate.getAllDataStreams()) {
+            if(data_stream_mapping[data_stream_address] === undefined) {
+                throw new Error("Data stream " + data_stream_address + " is not mapped");
+            }
+            this.dataStreams.push(data_stream_mapping[data_stream_address]);
+        }
+        
         this.awaiting_reveal_value_to_be_provable = false;
         // Generate a unique storage key based on the seal address
         this.storageKey = `unsealing_state_${seal.public_package.address}`;
@@ -48,6 +63,17 @@ export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnse
             seal: seal,
             unseal_response: undefined
         }
+    }
+
+    getModulesForPath(proof_index: number): {compiled_module: CompiledModule, module: UnsealConditionModule}[] {
+        var toReturn: {compiled_module: CompiledModule, module: UnsealConditionModule}[] = [];
+
+        for(var module of this.unsealConditionTemplate.compiled_collection.compiled_modules[proof_index]) {
+            toReturn.push({compiled_module: module, 
+                module: this.unsealConditionTemplate.module_library.getModule(module.module_name, 
+                    this.unsealConditionTemplate.proof_library)});
+        }
+        return toReturn;
     }
 
     private isLocalStorageAvailable(): boolean {
@@ -116,7 +142,7 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
     this.awaiting_reveal_value_to_be_provable = true;
     while(this.awaiting_reveal_value_to_be_provable) {
         await new Promise(resolve => setTimeout(resolve, 500));
-        var isProvable = await this.validate_elligble_for_unsealing();
+        var isProvable = await this.reveal_value_published();
         if(isProvable) {
             if(callback) {
                 callback();
@@ -126,7 +152,7 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
     }
 }
 
-    async validate_elligble_for_unsealing(): Promise<boolean> {
+    async reveal_value_published(): Promise<boolean> {
         //if(this.phase == UnsealingStatus.REVEAL_VALUE_SENT){
             //TODO check other reveal conditions
             var isProvable = await this.dataStreams[0].isProvable(BigInt(this.seal.public_package.reveal_value).toString())
@@ -150,7 +176,7 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
         if(data_stream_id == "") {
             data_stream_id = this.dataStreams[0].getAddress()
         }
-        var isProvable = await this.validate_elligble_for_unsealing();
+        var isProvable = await this.reveal_value_published();
         if(isProvable) {
            return
         }
@@ -178,11 +204,18 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
         this.saveStateToLocalStorage();
     }
 
-    async get_unseal_request(): Promise<SingleUnsealRequest> {
+    /**
+     * This function is not responsible for producing the proofs, it is only responsible for constructing the unseal request.
+     * @param proof_index the index of the proof path to use
+     * @param proofs the proofs to use
+     * @param public_inputs the public inputs to use
+     * @returns the unseal request
+     */
+    async get_unseal_request(proof_index: number, proofs: any[], public_inputs: any[][]): Promise<SingleUnsealRequest> {
         if(this.phase != UnsealingStatus.REVEAL_VALUE_EXPOSED) {
             throw new Error("Unseal request can only be produced in the initial reveal condition exposed phase")
         }
-        var proofs = await this.chainedProofCollection.produce_proofs(this.dataStreams[0], this.processor, hexToBytes(this.seal.private_package.proof), this.seal.private_package.public_signals)
+        //var proofs = await this.un.produce_proofs(this.dataStreams[0], this.processor, hexToBytes(this.seal.private_package.proof), this.seal.private_package.public_signals)
         
         return  {
             address: this.seal.public_package.address,
@@ -193,16 +226,17 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
             signature_S: "0",
             signature_R8x: "0",
             signature_R8y: "0",
-            proofs: proofs.proofs.map(proof => cryptoTools.uint8ArrayToHex(proof)),
-            public_signals: proofs.public_inputs,
+            proofs: proofs,
+            public_signals: public_inputs,
             data_stream_address: this.dataStreams[0].getAddress(),
-            unseal_proof_actions: this.chainedProofCollection.getUnsealProofActions()
+            unseal_proof_actions: this.unsealConditionTemplate.unsealProofActions[proof_index],
+            unseal_root_proof: await this.unsealConditionTemplate.getUnsealRootForProof(proof_index)
         }
     }
 
-    async unseal_request_to_processor(): Promise<SingleSealUnsealRequestResponse> {
+    async unseal_request_to_processor(proof_index: number, proofs: any[], public_inputs: any[][]): Promise<SingleSealUnsealRequestResponse> {
         //Always needs to be called live due to the fact of rolling over merkle roots in the data stream
-        var unseal_request = await this.get_unseal_request();
+        var unseal_request = await this.get_unseal_request(proof_index, proofs, public_inputs);
         const request_url = this.processor.url + PROTOCOL_PROCESSOR_PATHS.REQUEST_UNSEAL;
         const response = await axios.post<SingleSealUnsealRequestResponse>(
             request_url, unseal_request)
@@ -215,18 +249,8 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
         return response.data;
     }
 
-    async start_unsealing(send_to_processor: boolean = true): Promise<SingleUnsealRequest> {
-        var toReturn:SingleUnsealRequest = await this.get_unseal_request();
-        if(send_to_processor) {
-            const response = await axios.post<SingleSealUnsealRequestResponse>(
-                this.processor.url + PROTOCOL_PROCESSOR_PATHS.REQUEST_UNSEAL, toReturn)
-            if(response.status != 200) {
-                throw new Error("Failed to request unseal");
-            }
-            this.phase = UnsealingStatus.UNSEALING_IN_PROGRESS;
-            this.saveStateToLocalStorage();
-        }
-        
+    async start_unsealing(proof_index: number, proofs: any[], public_inputs: any[][]): Promise<SingleUnsealRequest> {
+        var toReturn:SingleUnsealRequest = await this.get_unseal_request(proof_index, proofs, public_inputs);
         return toReturn;
     }
     async process_unseal_response(processor_response?: SingleSealUnsealRequestResponse, open_metadata?: (request:bigint) => bigint): Promise<bigint> {

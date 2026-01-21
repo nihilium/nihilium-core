@@ -7,6 +7,7 @@
     "./packages/zkp-circuits",    
     "./packages/privacy-lib",
     "./packages/client-sdk",
+    "./packages/dlog-solver-rs",
     "./apps/datastream-server",
     "./apps/processor",
     "./apps/test-ui"

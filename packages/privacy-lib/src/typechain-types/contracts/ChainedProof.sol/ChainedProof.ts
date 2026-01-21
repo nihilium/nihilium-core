@@ -23,35 +23,32 @@ import type {
 
 export type ProvingStateStruct = {
   current_hash: BytesLike;
-  expected_hash: BytesLike;
   current_index: BigNumberish;
   outputs: BytesLike[][];
   prepared_public_inputs: BytesLike[];
   prepared_proof: BytesLike;
+  verifier_must_be_true: boolean;
   proof_verifier: AddressLike;
-  commited_processor_public_key: BigNumberish[];
   initiator: AddressLike;
 };
 
 export type ProvingStateStructOutput = [
   current_hash: string,
-  expected_hash: string,
   current_index: bigint,
   outputs: string[][],
   prepared_public_inputs: string[],
   prepared_proof: string,
+  verifier_must_be_true: boolean,
   proof_verifier: string,
-  commited_processor_public_key: bigint[],
   initiator: string
 ] & {
   current_hash: string;
-  expected_hash: string;
   current_index: bigint;
   outputs: string[][];
   prepared_public_inputs: string[];
   prepared_proof: string;
+  verifier_must_be_true: boolean;
   proof_verifier: string;
-  commited_processor_public_key: bigint[];
   initiator: string;
 };
 
@@ -60,19 +57,14 @@ export interface ChainedProofInterface extends Interface {
     nameOrSignature:
       | "ACTION_CHAIN_PROOF_VERIFY"
       | "ACTION_PASS_SIGNAL"
-      | "ACTION_PASS_SIGNAL_PLUSONE"
       | "ACTION_PREPARE_NEXT_PROOF"
-      | "ACTION_START_UNSEALING"
       | "ACTION_STATIC_INPUT"
       | "ACTION_VALIDATE_DATA_ROOT"
-      | "ACTION_VALIDATE_TIMESTAMP"
       | "dryrun_chain_pass_signal"
       | "dryrun_chain_proof_verify"
       | "dryrun_chain_static_input"
       | "dryrun_prepare_next_proof"
-      | "dryrun_start_proving"
       | "dryrun_validate_data_root"
-      | "dryrun_validate_timestamp"
       | "forced_opening_verifier"
       | "has_data_stream_root"
       | "provingStates"
@@ -88,15 +80,7 @@ export interface ChainedProofInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "ACTION_PASS_SIGNAL_PLUSONE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "ACTION_PREPARE_NEXT_PROOF",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "ACTION_START_UNSEALING",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -108,12 +92,13 @@ export interface ChainedProofInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "ACTION_VALIDATE_TIMESTAMP",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "dryrun_chain_pass_signal",
-    values: [ProvingStateStruct, BigNumberish[], BigNumberish[], BigNumberish[]]
+    values: [
+      ProvingStateStruct,
+      [BigNumberish, BigNumberish],
+      BigNumberish,
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_chain_proof_verify",
@@ -121,37 +106,15 @@ export interface ChainedProofInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_chain_static_input",
-    values: [ProvingStateStruct, BytesLike[], BigNumberish[]]
+    values: [ProvingStateStruct, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_prepare_next_proof",
-    values: [ProvingStateStruct, AddressLike, BytesLike[], BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "dryrun_start_proving",
-    values: [AddressLike, BytesLike[], BytesLike, boolean]
+    values: [ProvingStateStruct, AddressLike, boolean, BytesLike[], BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_validate_data_root",
-    values: [
-      ProvingStateStruct,
-      AddressLike,
-      BigNumberish,
-      boolean,
-      BytesLike,
-      BytesLike[],
-      BigNumberish
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "dryrun_validate_timestamp",
-    values: [
-      ProvingStateStruct,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ]
+    values: [ProvingStateStruct, AddressLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "forced_opening_verifier",
@@ -179,15 +142,7 @@ export interface ChainedProofInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ACTION_PASS_SIGNAL_PLUSONE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "ACTION_PREPARE_NEXT_PROOF",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "ACTION_START_UNSEALING",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -196,10 +151,6 @@ export interface ChainedProofInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "ACTION_VALIDATE_DATA_ROOT",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "ACTION_VALIDATE_TIMESTAMP",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -219,15 +170,7 @@ export interface ChainedProofInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "dryrun_start_proving",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "dryrun_validate_data_root",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "dryrun_validate_timestamp",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -295,24 +238,18 @@ export interface ChainedProof extends BaseContract {
 
   ACTION_PASS_SIGNAL: TypedContractMethod<[], [string], "view">;
 
-  ACTION_PASS_SIGNAL_PLUSONE: TypedContractMethod<[], [string], "view">;
-
   ACTION_PREPARE_NEXT_PROOF: TypedContractMethod<[], [string], "view">;
-
-  ACTION_START_UNSEALING: TypedContractMethod<[], [string], "view">;
 
   ACTION_STATIC_INPUT: TypedContractMethod<[], [string], "view">;
 
   ACTION_VALIDATE_DATA_ROOT: TypedContractMethod<[], [string], "view">;
 
-  ACTION_VALIDATE_TIMESTAMP: TypedContractMethod<[], [string], "view">;
-
   dryrun_chain_pass_signal: TypedContractMethod<
     [
       state: ProvingStateStruct,
-      public_input_indexes: BigNumberish[],
-      output_proof_indexes: BigNumberish[],
-      output_indexes: BigNumberish[]
+      public_input_indexes: [BigNumberish, BigNumberish],
+      output_proof_index: BigNumberish,
+      output_indexes: [BigNumberish, BigNumberish]
     ],
     [ProvingStateStructOutput],
     "view"
@@ -325,7 +262,11 @@ export interface ChainedProof extends BaseContract {
   >;
 
   dryrun_chain_static_input: TypedContractMethod<
-    [state: ProvingStateStruct, inputs: BytesLike[], indexes: BigNumberish[]],
+    [
+      state: ProvingStateStruct,
+      value: BytesLike,
+      public_input_index: BigNumberish
+    ],
     [ProvingStateStructOutput],
     "view"
   >;
@@ -334,19 +275,9 @@ export interface ChainedProof extends BaseContract {
     [
       state: ProvingStateStruct,
       _verifier: AddressLike,
+      _verifierMustBeTrue: boolean,
       _publicInputs: BytesLike[],
       _proof: BytesLike
-    ],
-    [ProvingStateStructOutput],
-    "view"
-  >;
-
-  dryrun_start_proving: TypedContractMethod<
-    [
-      verifier: AddressLike,
-      public_inputs: BytesLike[],
-      proof: BytesLike,
-      verify_proof: boolean
     ],
     [ProvingStateStructOutput],
     "view"
@@ -356,23 +287,8 @@ export interface ChainedProof extends BaseContract {
     [
       state: ProvingStateStruct,
       datastream: AddressLike,
-      public_input_index: BigNumberish,
-      is_delayed_proof: boolean,
-      optional_dual_tree_proof: BytesLike,
-      optional_dual_tree_public_inputs: BytesLike[],
-      merkle_root_index: BigNumberish
-    ],
-    [ProvingStateStructOutput],
-    "view"
-  >;
-
-  dryrun_validate_timestamp: TypedContractMethod<
-    [
-      state: ProvingStateStruct,
       output_proof_index: BigNumberish,
-      output_index: BigNumberish,
-      public_input_index: BigNumberish,
-      timestamp_window: BigNumberish
+      output_signal_index: BigNumberish
     ],
     [ProvingStateStructOutput],
     "view"
@@ -389,11 +305,11 @@ export interface ChainedProof extends BaseContract {
   provingStates: TypedContractMethod<
     [arg0: BytesLike],
     [
-      [string, string, bigint, string, string, string] & {
+      [string, bigint, string, boolean, string, string] & {
         current_hash: string;
-        expected_hash: string;
         current_index: bigint;
         prepared_proof: string;
+        verifier_must_be_true: boolean;
         proof_verifier: string;
         initiator: string;
       }
@@ -414,13 +330,7 @@ export interface ChainedProof extends BaseContract {
     nameOrSignature: "ACTION_PASS_SIGNAL"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "ACTION_PASS_SIGNAL_PLUSONE"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
     nameOrSignature: "ACTION_PREPARE_NEXT_PROOF"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "ACTION_START_UNSEALING"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "ACTION_STATIC_INPUT"
@@ -429,16 +339,13 @@ export interface ChainedProof extends BaseContract {
     nameOrSignature: "ACTION_VALIDATE_DATA_ROOT"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "ACTION_VALIDATE_TIMESTAMP"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
     nameOrSignature: "dryrun_chain_pass_signal"
   ): TypedContractMethod<
     [
       state: ProvingStateStruct,
-      public_input_indexes: BigNumberish[],
-      output_proof_indexes: BigNumberish[],
-      output_indexes: BigNumberish[]
+      public_input_indexes: [BigNumberish, BigNumberish],
+      output_proof_index: BigNumberish,
+      output_indexes: [BigNumberish, BigNumberish]
     ],
     [ProvingStateStructOutput],
     "view"
@@ -453,7 +360,11 @@ export interface ChainedProof extends BaseContract {
   getFunction(
     nameOrSignature: "dryrun_chain_static_input"
   ): TypedContractMethod<
-    [state: ProvingStateStruct, inputs: BytesLike[], indexes: BigNumberish[]],
+    [
+      state: ProvingStateStruct,
+      value: BytesLike,
+      public_input_index: BigNumberish
+    ],
     [ProvingStateStructOutput],
     "view"
   >;
@@ -463,20 +374,9 @@ export interface ChainedProof extends BaseContract {
     [
       state: ProvingStateStruct,
       _verifier: AddressLike,
+      _verifierMustBeTrue: boolean,
       _publicInputs: BytesLike[],
       _proof: BytesLike
-    ],
-    [ProvingStateStructOutput],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "dryrun_start_proving"
-  ): TypedContractMethod<
-    [
-      verifier: AddressLike,
-      public_inputs: BytesLike[],
-      proof: BytesLike,
-      verify_proof: boolean
     ],
     [ProvingStateStructOutput],
     "view"
@@ -487,24 +387,8 @@ export interface ChainedProof extends BaseContract {
     [
       state: ProvingStateStruct,
       datastream: AddressLike,
-      public_input_index: BigNumberish,
-      is_delayed_proof: boolean,
-      optional_dual_tree_proof: BytesLike,
-      optional_dual_tree_public_inputs: BytesLike[],
-      merkle_root_index: BigNumberish
-    ],
-    [ProvingStateStructOutput],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "dryrun_validate_timestamp"
-  ): TypedContractMethod<
-    [
-      state: ProvingStateStruct,
       output_proof_index: BigNumberish,
-      output_index: BigNumberish,
-      public_input_index: BigNumberish,
-      timestamp_window: BigNumberish
+      output_signal_index: BigNumberish
     ],
     [ProvingStateStructOutput],
     "view"
@@ -524,11 +408,11 @@ export interface ChainedProof extends BaseContract {
   ): TypedContractMethod<
     [arg0: BytesLike],
     [
-      [string, string, bigint, string, string, string] & {
+      [string, bigint, string, boolean, string, string] & {
         current_hash: string;
-        expected_hash: string;
         current_index: bigint;
         prepared_proof: string;
+        verifier_must_be_true: boolean;
         proof_verifier: string;
         initiator: string;
       }

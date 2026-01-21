@@ -52,10 +52,10 @@
     "upload-to-pinata": "node ./scripts/upload_to_pinata.js"
   },
   "dependencies": {
-    "@aztec/bb.js": "0.84.0",
+    
     "@noble/curves": "1.5.0",
     "@noble/hashes": "^1.3.3",
-    "@noir-lang/noir_js": "^1.0.0-beta.6",
+    
     "@types/crypto-js": "^4.2.2",
     "@zk-kit/baby-jubjub": "^1.0.3",
     "@zk-kit/eddsa-poseidon": "^1.1.0",
@@ -70,7 +70,7 @@
     "poseidon-lite": "^0.3.0"
   },
   "devDependencies": {
-    "@noir-lang/noir_codegen": "^1.0.0-beta.6",
+    
     "@types/chai": "^4.3.20",
     "@types/chai-as-promised": "^7.1.5",
     "@types/jest": "^29.5.11",

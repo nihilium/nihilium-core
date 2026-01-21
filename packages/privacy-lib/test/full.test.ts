@@ -34,10 +34,15 @@ import { Provider, Signer } from "ethers";
 import { IDataStreamPersistence } from "../src/lib/persistence/types";
 import { DataStreamFilePersistence } from "../src/lib/persistence/DataStreamFilePersistence";
 import * as zkeddsa from "@zk-kit/eddsa-poseidon";
-import { ChainedProofCollection } from "../src/lib/reveal_methods/collections/types";
-import { RevealOnlyCollectionNormalTrees } from "../src/lib/reveal_methods/collections/reveal_only_normal_trees";
+import { from_json, UnsealConditionTemplate } from "../src/lib/unseal_conditions/collections/UnsealConditionTemplate";
+import { createRevealOnlyCollection } from "../src/lib/unseal_conditions/templates/reveal_only_template";
+import { UnsealConditionCollection } from "../src/lib/unseal_conditions/collections/UnsealConditionCollection";
+// import { RevealOnlyCollectionNormalTrees } from "../src/lib/reveal_methods/collections/reveal_only_normal_trees";
 //import { validatedSigHeAddCircuit, encryptProofCircuit } from "@nihilium/zkp-circuits";
 import { createKeccakMerkelTree, keccakTreeHasher, toPaddedHex } from "../src/lib/utils";
+import { NETWORK_IDS, deployedProtocolContracts } from "../src/static_contracts";
+import { CompiledModule, DefaultAnchoredOpeningProofModule, StandardModuleLibrary } from "../src/lib/unseal_conditions/modules";
+import { StandardProofLibrary } from "../src/lib/unseal_conditions/proofs";
 //var mimc7contract = require("../contracts/mimc7.json");
 describe("Processor-Client intereaction", () => {
   context("rocessor-Client intereaction context", () => {
@@ -52,7 +57,7 @@ describe("Processor-Client intereaction", () => {
     let valueQ:bigint = 1329226995684915862903806060280344565n; // 120-bit max
     let valueAdd: bigint = 1339226995683915862903806060280343565n
     
-    let chainedProofCollection: ChainedProofCollection;
+    let revealOnlyTemplate: {collection: UnsealConditionCollection, template: UnsealConditionTemplate};
 
     let chainedProofContract: any;
     let chainedProofAddress: string;
@@ -74,7 +79,7 @@ describe("Processor-Client intereaction", () => {
     let genericAdjacentTreeProof: any;
     let genericAdjacentTreeProofAddress: string;
 
-    let levels = 20;
+    let levels = 24;
     let persistence: IDataStreamPersistence;
     before(async () => {
       //eddsa = await buildEddsa();
@@ -91,7 +96,11 @@ describe("Processor-Client intereaction", () => {
       const openingProofC = await ethers.getContractFactory("opening_proof");
       openingProof = await openingProofC.deploy();
       openingProofAddress = await openingProof.getAddress();
-      console.log(openingProofAddress);
+      //console.log(openingProofAddress);
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["opening_proof"] =   
+      {address: await openingProof.getAddress(),
+      bytecode: openingProofC.bytecode,
+      abi: openingProofC.interface.fragments.map((fragment: any) => fragment)}
 
     
       const encryptProofC = await ethers.getContractFactory("encrypt_proof");
@@ -111,8 +120,13 @@ describe("Processor-Client intereaction", () => {
 
       const topLevelMerkleProofC = await ethers.getContractFactory("TopLevelMerkleProof");
       topLevelMerkleProof = await topLevelMerkleProofC.deploy();
-      topLevelMerkleProofAddress = await topLevelMerkleProof.getAddress();
-      console.log(topLevelMerkleProofAddress);
+      //topLevelMerkleProofAddress = await topLevelMerkleProof.getAddress();
+      //console.log(topLevelMerkleProofAddress);
+      var s = deployedProtocolContracts
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["TopLevelMerkleProof"] =   
+      {address: await topLevelMerkleProof.getAddress(),
+      bytecode: topLevelMerkleProofC.bytecode,
+      abi: topLevelMerkleProofC.interface.fragments.map((fragment: any) => fragment)}
 
       // const subTreeMerkleProofC = await ethers.getContractFactory("sub_tree_merkle_proof");
       // subTreeMerkleProof = await subTreeMerkleProofC.deploy();
@@ -121,8 +135,20 @@ describe("Processor-Client intereaction", () => {
 
       const subTreeMerkleProofC = await ethers.getContractFactory("SubTreeMerkleProof");
       subTreeMerkleProof = await subTreeMerkleProofC.deploy();
-      subTreeMerkleProofAddress = await subTreeMerkleProof.getAddress();
-      console.log(subTreeMerkleProofAddress);
+      //subTreeMerkleProofAddress = await subTreeMerkleProof.getAddress();
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["SubTreeMerkleProof"] =   
+      {address: await subTreeMerkleProof.getAddress(),
+      bytecode: subTreeMerkleProofC.bytecode,
+      abi: subTreeMerkleProofC.interface.fragments.map((fragment: any) => fragment)}
+
+      const keccakTreeEntryC = await ethers.getContractFactory("KeccakTreeEntry");
+      var keccakTreeEntryContract = await keccakTreeEntryC.deploy();
+      //subTreeMerkleProofAddress = await subTreeMerkleProof.getAddress();
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["KeccakTreeEntry"] =   
+      {address: await keccakTreeEntryContract.getAddress(),
+      bytecode: keccakTreeEntryC.bytecode,
+      abi: keccakTreeEntryC.interface.fragments.map((fragment: any) => fragment)}
+      console.log("KeccakTreeEntry address: " + await keccakTreeEntryContract.getAddress());
 
       // const mimcverifier =  new ethers.ContractFactory(mimc7contract.abi, mimc7contract.bytecode, signers[0]);
       // mimcVerifierContract = await mimcverifier.deploy();
@@ -135,18 +161,27 @@ describe("Processor-Client intereaction", () => {
       const merkleTree = await ethers.getContractFactory("EmpheralMerkleTreeKeccak");
       merkleTreeContract = await merkleTree.deploy(signers[0], levels);
       merkleTreeContractAddress = await merkleTreeContract.getAddress();
+      // deployedProtocolContracts[NETWORK_IDS.CUSTOM]["EmpheralMerkleTreeKeccak"] =   
+      // {address: await merkleTreeContract.getAddress(),
+      // bytecode: merkleTree.bytecode,
+      // abi: merkleTree.interface.fragments.map((fragment: any) => fragment)}
 
       const chainedProofC = await ethers.getContractFactory("ChainedProof");
       chainedProofContract = await chainedProofC.deploy(openingProofAddress, openingProofAddress);
-      chainedProofAddress = await chainedProofContract.getAddress();
-      console.log(chainedProofAddress);
+      //chainedProofAddress = await chainedProofContract.getAddress();
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProof"] =   
+      {address: await chainedProofContract.getAddress(),
+      bytecode: chainedProofC.bytecode,
+      abi: chainedProofC.interface.fragments.map((fragment: any) => fragment)}
+      //console.log(chainedProofAddress);
 
 
-      console.log(merkleTreeContractAddress);
+      //console.log(merkleTreeContractAddress);
       const random = Date.now().toString();
       persistence = new DataStreamFilePersistence("./test_data/" + random, createKeccakMerkelTree);
       //data_stream = new EVMDataStream("test", persistence, merkleTreeContractAddress, signers[0], 10, 20, 10);
-      data_stream = new EVMDataStreamNonZK("test", persistence, merkleTreeContractAddress, signers[0], 10, 20, 10);
+      data_stream = new EVMDataStreamNonZK("test", persistence, 
+        merkleTreeContractAddress, signers[0], 10, 20, 10);
       //data_stream = new DataStreamClient("http://localhost:3000");
       await data_stream.initialize();
       
@@ -161,8 +196,8 @@ describe("Processor-Client intereaction", () => {
       processor = new Processor(
         signing_key.privKey.toString(), 
         he_encryption.privKey.toString(),        
-        chainedProofAddress,
-        openingProofAddress,        
+        deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProof"].address ,
+        deployedProtocolContracts[NETWORK_IDS.CUSTOM]["opening_proof"].address ,        
         signers[0]
       );
 
@@ -175,11 +210,13 @@ describe("Processor-Client intereaction", () => {
       }
       // chainedProofCollection = new RevealOnlyCollection(openingProofAddress, 
       //   topLevelMerkleProofAddress, subTreeMerkleProofAddress, [data_stream], signers[0]);
-      chainedProofCollection = new RevealOnlyCollectionNormalTrees(openingProofAddress, 
-          topLevelMerkleProofAddress, subTreeMerkleProofAddress, [data_stream], signers[0] as unknown as Provider);
+      revealOnlyTemplate = createRevealOnlyCollection(NETWORK_IDS.CUSTOM);
+      console.log(revealOnlyTemplate.template.getExpectedInputs());
+      //revealOnlyTemplate.compile({"metadata_root_hash": valueMetadata});
+          //topLevelMerkleProofAddress, subTreeMerkleProofAddress, [data_stream], signers[0] as unknown as Provider);
           
-      client_1 = new ClientSingleShareSealingProcess(processor_endpoint, chainedProofCollection);
-      await client_1.initialize(valueP, valueMetadata);
+      client_1 = new ClientSingleShareSealingProcess(processor_endpoint, [data_stream], revealOnlyTemplate.template);
+      await client_1.initialize(valueP, valueMetadata, {}, {"datastream": data_stream.getAddress()});
 
       await processor.initialize();
       console.log("encrypt_proof initialized");
@@ -208,8 +245,16 @@ describe("Processor-Client intereaction", () => {
     //var ttt =await encryptProofContract.verify(response.proof.proof, response.public_signals)
     //console.log(response);
     //TODO continue here
+    revealOnlyTemplate.template = from_json(single_seal.private_package.unseal_template, 
+      new StandardProofLibrary(), new StandardModuleLibrary());
 
-    const unsealing_process = new ClientSingleShareUnsealingProcess(processor_endpoint, chainedProofCollection, single_seal);
+    const unsealing_process = new ClientSingleShareUnsealingProcess(
+      processor_endpoint,
+      revealOnlyTemplate.collection,
+      revealOnlyTemplate.template,
+      {[data_stream.getAddress()]: data_stream},
+      single_seal
+    );
     await unsealing_process.initialize();
     await data_stream.postData([cryptoTools.generateRandom248BitNumber().toString()]);
     await data_stream.postData([cryptoTools.generateRandom248BitNumber().toString()]);
@@ -222,7 +267,7 @@ describe("Processor-Client intereaction", () => {
     }
     console.log("Waiting for provable");
     while(true) {
-      var provable = await unsealing_process.validate_elligble_for_unsealing();
+      var provable = await unsealing_process.reveal_value_published();
       await new Promise(resolve => setTimeout(resolve, 50));
       counter++;
       if(counter % 50){
@@ -233,7 +278,27 @@ describe("Processor-Client intereaction", () => {
       }
       
     }
-    const unseal_request = await unsealing_process.get_unseal_request();
+
+    var proofs: any[] = []
+    var public_inputs: any[][] = []
+    var proof_index = 0;
+    const modules = unsealing_process.getModulesForPath(proof_index);
+    for(var module of modules) {
+      switch(module.compiled_module.module_name) {
+        case "DefaultAnchoredOpeningModule":
+          var typedModule = module.module as DefaultAnchoredOpeningProofModule;
+          var result = await typedModule.produce_proofs(data_stream, processor_endpoint,
+            single_seal.private_package.proof, single_seal.private_package.public_signals);
+          for(var proof of result.proofs) {
+            proofs.push(proof);
+          }
+          for(var public_input of result.public_inputs) {
+            public_inputs.push(public_input);
+          }
+          break;
+      }
+    }
+    const unseal_request = await unsealing_process.get_unseal_request(proof_index, proofs, public_inputs);
     //await validatedSigHeAddCircuit.init()
     // var testtesta = await validatedSigHeAddCircuit.verifyProof(unseal_request.proof)
     // var testtest = await o.verify(unseal_request.proof.proof, unseal_request.proof.publicInputs);

@@ -57,7 +57,7 @@ export class LocalVMExecutor {
    * Initialize the VM - must be called before using the executor
    */
   async initialize(): Promise<void> {
-    this.common = new Common({ chain: Mainnet, hardfork: Hardfork.Shanghai });
+    this.common = new Common({ chain: Mainnet, hardfork: Hardfork.Cancun });
     this.state = new SimpleStateManager();
     this.evm = await createEVM({ common: this.common, stateManager: this.state });
     this.caller = new Address(Buffer.from('0000000000000000000000000000000000000001', 'hex'));

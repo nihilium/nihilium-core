@@ -14,13 +14,17 @@ interface DeployedContract {
     contract?: any;
 }
 
-// Interface for deployment file format
+// Interface for deployment file format (without bytecode)
 interface DeploymentData {
     [contractName: string]: {
         address: string;
-        bytecode: string;
         abi: any[];
     };
+}
+
+// Interface for bytecode map
+interface BytecodeMap {
+    [contractName: string]: string;
 }
 
 // A helper to deploy contracts and log the address
@@ -29,15 +33,18 @@ async function deployContract(
     factoryName: string,
     deployer: ethersjs.Wallet,
     gasPrice: bigint,
+    nonce: number,
     ...args: any[]
 ): Promise<DeployedContract> {
     console.log(`Deploying ${contractName}...`);
+    //const nonce = await deployer.provider?.getTransactionCount(deployer.address, "pending");
     const factory = await (hre as any).ethers.getContractFactory(factoryName, deployer);
-    
+    console.log(`Nonce: ${nonce}`);
     // Deploy with explicit gas settings
     const contract = await factory.deploy(...args, {
         gasPrice: gasPrice,
-        gasLimit: 6000000
+        gasLimit: 6000000,
+        nonce: nonce
     });
     await contract.waitForDeployment();
     const address = await contract.getAddress();
@@ -90,47 +97,61 @@ function getContractABI(contractPath: string): any[] {
 }
 
 // Helper to load existing deployment data
-function loadExistingDeployments(chainId: string): DeploymentData {
+function loadExistingDeployments(chainId: string): { deploymentData: DeploymentData; bytecodeMap: BytecodeMap } {
     const deploymentFilename = `deployed-contracts-${chainId}.json`;
+    const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
     const deploymentPath = path.join(__dirname, deploymentFilename);
+    const deploymentByteCodePath = path.join(__dirname, deploymentByteCodeFilename);
+    
+    const deploymentData: DeploymentData = {};
+    const bytecodeMap: BytecodeMap = {};
+    
+    // Load bytecode from separate file if it exists
+    if (fs.existsSync(deploymentByteCodePath)) {
+        const existingBytecode = JSON.parse(fs.readFileSync(deploymentByteCodePath, "utf-8"));
+        Object.assign(bytecodeMap, existingBytecode);
+    }
     
     if (fs.existsSync(deploymentPath)) {
         const existingData = JSON.parse(fs.readFileSync(deploymentPath, "utf-8"));
         
         // Convert old format to new format if needed
-        const deploymentData: DeploymentData = {};
         for (const [name, value] of Object.entries(existingData)) {
             if (typeof value === 'string') {
                 // Old format: just addresses - need to fill in missing data
-                deploymentData[name] = { address: value, bytecode: "", abi: [] };
+                deploymentData[name] = { address: value, abi: [] };
             } else if (typeof value === 'object' && value !== null) {
                 const existing = value as any;
-                // New format: ensure all fields exist
+                // New format: remove bytecode from deployment data
                 deploymentData[name] = {
                     address: existing.address || "",
-                    bytecode: existing.bytecode || "",
                     abi: existing.abi || []
                 };
+                // If bytecode exists in old format, migrate it to bytecode map
+                if (existing.bytecode && !bytecodeMap[name]) {
+                    bytecodeMap[name] = existing.bytecode;
+                }
             }
         }
         
         console.log(`Loaded existing deployments for chain ${chainId}`);
-        return deploymentData;
+        return { deploymentData, bytecodeMap };
     }
     
     console.log(`No existing deployments found for chain ${chainId}`);
-    return {};
+    return { deploymentData, bytecodeMap };
 }
 
 // Helper to check if contract needs redeployment
-function needsRedeployment(contractName: string, newBytecode: string, existingDeployments: DeploymentData): boolean {
+function needsRedeployment(contractName: string, newBytecode: string, existingDeployments: DeploymentData, bytecodeMap: BytecodeMap): boolean {
     const existing = existingDeployments[contractName];
     if (!existing || !existing.address) {
         console.log(`${contractName}: No existing deployment found - needs deployment`);
         return true;
     }
     
-    if (!existing.bytecode || existing.bytecode !== newBytecode) {
+    const existingBytecode = bytecodeMap[contractName];
+    if (!existingBytecode || existingBytecode !== newBytecode) {
         console.log(`${contractName}: Bytecode changed - needs redeployment`);
         return true;
     }
@@ -187,18 +208,26 @@ async function main() {
     console.log("Compilation complete.");
 
     // Load existing deployments
-    const existingDeployments = loadExistingDeployments(chainId.toString());
+    const { deploymentData: existingDeployments, bytecodeMap: existingBytecodeMap } = loadExistingDeployments(chainId.toString());
     const deploymentData: DeploymentData = { ...existingDeployments };
-
+    const bytecodeMap: BytecodeMap = { ...existingBytecodeMap };
+//TimeDelayProof
+    var nonce = (await wallet.provider?.getTransactionCount(wallet.address, "pending")) || 0;
     // --- DEPLOY VERIFIERS ---
     const verifierConfigs = [
-       // { name: "encrypt_proof", artifactPath: "contracts/encrypt_proof.sol/BaseHonkVerifier", contractPath: "contracts/encrypt_proof.sol:BaseHonkVerifier" },
+        { name: "TopLevelMerkleProof", artifactPath: "contracts/proofs/TopLevelMerkleProof.sol/TopLevelMerkleProof", contractPath: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
+        { name: "SubTreeMerkleProof", artifactPath: "contracts/proofs/SubTreeMerkleProof.sol/SubTreeMerkleProof", contractPath: "contracts/proofs/SubTreeMerkleProof.sol:SubTreeMerkleProof" },
+        { name: "KeccakTreeEntry", artifactPath: "contracts/proofs/KeccakTreeEntry.sol/KeccakTreeEntry", contractPath: "contracts/proofs/KeccakTreeEntry.sol:KeccakTreeEntry" },
+        { name: "GreaterOrEqualThen", artifactPath: "contracts/proofs/GreaterOrEqualThen.sol/GreaterOrEqualThen", contractPath: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
+        { name: "SmallerThan", artifactPath: "contracts/proofs/SmallerThan.sol/SmallerThan", contractPath: "contracts/proofs/SmallerThan.sol:SmallerThan" },
+        { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
+       // { name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
         // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
-        { name: "opening_proof", artifactPath: "contracts/opening_proof.sol/opening_proof", contractPath: "contracts/opening_proof.sol:opening_proof" },
-        { name: "validated_sig_he_add", artifactPath: "contracts/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/validated_sig_he_add.sol:validated_sig_he_add" },
+        { name: "opening_proof", artifactPath: "contracts/proofs/opening_proof.sol/opening_proof", contractPath: "contracts/proofs/opening_proof.sol:opening_proof" },
+        // { name: "validated_sig_he_add", artifactPath: "contracts/proofs/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/proofs/validated_sig_he_add.sol:validated_sig_he_add" },
     ];
 
     const verifierAddresses: { [name: string]: string } = {};
@@ -206,14 +235,15 @@ async function main() {
     for (const config of verifierConfigs) {
         const contractBytecode = getContractBytecode(config.artifactPath);
         
-        if (needsRedeployment(config.name, contractBytecode, existingDeployments)) {
-            const verifier = await deployContract(config.name, config.contractPath, wallet, gasPrice);
+        if (needsRedeployment(config.name, contractBytecode, existingDeployments, existingBytecodeMap)) {
+            const verifier = await deployContract(config.name, config.contractPath, wallet, gasPrice, nonce);
             deploymentData[verifier.name] = {
                 address: verifier.address,
-                bytecode: verifier.bytecode,
                 abi: verifier.abi
             };
+            bytecodeMap[verifier.name] = verifier.bytecode;
             verifierAddresses[config.name] = verifier.address;
+            nonce++;
         } else {
             // If ABI is missing from existing deployment, add it
             const existing = existingDeployments[config.name];
@@ -230,52 +260,50 @@ async function main() {
     // EmpheralMerkleTreeKeccak
     const empheralName = "EmpheralMerkleTreeKeccak";
     const empheralBytecode = getContractBytecode(`contracts/${empheralName}.sol/${empheralName}`);
-    if (needsRedeployment(empheralName, empheralBytecode, existingDeployments)) {
-        const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, wallet.address, 24);
+    if (needsRedeployment(empheralName, empheralBytecode, existingDeployments, existingBytecodeMap)) {
+        const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, nonce, wallet.address, 24);
         deploymentData[empheralMerkleTree.name] = {
             address: empheralMerkleTree.address,
-            bytecode: empheralMerkleTree.bytecode,
             abi: empheralMerkleTree.abi
         };
+        bytecodeMap[empheralMerkleTree.name] = empheralMerkleTree.bytecode;
+        nonce++;
     } else if (!existingDeployments[empheralName].abi || existingDeployments[empheralName].abi.length === 0) {
         existingDeployments[empheralName].abi = getContractABI(`contracts/${empheralName}.sol/${empheralName}`);
         deploymentData[empheralName] = existingDeployments[empheralName];
     }
 
-    // SubTreeMerkleProof
-    const subTreeName = "SubTreeMerkleProof";
-    const subTreeBytecode = getContractBytecode(`contracts/${subTreeName}.sol/${subTreeName}`);
-    if (needsRedeployment(subTreeName, subTreeBytecode, existingDeployments)) {
-        const subTreeMerkleTree = await deployContract(subTreeName, `contracts/${subTreeName}.sol:${subTreeName}`, wallet, gasPrice);
-        deploymentData[subTreeMerkleTree.name] = {
-            address: subTreeMerkleTree.address,
-            bytecode: subTreeMerkleTree.bytecode,
-            abi: subTreeMerkleTree.abi
-        };
-    } else if (!existingDeployments[subTreeName].abi || existingDeployments[subTreeName].abi.length === 0) {
-        existingDeployments[subTreeName].abi = getContractABI(`contracts/${subTreeName}.sol/${subTreeName}`);
-        deploymentData[subTreeName] = existingDeployments[subTreeName];
-    }
+    // // SubTreeMerkleProof
+    // const subTreeName = "SubTreeMerkleProof";
+    // const subTreeBytecode = getContractBytecode(`contracts/proofs/${subTreeName}.sol/${subTreeName}`);
+    // if (needsRedeployment(subTreeName, subTreeBytecode, existingDeployments)) {
+    //     const subTreeMerkleTree = await deployContract(subTreeName, `contracts/proofs/${subTreeName}.sol:${subTreeName}`, wallet, gasPrice);
+    //     deploymentData[subTreeMerkleTree.name] = {
+    //         address: subTreeMerkleTree.address,
+    //         bytecode: subTreeMerkleTree.bytecode,
+    //         abi: subTreeMerkleTree.abi
+    //     };
+    // } else if (!existingDeployments[subTreeName].abi || existingDeployments[subTreeName].abi.length === 0) {
+    //     existingDeployments[subTreeName].abi = getContractABI(`contracts/proofs/${subTreeName}.sol/${subTreeName}`);
+    //     deploymentData[subTreeName] = existingDeployments[subTreeName];
+    // }
 
-    // TopLevelMerkleProof
-    const topLevelName = "TopLevelMerkleProof";
-    const topLevelBytecode = getContractBytecode(`contracts/${topLevelName}.sol/${topLevelName}`);
-    if (needsRedeployment(topLevelName, topLevelBytecode, existingDeployments)) {
-        const topLevelMerkleTree = await deployContract(topLevelName, `contracts/${topLevelName}.sol:${topLevelName}`, wallet, gasPrice);
-        deploymentData[topLevelMerkleTree.name] = {
-            address: topLevelMerkleTree.address,
-            bytecode: topLevelMerkleTree.bytecode,
-            abi: topLevelMerkleTree.abi
-        };
-    } else if (!existingDeployments[topLevelName].abi || existingDeployments[topLevelName].abi.length === 0) {
-        existingDeployments[topLevelName].abi = getContractABI(`contracts/${topLevelName}.sol/${topLevelName}`);
-        deploymentData[topLevelName] = existingDeployments[topLevelName];
-    }
+    // // TopLevelMerkleProof
+    // const topLevelName = "TopLevelMerkleProof";
+    // const topLevelBytecode = getContractBytecode(`contracts/proofs/${topLevelName}.sol/${topLevelName}`);
+    // if (needsRedeployment(topLevelName, topLevelBytecode, existingDeployments)) {
+    //     const topLevelMerkleTree = await deployContract(topLevelName, `contracts/proofs/${topLevelName}.sol:${topLevelName}`, wallet, gasPrice);
+    //     deploymentData[topLevelMerkleTree.name] = {
+    //         address: topLevelMerkleTree.address,prfs
+    // } else if (!existingDeployments[topLevelName].abi || existingDeployments[topLevelName].abi.length === 0) {
+    //     existingDeployments[topLevelName].abi = getContractABI(`contracts/proofs/${topLevelName}.sol/${topLevelName}`);
+    //     deploymentData[topLevelName] = existingDeployments[topLevelName];
+    // }
 
     // ChainedProof
     const chainedProofName = "ChainedProof";
     const chainedProofBytecode = getContractBytecode(`contracts/${chainedProofName}.sol/${chainedProofName}`);
-    if (needsRedeployment(chainedProofName, chainedProofBytecode, existingDeployments)) {
+    if (needsRedeployment(chainedProofName, chainedProofBytecode, existingDeployments, existingBytecodeMap)) {
         // We need to provide two verifier addresses for ChainedProof.
         // We'll use validated_sig_he_add for both as a default. This can be changed later.
         const chainedProof = await deployContract(
@@ -283,21 +311,95 @@ async function main() {
             `contracts/${chainedProofName}.sol:${chainedProofName}`,
             wallet,
             gasPrice,
+            nonce,
             verifierAddresses["opening_proof"],
             verifierAddresses["opening_proof"]
         );
         deploymentData[chainedProof.name] = {
             address: chainedProof.address,
-            bytecode: chainedProof.bytecode,
             abi: chainedProof.abi
         };
+        bytecodeMap[chainedProof.name] = chainedProof.bytecode;
     } else if (!existingDeployments[chainedProofName].abi || existingDeployments[chainedProofName].abi.length === 0) {
         existingDeployments[chainedProofName].abi = getContractABI(`contracts/${chainedProofName}.sol/${chainedProofName}`);
         deploymentData[chainedProofName] = existingDeployments[chainedProofName];
     }
 
-    console.log("\n--- Deployment complete ---");
-    
+    // // KeccakTreeEntry
+    // const keccakTreeEntryName = "KeccakTreeEntry";
+    // const keccakTreeEntryBytecode = getContractBytecode(`contracts/${keccakTreeEntryName}.sol/${keccakTreeEntryName}`);
+    // if (needsRedeployment(keccakTreeEntryName, keccakTreeEntryBytecode, existingDeployments)) {
+    //     const keccakTreeEntry = await deployContract(keccakTreeEntryName, `contracts/${keccakTreeEntryName}.sol:${keccakTreeEntryName}`, wallet, gasPrice);
+    //     deploymentData[keccakTreeEntry.name] = {
+    //         address: keccakTreeEntry.address,
+    //         bytecode: keccakTreeEntry.bytecode,
+    //         abi: keccakTreeEntry.abi
+    //     };
+    // } else if (!existingDeployments[keccakTreeEntryName].abi || existingDeployments[keccakTreeEntryName].abi.length === 0) {
+    //     existingDeployments[keccakTreeEntryName].abi = getContractABI(`contracts/${keccakTreeEntryName}.sol/${keccakTreeEntryName}`);
+    //     deploymentData[keccakTreeEntryName] = existingDeployments[keccakTreeEntryName];
+    // }
+
+    // // GreaterOrEqualThen
+    // const greaterOrEqualThenName = "GreaterOrEqualThen";
+    // const greaterOrEqualThenBytecode = getContractBytecode(`contracts/${greaterOrEqualThenName}.sol/${greaterOrEqualThenName}`);
+    // if (needsRedeployment(greaterOrEqualThenName, greaterOrEqualThenBytecode, existingDeployments)) {
+    //     const greaterOrEqualThen = await deployContract(greaterOrEqualThenName, `contracts/${greaterOrEqualThenName}.sol:${greaterOrEqualThenName}`, wallet, gasPrice);
+    //     deploymentData[greaterOrEqualThen.name] = {
+    //         address: greaterOrEqualThen.address,
+    //         bytecode: greaterOrEqualThen.bytecode,
+    //         abi: greaterOrEqualThen.abi
+    //     };
+    // } else if (!existingDeployments[greaterOrEqualThenName].abi || existingDeployments[greaterOrEqualThenName].abi.length === 0) {
+    //     existingDeployments[greaterOrEqualThenName].abi = getContractABI(`contracts/${greaterOrEqualThenName}.sol/${greaterOrEqualThenName}`);
+    //     deploymentData[greaterOrEqualThenName] = existingDeployments[greaterOrEqualThenName];
+    // }
+
+    // //SmallerThan
+    // const smallerThanName = "SmallerThan";
+    // const smallerThanBytecode = getContractBytecode(`contracts/${smallerThanName}.sol/${smallerThanName}`);
+    // if (needsRedeployment(smallerThanName, smallerThanBytecode, existingDeployments)) {
+    //     const smallerThan = await deployContract(smallerThanName, `contracts/${smallerThanName}.sol:${smallerThanName}`, wallet, gasPrice);
+    //     deploymentData[smallerThan.name] = {
+    //         address: smallerThan.address,
+    //         bytecode: smallerThan.bytecode,
+    //         abi: smallerThan.abi
+    //     };
+    // } else if (!existingDeployments[smallerThanName].abi || existingDeployments[smallerThanName].abi.length === 0) {
+    //     existingDeployments[smallerThanName].abi = getContractABI(`contracts/${smallerThanName}.sol/${smallerThanName}`);
+    //     deploymentData[smallerThanName] = existingDeployments[smallerThanName];
+    // }
+
+    // //EqualTo
+    // const equalToName = "EqualTo";
+    // const equalToBytecode = getContractBytecode(`contracts/${equalToName}.sol/${equalToName}`);
+    // if (needsRedeployment(equalToName, equalToBytecode, existingDeployments)) {
+    //     const equalTo = await deployContract(equalToName, `contracts/${equalToName}.sol:${equalToName}`, wallet, gasPrice);
+    //     deploymentData[equalTo.name] = {
+    //         address: equalTo.address,
+    //         bytecode: equalTo.bytecode,
+    //         abi: equalTo.abi
+    //     };
+    // } else if (!existingDeployments[equalToName].abi || existingDeployments[equalToName].abi.length === 0) {
+    //     existingDeployments[equalToName].abi = getContractABI(`contracts/${equalToName}.sol/${equalToName}`);
+    //     deploymentData[equalToName] = existingDeployments[equalToName];
+    // }
+
+    // //NotEqualTo
+    // const notEqualToName = "NotEqualTo";
+    // const notEqualToBytecode = getContractBytecode(`contracts/${notEqualToName}.sol/${notEqualToName}`);
+    // if (needsRedeployment(notEqualToName, notEqualToBytecode, existingDeployments)) {
+    //     const notEqualTo = await deployContract(notEqualToName, `contracts/${notEqualToName}.sol:${notEqualToName}`, wallet, gasPrice);
+    //     deploymentData[notEqualTo.name] = {
+    //         address: notEqualTo.address,
+    //         bytecode: notEqualTo.bytecode,
+    //         abi: notEqualTo.abi
+    //     };
+    // } else if (!existingDeployments[notEqualToName].abi || existingDeployments[notEqualToName].abi.length === 0) {
+    //     existingDeployments[notEqualToName].abi = getContractABI(`contracts/${notEqualToName}.sol/${notEqualToName}`);
+    //     deploymentData[notEqualToName] = existingDeployments[notEqualToName];
+    // }
+
     // Convert back to simpler format for display
     const displayData: { [name: string]: string } = {};
     for (const [name, data] of Object.entries(deploymentData)) {
@@ -306,11 +408,21 @@ async function main() {
     console.log(JSON.stringify(displayData, null, 2));
 
     const deploymentFilename = `deployed-contracts-${chainId}.json`;
+    const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
+    
+    // Save deployment data (without bytecode)
     fs.writeFileSync(
         path.join(__dirname, deploymentFilename),
         JSON.stringify(deploymentData, null, 2)
     );
     console.log(`\nDeployment data saved to ${deploymentFilename} in privacy-lib/scripts/`);
+    
+    // Save bytecode separately
+    fs.writeFileSync(
+        path.join(__dirname, deploymentByteCodeFilename),
+        JSON.stringify(bytecodeMap, null, 2)
+    );
+    console.log(`Bytecode data saved to ${deploymentByteCodeFilename} in privacy-lib/scripts/`);
 }
 
 main().catch((error) => {

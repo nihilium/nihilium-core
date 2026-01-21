@@ -15,7 +15,8 @@
     }
   },
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc && NODE_OPTIONS='--max-old-space-size=8192' vite build --config vite.config.cjs",
+    "publish": "npm run build && npm publish",
+    "build": "NODE_OPTIONS='--max-old-space-size=18192' tsc && NODE_OPTIONS='--max-old-space-size=18192' vite build --config vite.config.cjs",
     "dev": "tsc --watch"
   },
   "dependencies": {

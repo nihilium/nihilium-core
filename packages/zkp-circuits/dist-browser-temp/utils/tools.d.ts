@@ -1,9 +1,9 @@
 declare const stringifyBigInts: (obj: object) => any;
 declare const unstringifyBigInts: (obj: object) => any;
 import { PrivKey, PubKey, Keypair, babyJub } from "./types";
-import { BabyJubAffinePoint, BabyJubExtPoint } from "./types";
+import { BabyJubAffinePoint, BabyJubExtPoint, SNARK_FIELD_SIZE } from "./types";
 import { ExtPointType } from "@noble/curves/abstract/edwards";
-export { babyJub };
+export { babyJub, SNARK_FIELD_SIZE };
 export type { BabyJubAffinePoint, BabyJubExtPoint, PrivKey, PubKey, Keypair };
 export declare function createNobleBlakeHash(data: Buffer): Buffer<ArrayBuffer>;
 /**
@@ -72,16 +72,18 @@ export declare function coordinatesToExtPointBigint(x: bigint, y: bigint): BabyJ
  * @returns Uint8Array of random bytes.
  */
 export declare function portableRandomBytes(length: number): Buffer;
-export declare function HEEncryptFromPoint(message: bigint, pubKey: ExtPointType, exportNonces?: boolean): {
+export declare function generateNonces(): bigint[];
+export declare function HEEncryptFromPoint(message: bigint, pubKey: ExtPointType, nonces?: bigint[], exportNonces?: boolean): {
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
     nonces: bigint[];
 };
-export declare function HEEncrypt(message: bigint, pubKey: bigint[], exportNonces?: boolean): {
+export declare function HEEncrypt(message: bigint, pubKey: bigint[], nonces?: bigint[], exportNonces?: boolean): {
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
     nonces: bigint[];
 };
+export declare function HEDecryptExternalSolver(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[], solve: (base_x: bigint, base_y: bigint, encoded_x: bigint, encoded_y: bigint) => bigint): Promise<bigint>;
 export declare function HEDecrypt(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[]): Promise<bigint>;
 export declare function HEDecryptSync(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[]): bigint;
 export declare const hashCypherText: (message: bigint[], ephemeralKey: bigint[], relatedPublicKey: bigint[], preimage_hash: any, random_value: bigint, unseal_condition_root_hash: any, metadata_root_commit: any) => bigint;

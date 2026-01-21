@@ -1,4 +1,4 @@
-import { InputMap } from "@noir-lang/noir_js";
+//import { InputMap } from "@noir-lang/noir_js";
 
 export interface CircuitConfig {
   
@@ -29,7 +29,7 @@ export interface VerifyOptions {
   publicSignals: string[];
 }
 
-export interface CircuitWrapper<T extends InputMap> {
+export interface CircuitWrapper<T> {
   get_id(): string;
   init(): Promise<void>;
   generateProof(options: ProofOptions<T>): Promise<{

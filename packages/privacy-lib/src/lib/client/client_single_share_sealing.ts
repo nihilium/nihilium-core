@@ -12,11 +12,16 @@ import axios from "axios";
 // import { PubKey } from "@nihilium/noir-circuits";
 import { hexToBytes } from "@noble/hashes/utils";
 import { IDataStream } from "../data_stream/types";
-import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
+// /import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
 //import { encryptProofCircuit } from "@nihilium/zkp-circuits";
-import { ChainedProofCollection } from "../reveal_methods/collections/types";
+import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
+import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
 
 
+
+const metadata_root_hash = (metadata_root: bigint, reveal_value_preimage: bigint) => {
+    return poseidon2([cryptoTools.shrinkToBits(metadata_root, 247), reveal_value_preimage]).toString()
+}
 
 const genCircuitInputsHEAdd = (   
     pubKey: cryptoTools.PubKey,    
@@ -30,9 +35,13 @@ const genCircuitInputsHEAdd = (
     random_severed_commit: bigint,
     unseal_condition_root: bigint,
     metadata_root: bigint,
+    nonces: bigint[] = []
 ) => {
     
-    var noncesAdd = [cryptoTools.generateRandom248BitNumber(), cryptoTools.generateRandom248BitNumber(),cryptoTools.generateRandom248BitNumber(),cryptoTools.generateRandom248BitNumber(),cryptoTools.generateRandom248BitNumber(), cryptoTools.generateRandom248BitNumber(),cryptoTools.generateRandom248BitNumber(),cryptoTools.generateRandom248BitNumber()]
+    var noncesAdd = nonces;
+    if(nonces.length == 0) {
+        noncesAdd = cryptoTools.generateNonces();
+    }
     /*
     signal input input_add;
     //public key for encryption
@@ -52,7 +61,7 @@ const genCircuitInputsHEAdd = (
         y: pubKeyXY[1].toString()
     }
     
-    let input_encrypt: validated_sig_he_addInputType = {
+    let input_encrypt: any = {
         input_add: value.toString(),
         nonceKey: noncesAdd.map(n => n.toString()),
         point_org: points.map(point => {    
@@ -119,13 +128,14 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
     //private env_settings: EnvSettings;
     private processor: ProcessorEndpoint;
     private phase: ClientProcessorSealingPhase;
-    private reveal_conditions: RevealCondition[];
+    
     private commitment_response?: SingleSealRequestResponse;
     private unseal_condition_root: bigint = 0n;
-    private chainedProofCollection: ChainedProofCollection;
+    private unsealConditionTemplate: UnsealConditionTemplate;
+    // private unsealConditionCollection: UnsealConditionCollection;
     private secret: bigint;
     private data_streams: IDataStream[];
-    private require_proof: boolean;
+    private proving_hints: any;
     private reveal_value_preimage: bigint;
     private data_stream_group_preimage: bigint;
     private metadata_root: bigint;
@@ -136,9 +146,12 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
 
     constructor(
         processor: ProcessorEndpoint,        
-        chainedProofCollection: ChainedProofCollection
+        dataStreams: IDataStream[],
+        unsealConditionTemplate: UnsealConditionTemplate,
+        proving_hints: any = {},
+        // unsealConditionCollection: UnsealConditionCollection
     ) {
-        this.data_streams = chainedProofCollection.getDatastreams();
+        this.data_streams = dataStreams;
         this.processor = processor;        
         this.secret = 0n;        
         this.phase = ClientProcessorSealingPhase.NOT_STARTED;
@@ -147,32 +160,39 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
         this.data_stream_group_preimage = 0n;
         this.metadata_root = 0n;
         //this.severed_commitment_preimage = 0n;
-        this.reveal_conditions = [];
-        this.chainedProofCollection = chainedProofCollection;
-        this.require_proof = false;
+        this.proving_hints = proving_hints;
+        this.unsealConditionTemplate = unsealConditionTemplate;
+        //this.unsealConditionCollection = unsealConditionCollection;
                 // this.env_settings = {
                 //     sc_addresses: new Map(),
                 //     sc_circuits: new Map()
                 // }
     }
 
-    async initialize(secret: bigint, metadata_root: bigint): Promise<void> {
+    async initialize(secret: bigint, metadata_root: bigint, template_inputs: {[key:string]:any} = {}, data_stream_mapping: {[key:string]:string} = {}): Promise<void> {
         if(this.phase != ClientProcessorSealingPhase.NOT_STARTED) {
             throw new Error("Sealing process already started");
         }
         this.zkeddsa = await import("@zk-kit/eddsa-poseidon");
+        this.reveal_value_preimage = cryptoTools.generateRandom248BitNumber();
+        this.metadata_root = metadata_root;
         //this.poseidon = await buildPoseidon();
         //this.env_settings = await get_env_settings();
         //this.babyJub = await buildBabyjub();
+        var enhanced_template_inputs = Object.assign({}, template_inputs)
+        enhanced_template_inputs["metadata_root_hash"] = poseidon1([cryptoTools.shrinkToBits(this.metadata_root, 247)]);
+        console.log("Metadata root: " + this.metadata_root.toString(16));
+        console.log("Metadata root hash: " , enhanced_template_inputs );
         //TODO: this should be caluclated from the reveal conditions
-        var r = await this.chainedProofCollection.getUnsealRoot();
+        this.unsealConditionTemplate.compile(enhanced_template_inputs, data_stream_mapping);
+        var r = await this.unsealConditionTemplate.getUnsealRoot();
         this.unseal_condition_root = BigInt(r);
         //this.severed_commitment_preimage = generateRandom248BitNumber();
         //this.eddsa = await buildEddsa();
-        this.reveal_value_preimage = cryptoTools.generateRandom248BitNumber();
+        
         // this.data_stream_group_preimage = generateRandom248BitNumber();
         this.secret = secret;
-        this.metadata_root = metadata_root;
+        
         this.keypair = cryptoTools.genPrivKey();
         this.phase = ClientProcessorSealingPhase.GENERATING_SECRETS;
         //await encryptProofCircuit.init()
@@ -207,7 +227,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
             "address": "", //TODO chainedproofaddress
             "circuit_id": "", //TODO chainedproofcircuit
             "hashed_reveal_value_preimage": hashed_reveal_value_preimage.toString(),
-            "hashed_metadata_root": poseidon2([cryptoTools.shrinkToBits(this.metadata_root, 247), this.reveal_value_preimage]).toString(),
+            "hashed_metadata_root": metadata_root_hash(this.metadata_root, this.reveal_value_preimage),
             //"hashed_severed_commitment_preimage": bufferToBigInt(this.poseidon([this.severed_commitment_preimage])).toString(16),
             "hashed_unseal_condition_root": poseidon2([this.unseal_condition_root, hashed_reveal_value_preimage]).toString(),
             "require_proof": require_proof
@@ -245,8 +265,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         //     proof: processor_response.proof,
         //     publicSignals: processor_response.public_signals
         // })
-        var pos2 = poseidon2
-        var pos1 = poseidon1
+      
         var msg = cryptoTools.hashCypherText(processor_response.cyphertexts.map(bigint => BigInt(bigint)),
          processor_response.empheral_keys.map(bigint => BigInt(bigint)),
          [BigInt(processor_response.new_public_key[0]), 
@@ -305,7 +324,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         
         
 
-
+        var encrypted_nonces = cryptoTools.generateNonces();
         var hePubKey:cryptoTools.PubKey = cryptoTools.coordinatesToExtPointBigint(this.processor.public_he_encryption_key[0], this.processor.public_he_encryption_key[1]);
         
         // ----- Validate signature and Homomorphic addition to private key -----
@@ -337,6 +356,8 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
        var valueToAdd = cryptoTools.generateRandom248BitNumber();
        valueToAdd = cryptoTools.shrinkToBits(valueToAdd, 247);
        var metadata_root_shrinked = cryptoTools.shrinkToBits(this.metadata_root, 247);
+       var test1 = this.unseal_condition_root % 21888242871839275222246405745257275088548364400416034343698204186575808495617n //babyjub modulus
+       var test2 = this.unseal_condition_root % 21888242871839275222246405745257275088614511777268538073601725287587578984328n //babyjub modulus
         var input = genCircuitInputsHEAdd(hePubKey, valueToAdd,
             point_p,
             empheral_p,            
@@ -347,7 +368,8 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
                   
             BigInt(processor_response.severed_commitment_random_value),
             this.unseal_condition_root,
-            metadata_root_shrinked
+            metadata_root_shrinked,
+            encrypted_nonces
         );
         console.time("circomOpeningProof.proof");
         await circomOpeningProof.init()
@@ -384,6 +406,11 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
            
         var encrypted_shamir_key = cryptoTools.encryptECCBabyJub(this.secret, cryptoTools.coordinatesToExtPointBigint(newCombinedPublicKeyX, newCombinedPublicKeyY) )
         
+        //TODO do the HEHomomorphic addition similar to the circuit and calculate them separately.
+        //Make sure they are the same, if they are the same, hash them and prepare for the circuit
+        //to remove the actual cihpertexts from the circuit and only return the hashes.
+        //So that the cipher texts can be omitted.
+        var encrypted_add_value =cryptoTools.HEEncrypt(valueToAdd + metadata_root_shrinked, cryptoTools.toBigIntArray(hePubKey), encrypted_nonces)
         
         
         
@@ -397,15 +424,15 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
                 empheral_keys:  proof.publicSignals.slice(19,35).map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[1] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),                
                 public_key_he: [this.processor.public_he_encryption_key[0].toString(), this.processor.public_he_encryption_key[1].toString()],
                 public_verification_key: [this.processor.public_verification_key[0].toString(), this.processor.public_verification_key[1].toString()],
-                proof: cryptoTools.uint8ArrayToHex(proof.proof),
+                proof: "0x" + cryptoTools.uint8ArrayToHex(proof.proof),
                 public_signals: proof.publicSignals,
                 encrypted_secret: encrypted_shamir_key,
-                reveal_conditions: this.chainedProofCollection.getUnsealProofActions(),
+                unseal_template: this.unsealConditionTemplate.export_compiled_to_json(),
                 unseal_condition_root: this.unseal_condition_root.toString(),
                 metadata_root: this.metadata_root.toString(), //This metadata root can be hashed or even encrypted to create password protection
                 reveal_value: BigInt(proof.publicSignals[0]).toString(),
-                reveal_collection_id: this.chainedProofCollection.getCollectionId(),
-                reveal_collection_inputs: this.chainedProofCollection.getConstructorFields()
+                unseal_collection_id: this.unsealConditionTemplate.collection_id,
+                proving_hints: this.proving_hints,
             },
             public_package: { //TODO should be different proof of the severed commitment
                 reveal_value: BigInt(proof.publicSignals[0] ).toString(),

@@ -10,7 +10,8 @@ import {
   Snackbar
 } from '@mui/material';
 import { CloudUpload, Download, Settings, CheckCircle } from '@mui/icons-material';
-import { getDefaultSealingProcess, getDefaultUnsealingProcess, nhsdk} from '@nihilium/client-sdk';
+import { getDefaultSealingProcess, getDefaultUnsealingProcess, getProcessorEndpoint, getFullDatastreams, getFullProcessors, nhsdk} from '@nihilium/client-sdk';
+import { DefaultAnchoredOpeningProofModule } from '@nihilium/privacy-lib/dist/lib/unseal_conditions/modules/standard_modules/default_anchored_opening_module';
 
 const App: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -21,10 +22,17 @@ const App: React.FC = () => {
   const handleButton1Click = async () => {
     var success = 0;
     var failed = 0;
+    var dataStreams = await getFullDatastreams();
+    var processors = await getFullProcessors();
+    for(var dataStream of dataStreams) {
+      await dataStream.initialize();
+    }
+   
     while(true) {
-      var testing = nhsdk.cryptoTools.generateRandom248BitNumber()
+      var secret = nhsdk.cryptoTools.generateRandom248BitNumber()
+      var metadata_root = nhsdk.cryptoTools.generateRandom248BitNumber()
       const clientSealingProcess = await getDefaultSealingProcess()
-      await clientSealingProcess.initialize(testing, testing)
+      await clientSealingProcess.initialize(secret, metadata_root, {}, {["datastream"]: dataStreams[0].getAddress()})
       var res = await clientSealingProcess.request_commitment_to_processor()
       console.log(res)
       var unsealingProcess = await getDefaultUnsealingProcess(res)
@@ -32,7 +40,7 @@ const App: React.FC = () => {
       var unsealingResult = await unsealingProcess.publish_reveal_value()
       var counter = 0
       while(true) {
-        var provable = await unsealingProcess.validate_elligble_for_unsealing();
+        var provable = await unsealingProcess.reveal_value_published();
         await new Promise(resolve => setTimeout(resolve, 500));
         counter++;
         if(counter % 50){
@@ -43,15 +51,36 @@ const App: React.FC = () => {
         }
         
       }
-      const unseal_response = await unsealingProcess.unseal_request_to_processor();
+      var proofs: any[] = []
+    var public_inputs: any[][] = []
+    var proof_index = 0;
+    const modules = unsealingProcess.getModulesForPath(proof_index);
+    const data_stream = new nhsdk.DataStreamClient(res.public_package.data_stream_urls[0]);
+    const processor_endpoint = await getProcessorEndpoint(res.public_package.processor_url);
+    for(var module of modules) {
+      switch(module.compiled_module.module_name) {
+        case "DefaultAnchoredOpeningModule":
+          var typedModule = module.module as DefaultAnchoredOpeningProofModule;
+          var result = await typedModule.produce_proofs(data_stream, processor_endpoint,
+            res.private_package.proof, res.private_package.public_signals);
+          for(var proof of result.proofs) {
+            proofs.push(proof);
+          }
+          for(var public_input of result.public_inputs) {
+            public_inputs.push(public_input);
+          }
+          break;
+      }
+    }
+     const unseal_response = await unsealingProcess.unseal_request_to_processor(proof_index, proofs, public_inputs);
       //await validatedSigHeAddCircuit.init()
       // var testtesta = await validatedSigHeAddCircuit.verifyProof(unseal_request.proof)
       // var testtest = await o.verify(unseal_request.proof.proof, unseal_request.proof.publicInputs);
       //const unseal_response = await processor.process_unseal_request(unseal_request);
       const unsealed_value = await unsealingProcess.process_unseal_response(unseal_response);
       console.log("Unsealed value: " + unsealed_value)
-      console.log("Unsealed value: " + testing)
-      if(unsealed_value == testing) {
+      console.log("Unsealed value: " + secret)
+      if(unsealed_value == secret) {
         success++;
       }else{
         failed++;

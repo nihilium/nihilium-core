@@ -9,22 +9,22 @@ module.exports = defineConfig({
      topLevelAwait(),
      viteStaticCopy({
         targets: [
-          {
-            src: require.resolve('@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm'),
-            dest: ''
-          },
-          {
-            src: require.resolve('@noir-lang/acvm_js/web/acvm_js_bg.wasm'),
-            dest: ''
-          }
+          // {
+          //   src: require.resolve('@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm'),
+          //   dest: ''
+          // },
+          // {
+          //   src: require.resolve('@noir-lang/acvm_js/web/acvm_js_bg.wasm'),
+          //   dest: ''
+          // }
         ]
       })
    ],
   optimizeDeps: {
     esbuildOptions: { target: 'esnext' },
     exclude: [
-      '@noir-lang/noirc_abi',
-      '@noir-lang/acvm_js'
+    //  '@noir-lang/noirc_abi',
+    //  '@noir-lang/acvm_js'
     ]
   },
   resolve: {

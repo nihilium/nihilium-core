@@ -1,4 +1,3 @@
-import { InputMap } from "@noir-lang/noir_js";
 export interface CircuitConfig {
     environment: 'node' | 'browser';
 }
@@ -21,7 +20,7 @@ export interface VerifyOptions {
     proof: Uint8Array;
     publicSignals: string[];
 }
-export interface CircuitWrapper<T extends InputMap> {
+export interface CircuitWrapper<T> {
     get_id(): string;
     init(): Promise<void>;
     generateProof(options: ProofOptions<T>): Promise<{

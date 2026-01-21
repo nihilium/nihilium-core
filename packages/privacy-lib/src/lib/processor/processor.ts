@@ -1,17 +1,20 @@
-import { cryptoTools } from '@nihilium/zkp-circuits';
-
+import { cryptoTools, precompute } from '@nihilium/zkp-circuits';
+import { DlogSolver } from '@nihilium/dlog-solver-rs';
+import fs from 'fs';
 // import { babyJub, Keypair, PubKey } from "../types/index";
 // import { bigInt2Buffer, bufferToBigInt, coordinatesToExtPointBigint, generateRandom248BitNumber, stringifyBigInts, toBigIntArray, uint8ArrayToHex } from '@nihilium/noir-circuits/utils/tools';
 // import { Environment } from 'nihilium-circuits/types/circuit_wrapper';
 import { SingleSealRequest, SingleSealRequestResponse, SingleUnsealRequest, SingleSealUnsealRequestResponse } from '../../types/protocol/common';
-import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
+//import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
 //import { circuit_ENCRYPT_PROOF, circuit_KEY_HE_ADD } from '../env_settings';
 import { hexToBytes } from '@noble/hashes/utils';
-import { poseidon2 } from "poseidon-lite";
-import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
-import { GenericVerifyCollection } from '../reveal_methods/collections/generic_verify_collection';
+
+// import { encrypt_proofInputType, encryptProofCircuit } from '@nihilium/zkp-circuits';
+import { GenericVerifyCollection } from '../unseal_conditions/generic_verify_collection';
 import { Signer } from 'ethers';
-import { IDataStream } from '../data_stream/types';
+
+import path from 'path';
+import { toPaddedHex } from '../utils';
 // import { stringifyBigInts, toBigIntArray, generateRandom248BitNumber, coordinatesToExtPoint } from 'nihilium-circuits'
 /**
  * ProcessorStageOne
@@ -44,7 +47,7 @@ const genCircuitInputsEncrypt = (
   
   
   var bigIntXY = cryptoTools.toBigIntArray(pubKey)
-  let input_encrypt: encrypt_proofInputType = {
+  let input_encrypt: any = {
       privateKeyScalar: p.toString(),
       
       nonceKey_p: noncesP.map(nonce => nonce.toString()),
@@ -80,6 +83,7 @@ export class Processor {
   private forced_opening_address: string;
   private signer: Signer;
   //private managed_data_stream: IDataStream;
+  private dlogSolver: DlogSolver;
   /**
    * Create a new ProcessorStageOne instance
    * 
@@ -100,6 +104,14 @@ export class Processor {
     this.chained_proof_address = chained_proof_address;
     this.forced_opening_address = forced_opening_address;
     this.signer = signer;
+    var lookupPath = path.join(__dirname, './x19xlookupTable.json')
+    if(!fs.existsSync(lookupPath)) {
+      var lookupTable = precompute(19);
+      fs.writeFileSync(lookupPath, JSON.stringify(lookupTable));
+    }else{
+      console.log(`Lookup table found at ${lookupPath}`);
+    }
+    this.dlogSolver = new DlogSolver(19, lookupPath);
   }
   
   get_chain_id(): number {
@@ -119,7 +131,7 @@ export class Processor {
   async initialize(): Promise<void> {
     this.zkeddsa = await import("@zk-kit/eddsa-poseidon");
     this.signing_PublicKey = this.zkeddsa.derivePublicKey(Buffer.from(BigInt(this.signingPrivateKey).toString(16), 'hex'))
-    await encryptProofCircuit.init()
+    //await encryptProofCircuit.init()
     //await validatedSigHeAddCircuit.init()
   
   }
@@ -142,12 +154,22 @@ export class Processor {
        this.signer.provider!,
        this.signer)
     await verification_collection.initialize();
-    var toCheck = await verification_collection.getUnsealRoot(true, request.proofs.map(proof => hexToBytes(proof)), request.public_signals)
+    //TODO actually verify the merkle proof
+    var path = request.unseal_root_proof.pathRoot;
+    //TODO This is a temp fix, we should consider how we handle keccack hashes as inputs in circuits
+    var correctedPathRoot = toPaddedHex(BigInt(path) % cryptoTools.SNARK_FIELD_SIZE); //babyjub modulus
+    var unseal_condition_root = request.public_signals[0][1];
+    var toCheck = await verification_collection.getUnsealRoot(true, request.proofs.map(proof => hexToBytes(proof.slice(2))), request.public_signals)
     var proofs = await verification_collection.verifySolidity(false, 
-      request.data_stream_address, request.proofs.map(proof => hexToBytes(proof)), request.public_signals)
-    var proofsCorrect = (toCheck === proofs && toCheck === request.public_signals[0][1])
+      request.data_stream_address, request.proofs.map(proof => hexToBytes(proof.slice(2))), request.public_signals)
+    
+    var proofsCorrect = toCheck === proofs
+    var rootCorrect = correctedPathRoot === unseal_condition_root
     if(!proofsCorrect) {
-      throw new Error(`Invalid chained proof: expected ${request.public_signals[0][1]} but got ${toCheck}`)
+      throw new Error(`Invalid chained proof: expected ${request.unseal_root_proof.pathElements[0]} ${toCheck} but got ${proofs}`)
+    }
+    if(!rootCorrect) {
+      throw new Error(`Invalid unseal condition root: expected ${request.public_signals[0][1]} but got ${unseal_condition_root} - ${correctedPathRoot}`)
     }
     console.timeEnd("ChainedProofVerification")
     //TODO only pass after proofs are correct
@@ -166,12 +188,17 @@ export class Processor {
     // if (!valid) {
     //   throw new Error("Invalid proof")
     // }
-    console.time("HEDecrypt")
-    var decrypted_private_scalar = await cryptoTools.HEDecrypt(this.privateHEKey, cyphertexts, ephemeral_keys)
-    console.timeEnd("HEDecrypt")
-    
+    // console.time("HEDecrypt")
+    // var decrypted_private_scalar = await cryptoTools.HEDecrypt(this.privateHEKey, cyphertexts, ephemeral_keys)
+    // console.timeEnd("HEDecrypt")
+    console.time("DlogSolver")
+    var dlog_solver_result = await cryptoTools.HEDecryptExternalSolver(this.privateHEKey, cyphertexts, ephemeral_keys, 
+      (base_x: bigint, base_y: bigint, encoded_x: bigint, encoded_y: bigint) => this.dlogSolver.solve(base_x.toString(), base_y.toString(), encoded_x.toString(), encoded_y.toString()))
+    console.timeEnd("DlogSolver")
+   // console.log("DlogSolver result: ", dlog_solver_result.toString(), "Decrypted private scalar: ", decrypted_private_scalar.toString());
+   // console.log("DlogSolver result === Decrypted private scalar: ", dlog_solver_result === decrypted_private_scalar);
     return {
-      unpacked_private_scalar: decrypted_private_scalar.toString(),
+      unpacked_private_scalar: dlog_solver_result.toString(),
     }
      
   }
@@ -187,7 +214,8 @@ export class Processor {
     var proof: any = null;
     if(request.require_proof) {
       console.log(input.encoded);
-      proof = await encryptProofCircuit.generateProof({input: input.encoded});
+      
+      //proof = await encryptProofCircuit.generateProof({input: input.encoded});
         //var encrypted_message =
 
      

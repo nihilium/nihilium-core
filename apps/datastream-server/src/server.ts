@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import {  contracts, NETWORK_IDS, deployedProtocolContracts, DataStream, Persistence } from '@nihilium/privacy-lib';
+import {  NETWORK_IDS, deployedProtocolContracts, DataStream, Persistence } from '@nihilium/privacy-lib';
+//import { Processor, deployedProtocolContracts, NETWORK_IDS, DataStream, Persistence } from '../../../packages/privacy-lib/src/index';
 // import { EVMDataStreamNonZK} from '@nihilium/privacy-lib/src/lib/data_stream/EVMDataStreamNonZK';
 // import { DataStreamFilePersistence } from '@nihilium/privacy-lib/src/lib/persistence/DataStreamFilePersistence';
 import { ethers, Signer, Network } from 'ethers';
@@ -83,7 +84,7 @@ async function main() {
     const persistence = new Persistence.DataStreamFilePersistence('./server-stream/' + contractAddress, utils.createKeccakMerkelTree);
     
 
-    const dataStream = new DataStream.EVMDataStreamNonZK('server-stream', persistence, contractAddress, wallet, 10, 20, -1, 10);
+    const dataStream = new DataStream.EVMDataStreamNonZK('server-stream', persistence, contractAddress, wallet, 10, 20, -1, 60);
     await dataStream.initialize();
 
     const app = express();

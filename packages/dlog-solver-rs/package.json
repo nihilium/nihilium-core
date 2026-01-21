@@ -1,0 +1,49 @@
+{
+  "name": "@nihilium/dlog-solver-rs",
+  "version": "0.1.0",
+  "description": "Discrete logarithm solver for Baby Jubjub using lookup tables (Rust implementation)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "dlog-solver-rs",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+        "aarch64-pc-windows-msvc"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -d npm",
+    "artifacts": "napi artifacts",
+    "version": "napi version"
+  },
+  "keywords": [
+    "baby-jubjub",
+    "discrete-logarithm",
+    "elliptic-curve",
+    "napi-rs",
+    "rust"
+  ],
+  "author": "Nihilium Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "^2.16.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nihilium/nihilium-core"
+  },
+  "engines": {
+    "node": ">= 10"
+  }
+}
+
+

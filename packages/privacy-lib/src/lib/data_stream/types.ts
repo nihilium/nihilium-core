@@ -13,7 +13,7 @@ export interface IDataStream {
     getAddress: () => string;
     getUrl: () => string;
     getLatestGlobalLeafProof: () => Promise<[ProofPath, string, number, number]>;
-    postData: (data: HexString[]) => Promise<[number, number]>;
+    postData: (data: HexString[]) => Promise<[number, number, string]>;
     getProof: (value: HexString) => Promise<[ProofPath, ProofPath, number, number, number]>;
     hasDataStreamRoot: (root: string) => Promise<boolean>;
     hasValueRoot: (root: string) => Promise<boolean>;

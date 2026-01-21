@@ -3,12 +3,14 @@
 /* eslint-disable */
 import type * as encryptProofSol from "./encrypt_proof.sol";
 export type { encryptProofSol };
+export type { Between } from "./Between";
+export type { GreaterOrEqualThen } from "./GreaterOrEqualThen";
 export type { IVerifier } from "./IVerifier";
+export type { KeccakTreeEntry } from "./KeccakTreeEntry";
+export type { SmallerThan } from "./SmallerThan";
 export type { SubTreeMerkleProof } from "./SubTreeMerkleProof";
 export type { TestVerifyAlwaysTrue } from "./TestVerifyAlwaysTrue";
-export type { TimeAfterProof } from "./TimeAfterProof";
-export type { TimeBeforeProof } from "./TimeBeforeProof";
-export type { TimeBetweenOffsetProof } from "./TimeBetweenOffsetProof";
-export type { TimeBetweenProof } from "./TimeBetweenProof";
+export type { TimeDelayProof } from "./TimeDelayProof";
 export type { TopLevelMerkleProof } from "./TopLevelMerkleProof";
+export type { VerifyEDDSA } from "./VerifyEDDSA";
 export type { Opening_proof } from "./Opening_proof";

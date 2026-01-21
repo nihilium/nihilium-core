@@ -30,7 +30,7 @@ import { ExtPointType } from "@noble/curves/abstract/edwards";
 import { poseidon16, poseidon8 } from "poseidon-lite";
 import CryptoJS from "crypto-js";
 
-export { babyJub };
+export { babyJub, SNARK_FIELD_SIZE };
 export type { BabyJubAffinePoint, BabyJubExtPoint, PrivKey, PubKey, Keypair };
 
 var aaa = CURVE;
@@ -287,28 +287,67 @@ export function portableRandomBytes(length: number): Buffer {
     }
 }
 
-export function HEEncryptFromPoint(message:bigint, pubKey: ExtPointType, exportNonces:boolean = false): {    
+export function generateNonces(): bigint[] {
+    return [generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber(), generateRandom248BitNumber()];
+}
+
+export function HEEncryptFromPoint(message:bigint, pubKey: ExtPointType, nonces: bigint[] = [], exportNonces:boolean = false): {    
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
     nonces: bigint[]; //NOTE: nonces are private and should not be shared
 } {
-    
+    var noncesToUse = nonces;
+    if(nonces.length > 0) {
+        noncesToUse = nonces;
+    } else {
+        noncesToUse = generateNonces();
+    }
     var splitValueToEncrypt = splitLargeNumber(message);    
-    var encryptedCyphertexts = splitValueToEncrypt.map(value => encrypt(pubKey, encode(babyJub.BASE, value), generateRandom248BitNumber()))
+    var encryptedCyphertexts = splitValueToEncrypt.map((value, i) => encrypt(pubKey, encode(babyJub.BASE, value), noncesToUse[i]))
     var encryptedCyphertextsMessages = encryptedCyphertexts.map(value => value.encrypted_message)
     var encryptedCyphertextsEphemeralKeys = encryptedCyphertexts.map(value => value.ephemeral_key)
-    var nonces = encryptedCyphertexts.map(value => value.nonce)
+   // var nonces = encryptedCyphertexts.map(value => value.nonce)
     return {
         ephemeral_keys: encryptedCyphertextsEphemeralKeys,
         encrypted_messages: encryptedCyphertextsMessages,
-        nonces: exportNonces ? nonces : []
+        nonces: exportNonces ? noncesToUse : []
     }
 }
 
-export function HEEncrypt(message: bigint, pubKey: bigint[], exportNonces:boolean = false) {
-    return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), exportNonces);
+export function HEEncrypt(message: bigint, pubKey: bigint[], nonces: bigint[] = [], exportNonces:boolean = false) {
+    return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
 }
 
+
+
+
+// Optimized HEDecrypt with parallel processing
+export async function HEDecryptExternalSolver(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[], 
+    solve: (base_x:bigint, base_y: bigint, encoded_x: bigint, encoded_y: bigint) => bigint): Promise<bigint> {
+    const numChunks = cypherTexts.length / 2;
+    
+    // Parallel coordinate conversion
+    const [cypherTextsEncoded, empheralKeysEncoded] = await Promise.all([
+        Promise.all(Array.from({length: numChunks}, (_, i) => 
+            Promise.resolve(coordinatesToExtPointBigint(cypherTexts[i*2], cypherTexts[(i*2)+1]))
+        )),
+        Promise.all(Array.from({length: numChunks}, (_, i) => 
+            Promise.resolve(coordinatesToExtPointBigint(ephemeralKeys[i*2], ephemeralKeys[(i*2)+1]))
+        ))
+    ]);
+    
+    // Parallel decryption and decode operations
+    const decrypted_p = await Promise.all(
+        cypherTextsEncoded.map(async (ciphertext, i) => {
+            const decrypted = decrypt(privKey, empheralKeysEncoded[i], ciphertext);
+            var [base_x, base_y] = toBigIntArray(babyJub.BASE);
+            var [encoded_x, encoded_y] = toBigIntArray(decrypted);
+            return solve(base_x, base_y, encoded_x, encoded_y);
+        })
+    );
+    
+    return combineChunksWithCarry(decrypted_p);
+}
 
 // Optimized HEDecrypt with parallel processing
 export async function HEDecrypt(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[]): Promise<bigint> {
