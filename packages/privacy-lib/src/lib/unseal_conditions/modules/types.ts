@@ -306,7 +306,7 @@ export abstract class UnsealConditionModule {
     public short_description: string = "";
     public description: string = "";
     protected inputs: IOMap = {};
-    protected canModuleFork: boolean = false;
+    protected forkingProof: string | undefined = undefined;
     protected outputs: ModuleOutputMap = {};
     protected proofLibrary: ProofLibraryType;
     protected proofs: { [key: string]: WrappedProof } = {};
@@ -326,7 +326,7 @@ export abstract class UnsealConditionModule {
         return this.outputs;
     }
     canFork(): boolean {
-        return this.canModuleFork;
+        return this.forkingProof !== undefined;
     }
 
     addProof(proof: UnsealConditionProof, easyId: boolean = true): string {
@@ -407,7 +407,7 @@ export abstract class UnsealConditionModule {
             output_proof_index: number;
             output_signal_indexes: number[];
         }
-    }, current_proof_depth: number): CompiledModule {
+    }, current_proof_depth: number, fork: boolean = false): CompiledModule {
         //Check if all inputs are mapped
         for (var input of Object.keys(this.inputs)) {
             if (this.inputs[input].user_input === false) {
@@ -430,6 +430,9 @@ export abstract class UnsealConditionModule {
 
             var node = this.proofs[node_id];
             var compiled_node = node.proof.compile(address_map);
+            if(fork && this.forkingProof === node_id) {
+                compiled_node.prepare_action.params.verifier_must_be_true = false;
+            }
 
             if (compiled_node.prepare_action !== undefined) {
                 return_actions.push(compiled_node.prepare_action);
@@ -528,6 +531,8 @@ export abstract class UnsealConditionModule {
             outputs: output_map,
         };
     }
+
+    
 }
 
 

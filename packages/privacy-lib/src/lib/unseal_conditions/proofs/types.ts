@@ -40,7 +40,7 @@ export class UnsealConditionProof {
     getName(): string {
         return this.data.name;
     }
-    compile(addresses: {[key: string]: string}): CompiledProof {
+    compile(addresses: {[key: string]: string}, verifier_must_be_true: boolean = true): CompiledProof {
         if(!addresses[this.data.addressMapKey]) {
             throw new Error("Address not found for proof " + this.data.name);
         }
@@ -49,7 +49,7 @@ export class UnsealConditionProof {
                 action: ACTION_PREPARE_NEXT_PROOF,
                 params: {
                     verifier_address: addresses[this.data.addressMapKey],
-                    verifier_must_be_true: true,
+                    verifier_must_be_true: verifier_must_be_true,
                 },
             },
             validate_action: {

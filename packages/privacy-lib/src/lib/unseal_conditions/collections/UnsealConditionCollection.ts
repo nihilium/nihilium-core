@@ -7,6 +7,9 @@ import { UnsealConditionTemplate } from "./UnsealConditionTemplate";
 import { sha256 } from "@noble/hashes/sha2";
 import { cryptoTools } from "@nihilium/zkp-circuits";
 
+//A fork is always a module proof that returns false
+
+
 export class UnsealConditionCollection {
     public nodes: {[key: string]: CollectionNode} = {};
     public edges: {[key: string]: CollectionEdge} = {};
@@ -16,6 +19,11 @@ export class UnsealConditionCollection {
     public starting_node: CollectionNode|undefined = undefined;
     public proofLibrary: ProofLibraryType;
     public moduleLibrary: ModuleLibraryType;
+    public forks: {[key: string]: string[]} = {};//NodeID -> ForkedNodeIDs
+    public fork_list: string[] = [];
+    private node_to_fork_map: {[key: string]: string} = {};
+    //ModuleID -> ForkIndex
+    
     public changed_callback: ChangedCallback;
     constructor(name: string, description: string, 
         proofLibrary: ProofLibraryType, moduleLibrary: ModuleLibraryType,
@@ -48,13 +56,20 @@ export class UnsealConditionCollection {
         return this.data_streams.find(data_stream => data_stream.datastream_id === datastream_id);
     }
 
-    add_node(module: UnsealConditionModule): string {
+    add_node(module: UnsealConditionModule, fork_from_node_id: string = "root"): string {
         var node = new CollectionNode(module.name + "_" + Object.keys(this.nodes).length, module, []);
         this.nodes[node.node_id] = node;
         var starting_node_changed = false;
+        if(this.forks[fork_from_node_id] === undefined) {
+            this.forks[fork_from_node_id] = [];
+            this.fork_list.push(fork_from_node_id);
+        }
+        this.node_to_fork_map[node.node_id] = fork_from_node_id;
+        this.forks[fork_from_node_id].push(node.node_id);
         if(this.starting_node === undefined) {
             this.starting_node = node;
             starting_node_changed = true;
+            
         }
         if(starting_node_changed) {
             this.changed_callback({
@@ -104,6 +119,20 @@ export class UnsealConditionCollection {
             edges: [edge],
         });
     }
+
+    all_nodes_for_fork(fork_id: string): string[] {
+        var fork_index = this.fork_list.indexOf(fork_id);
+        var nodes: string[] = this.forks[this.fork_list[fork_index]];
+        fork_index--;
+        for(fork_index; fork_index >= 0; fork_index--) {
+            var new_nodes = this.forks[this.fork_list[fork_index]]
+            var split_index = new_nodes.indexOf(this.fork_list[fork_index + 1])
+            new_nodes = new_nodes.slice(0, split_index)
+            //prepend
+            nodes = new_nodes.concat(nodes)
+        }
+        return nodes;
+    }
     add_edge(source_node_id: string | undefined, target_node_id: string | undefined, mapping: [string, any],
          input_type: CollectionEdgeInput): void {
         if(target_node_id === undefined) {
@@ -113,6 +142,17 @@ export class UnsealConditionCollection {
         var target_node = this.nodes[target_node_id];
         if(target_node === undefined) {
             throw new Error("Target node not found");
+        }
+        if (source_node_id !== undefined && target_node_id !== undefined) {
+            var all_nodes = this.all_nodes_for_fork(this.node_to_fork_map[target_node_id])
+            var indexSource = all_nodes.indexOf(source_node_id);
+            var indexTarget = all_nodes.indexOf(target_node_id);
+            if(indexSource === -1 || indexTarget === -1) {
+                throw new Error("Source or target node not found in fork");
+            }
+            if(indexSource >= indexTarget) {
+                throw new Error("Source node must be before target node in fork");
+            }
         }
         var edge = new CollectionEdge(source_node, target_node, mapping, input_type);
         this.edges[edge.edge_id] = edge;
@@ -146,7 +186,8 @@ export class UnsealConditionCollection {
         this.starting_node = this.nodes[data.starting_node];
     }
 
-    sort_nodes(): string[] | undefined {
+/*
+    sort_nodes_old(): string[] | undefined {
         // Perform a depth-first topological sort starting from starting_node
         // Only signal_pass and link edges define ordering dependencies
 
@@ -225,7 +266,7 @@ export class UnsealConditionCollection {
 
         return sorted;
     }
-
+*/
 
     getEdgesToNode(node_id: string): CollectionEdge[] {
         var edges: CollectionEdge[] = [];
@@ -240,13 +281,39 @@ export class UnsealConditionCollection {
     getCollectionId(): string {
         return cryptoTools.uint8ArrayToHex(sha256(Buffer.from(this.export_to_json())));
     }
-    //TODO handle branching
-    createTemplate(address_map: {[key: string]: string}): UnsealConditionTemplate {
 
-        var sorted_nodes = this.sort_nodes();
-        if(sorted_nodes === undefined) {
-            throw new Error("Collection not valid for compilation");
+    createTemplate(address_map: {[key: string]: string}): UnsealConditionTemplate {
+        
+        var compiled_modules: CompiledModule[][] = [];
+        var user_inputs: RequiredUserInput[][] = [];
+        var data_stream_inputs: DataStreamInput[][] = [];
+       
+         //  var a=     {compiled_modules: CompiledModule[], user_inputs: RequiredUserInput[], data_stream_inputs: DataStreamInput[]} {
+        console.log("Fork list: " + this.fork_list);
+         for(var fork_id of this.fork_list) {
+            var sorted_nodes = this.all_nodes_for_fork(fork_id);
+            var result= this.createTemplatePerFork(address_map, sorted_nodes);
+            compiled_modules.push(result.compiled_modules);
+            user_inputs.push(result.user_inputs);
+            data_stream_inputs.push(result.data_stream_inputs);
         }
+      
+        var toReturn = new UnsealConditionTemplate(this.name, this.description, this.proofLibrary, this.moduleLibrary, {
+            compiled_modules: compiled_modules,
+            user_inputs: user_inputs,
+            data_stream_inputs: data_stream_inputs,
+            collection_id: this.getCollectionId(),
+            collection_export: this.export_to_json(),
+           });
+           return toReturn;
+    }
+    //TODO handle branching
+    createTemplatePerFork(address_map: {[key: string]: string}, sorted_nodes: string[]): {compiled_modules: CompiledModule[], user_inputs: RequiredUserInput[], data_stream_inputs: DataStreamInput[]} {
+
+        // var sorted_nodes = this.sort_nodes();
+        // if(sorted_nodes === undefined) {
+        //     throw new Error("Collection not valid for compilation");
+        // }
         var compiled_modules: CompiledModule[] = [];
         var user_inputs: RequiredUserInput[] = [];
         
@@ -329,15 +396,19 @@ export class UnsealConditionCollection {
        
         
         
-       var toReturn = new UnsealConditionTemplate(this.name, this.description, this.proofLibrary, this.moduleLibrary, {
-        compiled_modules: [compiled_modules],
-        user_inputs: [user_inputs],
-        data_stream_inputs: [data_stream_inputs],
-        collection_id: this.getCollectionId(),
-        collection_export: this.export_to_json(),
-       });
+    //    var toReturn = new UnsealConditionTemplate(this.name, this.description, this.proofLibrary, this.moduleLibrary, {
+    //     compiled_modules: [compiled_modules],
+    //     user_inputs: [user_inputs],
+    //     data_stream_inputs: [data_stream_inputs],
+    //     collection_id: this.getCollectionId(),
+    //     collection_export: this.export_to_json(),
+    //    });
 
-        return toReturn;
+        return {
+            compiled_modules: compiled_modules,
+            user_inputs: user_inputs,
+            data_stream_inputs: data_stream_inputs,
+        };
 
     }
 

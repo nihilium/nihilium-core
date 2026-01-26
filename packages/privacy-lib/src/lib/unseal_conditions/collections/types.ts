@@ -66,7 +66,7 @@ export class CollectionNode {
 
 export enum CollectionEdgeInput {
     
-    link = "link",//Simple link to define ordering
+    //link = "link",//Simple link to define ordering
     signal_pass = "signal_pass",
     static_input = "static_input",    
     user_input = "user_input"//becomes a static input during compilation
