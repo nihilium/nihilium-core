@@ -4,7 +4,7 @@ import { UnsealConditionProof } from "../proofs/types";
 import { UnsealProofAction } from "../types";
 
 
-export type IOType = "Timestamp" | "BigInt" | "Number" | "String" | "HexString" | "Randomness" | "Other" | IOType[];
+export type IOType = "Timestamp" | "BigInt" | "Number" | "String" | "HexString" | "Randomness" | "Other" | "Boolean" | IOType[];
 export type IO = {
     type_order: IOType[];
     user_input: boolean;
@@ -326,7 +326,7 @@ export abstract class UnsealConditionModule {
         return this.outputs;
     }
     canFork(): boolean {
-        return this.forkingProof !== undefined;
+        return this.proofList.length == 1;
     }
 
     addProof(proof: UnsealConditionProof, easyId: boolean = true): string {
@@ -351,7 +351,7 @@ export abstract class UnsealConditionModule {
         //    console.log("Proof id already exists, adding counter", proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString());
          //   return proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString();
         //}
-        console.log("Proof id created", proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString());
+       // console.log("Proof id created", proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString());
         return proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString();
 
     }

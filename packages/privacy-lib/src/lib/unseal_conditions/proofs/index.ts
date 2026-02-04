@@ -5,8 +5,11 @@ import { TopLevelTreeProof } from "./lib/002_top_level_tree_proof";
 import { KeccakTreeEntryProof } from "./lib/003_keccak_tree_entry";
 import { GreaterOrEqualThenProof } from "./lib/005_greater_or_equal";
 import { SmallerThanProof } from "./lib/004_smaller_than";
+
+
 import { UnsealConditionProof } from "./types"
 import { TimeDelayProof } from "./lib/006_time_delay";
+import { ManualChoiceProof } from "./lib/007_manual_choice";
 
 export abstract class ProofLibraryType {
     standard: {
@@ -58,4 +61,6 @@ export const standardProofs = {
     SmallerThanProof,
     GreaterOrEqualThenProof,
     TimeDelayProof,
+    
+    ManualChoiceProof
 }

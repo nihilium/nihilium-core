@@ -26,8 +26,8 @@ export class UnsealConditionsProofPathDescriptor {
 }
 
 
-export function import_collectionnode_from_json(json: string, moduleLibrary: ModuleLibraryType, proofLibrary: ProofLibraryType): CollectionNode {
-    var data = JSON.parse(json);
+export function import_collectionnode_from_json(data: any, moduleLibrary: ModuleLibraryType, proofLibrary: ProofLibraryType): CollectionNode {
+    
     return new CollectionNode(data.node_id, new moduleLibrary.standard[data.module_name](proofLibrary), data.public_inputs);
 }
 
@@ -41,12 +41,12 @@ export class CollectionNode {
         this.public_inputs = public_inputs;
     }
 
-    export_to_json(): string {
-        return JSON.stringify({
+    export_to_json(): any {
+        return {
             node_id: this.node_id,
             module_name: this.module.name,
             public_inputs: this.public_inputs,
-        }, null, 2);
+        };
     }
 
     get_outputs(): ModuleOutputMap {
@@ -72,8 +72,7 @@ export enum CollectionEdgeInput {
     user_input = "user_input"//becomes a static input during compilation
 }
 
-export function import_collectionedge_from_json(json: string, nodes: {[key: string]: CollectionNode}): CollectionEdge {
-    var data = JSON.parse(json);
+export function import_collectionedge_from_json(data: any, nodes: {[key: string]: CollectionNode}): CollectionEdge {
     return new CollectionEdge(data.from_node_id ? nodes[data.from_node_id] : undefined,
          nodes[data.to_node_id], data.mapping, data.input_type);
 }
@@ -94,12 +93,12 @@ export class CollectionDataStream {
         this.field_name = field_name;
     }
 
-    export_to_json(): string {
-        return JSON.stringify({
+    export_to_json(): any {
+        return {
             datastream_id: this.datastream_id,
             from_node_id: this.from?.node_id,
             field_name: this.field_name,
-        }, null, 2);
+        };
     }
     
 
@@ -126,15 +125,34 @@ export class CollectionEdge {
             throw new Error("Invalid module edge");
         }
     }
+    toShortNodeId(node_id: string | undefined): string {
+        if(node_id === undefined) {
+            return "undefined";
+        }
+        var parts = node_id.split("_");
+        return parts[0].substring(0, 6) + "_" + parts[1];
+    }
+    toString(): string {
+        if(this.input_type === CollectionEdgeInput.signal_pass) {
+            return this.toShortNodeId(this.from?.node_id) + " -> " + this.toShortNodeId(this.to.node_id) + " [" + this.mapping[0] + " -> " + this.mapping[1] + "] (signal_pass)";
+        }
+        if(this.input_type === CollectionEdgeInput.static_input) {
+            return this.toShortNodeId(this.from?.node_id) + " -> " + this.toShortNodeId(this.to.node_id) + " [" + this.mapping[0] + " -> " + this.mapping[1] + "] (static_input)";
+        }
+        if(this.input_type === CollectionEdgeInput.user_input) {
+            return this.toShortNodeId(this.from?.node_id) + " -> " + this.toShortNodeId(this.to.node_id) + " [" + this.mapping[0] + " -> " + this.mapping[1] + "] (user_input)";
+        }
+        return this.edge_id;
+    }
 
-    export_to_json(): string {
-        return JSON.stringify({
+    export_to_json(): any {
+        return {
             edge_id: this.edge_id,
             from_node_id: this.from?.node_id,
-            to_node_id: this.to.node_id,
+            to_node_id: this.to.node_id,    
             mapping: this.mapping,
             input_type: this.input_type,
-        }, null, 2);
+        };
     }
     validate_inputs(): boolean {
         if(this.mapping[0] === undefined || this.mapping[1] === undefined) {
@@ -142,37 +160,37 @@ export class CollectionEdge {
         }
         if(this.input_type === "signal_pass") {
             if(this.from === undefined) {
-                console.log("From is undefined");
+                console.error("From is undefined");
                 return false;
             }
             if(!this.from.get_output_keys().includes(this.mapping[0])) {
-                console.log("From output key not found");
+                console.error("From output key not found");
                 return false;
             }
             if(!this.to.get_input_keys().includes(this.mapping[1])) {
-                console.log("To input key not found");
+                console.error("To input key not found");
                 return false;
             }
             return true;
         }
         if(this.input_type === "static_input") {
             if(this.from !== undefined) {
-                console.log("From is not undefined");
+                console.error("From is not undefined");
                 return false;
             }
             if(!this.to.get_input_keys().includes(this.mapping[1])) {
-                console.log("To input key not found");
+                console.error("To input key not found");
                 return false;
             }
             return true;
         }
         if(this.input_type === "user_input") {
             if(this.from !== undefined) {
-                console.log("From is not undefined");
+                console.error("From is not undefined");
                 return false;
             }
             if(!this.to.get_input_keys().includes(this.mapping[1])) {
-                console.log("To input key not found");
+                console.error("To input key not found");
                 return false;
             }
             return true;
@@ -181,11 +199,11 @@ export class CollectionEdge {
         if(this.input_type === "link") {
             // Link edges require a from node to define ordering
             if(this.from === undefined) {
-                console.log("From is undefined for link edge");
+                console.error("From is undefined for link edge");
                 return false;
             }
             if(this.to === undefined) {
-                console.log("To is undefined for link edge");
+                console.error("To is undefined for link edge");
                 return false;
             }
             return true;
@@ -200,6 +218,7 @@ export enum ChangedType {
     removed = "removed",
     added = "added",
     modified = "modified",
+    moved = "moved",
 }
 export type ChangedCallback = (changes: {
     action: ChangedType,
@@ -215,6 +234,7 @@ export type RequiredUserInput = {
     proof_index: number;
     signal_indexes: [number, number];
     name: string;
+    module_id: string;
     description: string;
 }
 

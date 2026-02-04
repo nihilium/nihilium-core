@@ -85,14 +85,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         
     
         this.outputs = {
-            link: {
-                name: "link",
-                type_order: ["Other"],                
-                description: "A simple link to define ordering",
-                proof_key: opening_proof_id,
-                signal_key: "link",
-                
-            },
+           
             reveal_value: {
                 name: "reveal_value",
                 type_order: ["String"],

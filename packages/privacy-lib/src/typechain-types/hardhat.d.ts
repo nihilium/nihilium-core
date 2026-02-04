@@ -74,9 +74,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
     getContractFactory(
+      name: "KeccakPreImage",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.KeccakPreImage__factory>;
+    getContractFactory(
       name: "KeccakTreeEntry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.KeccakTreeEntry__factory>;
+    getContractFactory(
+      name: "ManualChoice",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ManualChoice__factory>;
     getContractFactory(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -182,10 +190,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IVerifier>;
     getContractAt(
+      name: "KeccakPreImage",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.KeccakPreImage>;
+    getContractAt(
       name: "KeccakTreeEntry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.KeccakTreeEntry>;
+    getContractAt(
+      name: "ManualChoice",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ManualChoice>;
     getContractAt(
       name: "Opening_proof",
       address: string | ethers.Addressable,
@@ -283,9 +301,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "KeccakPreImage",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.KeccakPreImage>;
+    deployContract(
       name: "KeccakTreeEntry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KeccakTreeEntry>;
+    deployContract(
+      name: "ManualChoice",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ManualChoice>;
     deployContract(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -391,10 +417,20 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "KeccakPreImage",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.KeccakPreImage>;
+    deployContract(
       name: "KeccakTreeEntry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KeccakTreeEntry>;
+    deployContract(
+      name: "ManualChoice",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ManualChoice>;
     deployContract(
       name: "Opening_proof",
       args: any[],

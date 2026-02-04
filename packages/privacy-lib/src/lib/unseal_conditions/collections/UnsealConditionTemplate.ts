@@ -78,6 +78,24 @@ export class UnsealConditionTemplate {
     isCompiled(): boolean {
         return this.unsealProofActions.length > 0;
     }
+
+    private userInputKey(input:RequiredUserInput): string {
+        if(input.module_id === undefined) {
+            return input.name;
+        }
+        return input.module_id + "_" + input.name;
+    }
+
+    private getInputFromMapping(input_mapping: { [key: string]: bigint }, input:RequiredUserInput): bigint {
+        if(input.module_id + "_" + input.name in input_mapping) {
+            return input_mapping[input.module_id + "_" + input.name];
+        }
+        if(input_mapping[input.name] === undefined) {
+            throw new Error("Input " + input.name + " is not mapped");
+        }
+        return input_mapping[input.name];
+    }
+
     compile(input_mapping: { [key: string]: bigint }, data_stream_mapping: { [key: string]: string }): void {
         if (this.isCompiled()) {
             throw new Error("Template already compiled");
@@ -120,9 +138,8 @@ if(unseal_proof_action.action === ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT) {
 
         for (var user_input_path of this.user_inputs) {
             for (var user_input of user_input_path) {
-                if (input_mapping[user_input.name] === undefined) {
-                    throw new Error("User input " + user_input.name + " is not mapped");
-                }
+                //Throws if not set
+                this.getInputFromMapping(input_mapping, user_input);
 
 
                 var found_action = false;
@@ -139,7 +156,7 @@ if(unseal_proof_action.action === ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT) {
                                     action: ACTION_STATIC_INPUT,
                                     params: {
                                         public_input_index: user_input.signal_indexes[0],
-                                        value: toPaddedHex(input_mapping[user_input.name], 32),
+                                        value: toPaddedHex(this.getInputFromMapping(input_mapping, user_input), 32),
                                     }
                                 };
                                 //TODO fix now with the same 
@@ -152,13 +169,23 @@ if(unseal_proof_action.action === ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT) {
                         }
                     }
                     if (!found_action) {
-                        throw new Error("User input " + user_input.name + " is not a static input from user");
+                       // throw new Error("User input " + user_input.name + " is not a static input from user");
                     }else{
                         break;
                     }
                 }
             }
         }
+        //Sanity check that all user inputs are set
+        for (var i = 0; i < unseal_proof_action_paths.length; i++) {
+            var unseal_proof_action_path = unseal_proof_action_paths[i];
+            for (var j = 0; j < unseal_proof_action_path.length; j++) {
+                if(unseal_proof_action_path[j].action === ACTION_STATIC_INPUT_FROM_USER) {
+                    throw new Error(`User input input not set ${unseal_proof_action_path[j].params.module_input_key}`);
+                }
+            }
+        }
+
         var path_index = 0;
         for (var datastream_path of this.data_streams) {
             for (var datastream of datastream_path) {

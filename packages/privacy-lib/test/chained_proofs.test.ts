@@ -13,6 +13,7 @@ import { UnsealConditionCollection } from "../src/lib/unseal_conditions/collecti
 import { ChangedType, CollectionNode, CollectionEdge, CollectionEdgeInput } from "../src/lib/unseal_conditions/collections/types";
 import { AfterTimeModule } from "../src/lib/unseal_conditions/modules/standard_modules/after_time_module";
 import { TimeDelayModule } from "../src/lib/unseal_conditions/modules/standard_modules/time_delay";
+import { SubTreeModule } from "../src/lib/unseal_conditions/modules/standard_modules/sub_tree_module";
 //import { DefaultAnchoredOpeningProofModuleList } from "../src/lib/unseal_conditions/modules/standard_modules/default_anchored_opening_module_2";
 
 
@@ -142,4 +143,75 @@ describe("ChainedProofs", () => {
         scstate = await chainedProof.dryrunChainProofVerify(scstate, false);
         assert.equal(state.current_hash, scstate.current_hash);
     });
+
+    it("should compile and run collection with forks", async () => {
+        const changedCallback = (changes: { action: ChangedType, nodes?: CollectionNode[], edges?: CollectionEdge[], starting_node?: CollectionNode | undefined }) => {
+            console.log(changes);
+        }
+        const collection = new UnsealConditionCollection("Test", "Test", new StandardProofLibrary(), new StandardModuleLibrary(), changedCallback);
+        const openingModule = new DefaultAnchoredOpeningProofModule(new StandardProofLibrary());
+        const afterTimeModule = new AfterTimeModule(new StandardProofLibrary());
+        const timeDelayModuleRoot = new TimeDelayModule(new StandardProofLibrary());
+        const timeDelayModuleFork1 = new TimeDelayModule(new StandardProofLibrary());
+        const timeDelayModuleFork2 = new TimeDelayModule(new StandardProofLibrary());
+        const subTreeModule = new SubTreeModule(new StandardProofLibrary());
+        const oR = collection.add_node(openingModule);
+        const r1 = collection.add_node(afterTimeModule);
+        const r2 = collection.add_node(timeDelayModuleRoot);
+        const f0 = collection.add_node(subTreeModule, r1);
+        const f1 = collection.add_node(timeDelayModuleFork1, r1);
+        const f2 = collection.add_node(timeDelayModuleFork2, r1);
+        var edge_root1 =collection.add_edge(oR, r1, ["timestamp", "timestamp"],
+            CollectionEdgeInput.signal_pass);
+        var edge_root2 = collection.add_edge(oR, r2, ["timestamp", "timestamp_low"],
+            CollectionEdgeInput.signal_pass);
+        
+        var edge_root3 = collection.add_edge(oR, r2, ["timestamp", "timestamp_high"],
+                CollectionEdgeInput.signal_pass);
+        var edge_fork1 = collection.add_edge(oR, f1, ["timestamp", "timestamp_high"],
+            CollectionEdgeInput.signal_pass);
+        var edge_fork1 = collection.add_edge(f0, f1, ["sub_tree_index", "timestamp_low"],
+                CollectionEdgeInput.signal_pass);
+        var edge_fork2 = collection.add_edge(oR, f2, ["timestamp", "timestamp_high"],
+            CollectionEdgeInput.signal_pass);
+        var edge_fork3 = collection.add_edge(f0, f2, ["sub_tree_index", "timestamp_low"],
+                CollectionEdgeInput.signal_pass);
+        collection.add_data_stream("test_data_stream", oR, "metadata_root_hash");
+        var visual_forks = collection.visual_forks();
+        var visual_edges_all = collection.visual_edges_all();
+        console.log(visual_forks);
+        console.log(visual_edges_all);
+        const compiledTemplate = collection.createTemplate(addressMap);
+        compiledTemplate.compile({
+            "threshold": 10000000000n,
+            "offset": 5000000000n,
+            "metadata_root_hash": 9999999999n,
+            "content_root": 9999999999n,
+        }, {
+            "test_data_stream": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        });
+        var unsealRoot = await compiledTemplate.getUnsealRoot();
+        var compiledTemplateJson = compiledTemplate.export_compiled_to_json();
+        assert.equal(compiledTemplate.getUnsealProofActions().length, 2);
+        var removed_edges = collection.move_node(f2, "root", -1);
+        console.log(removed_edges);
+        var visual_forks2 = collection.visual_forks();
+        var visual_edges_all2 = collection.visual_edges_all();
+
+
+        var exported_json = collection.export_to_json();
+        var imported_collection = new UnsealConditionCollection("Test", "Test", new StandardProofLibrary(), new StandardModuleLibrary(), changedCallback);
+        imported_collection.import_from_json(exported_json);
+        var visual_forks3 = collection.visual_forks();
+        var visual_edges_all3 = imported_collection.visual_edges_all();
+        assert.equal(visual_forks3.length, visual_forks2.length);
+        assert.equal(visual_edges_all3.length, visual_edges_all2.length);
+        for(var i = 0; i < visual_forks3.length; i++) {
+            assert.equal(visual_forks3[i], visual_forks2[i]);
+        }
+        console.log(collection.visual_forks());
+        console.log(compiledTemplate);
+    });
+
+    
 });

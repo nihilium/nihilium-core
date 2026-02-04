@@ -1,5 +1,6 @@
 // Example: re-export browser entry from privacy-lib
 import * as nhsdk from '@nihilium/privacy-lib'; 
+export * from '@nihilium/privacy-lib';
 import axios from "axios";
 import { SelectableDataStream, SelectableProcessor,  } from "./lib/types";
 import { getDatastreams, getProcessors, getProcessorEndpoint } from './lib/endpoint-selection';

@@ -32,8 +32,12 @@ export type { Encrypt_proof } from "./contracts/proofs/encrypt_proof.sol/Encrypt
 export { Encrypt_proof__factory } from "./factories/contracts/proofs/encrypt_proof.sol/Encrypt_proof__factory";
 export type { GreaterOrEqualThen } from "./contracts/proofs/GreaterOrEqualThen";
 export { GreaterOrEqualThen__factory } from "./factories/contracts/proofs/GreaterOrEqualThen__factory";
+export type { KeccakPreImage } from "./contracts/proofs/KeccakPreImage";
+export { KeccakPreImage__factory } from "./factories/contracts/proofs/KeccakPreImage__factory";
 export type { KeccakTreeEntry } from "./contracts/proofs/KeccakTreeEntry";
 export { KeccakTreeEntry__factory } from "./factories/contracts/proofs/KeccakTreeEntry__factory";
+export type { ManualChoice } from "./contracts/proofs/ManualChoice";
+export { ManualChoice__factory } from "./factories/contracts/proofs/ManualChoice__factory";
 export type { Opening_proof } from "./contracts/proofs/Opening_proof";
 export { Opening_proof__factory } from "./factories/contracts/proofs/Opening_proof__factory";
 export type { SmallerThan } from "./contracts/proofs/SmallerThan";

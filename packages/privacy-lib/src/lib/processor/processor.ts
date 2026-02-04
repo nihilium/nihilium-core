@@ -173,6 +173,8 @@ export class Processor {
     }
     console.timeEnd("ChainedProofVerification")
     //TODO only pass after proofs are correct
+    //TODO get the cyphertexts and epherals keys from the request hash them and compare to the signal
+    //
     var cyphertexts = request.public_signals[0].slice(3, 19).map(signal => BigInt(signal));
     var ephemeral_keys = request.public_signals[0].slice(19, 35).map(signal => BigInt(signal));
     var public_key = request.public_signals[0].slice(35, 37).map(signal => BigInt(signal));

@@ -5,6 +5,12 @@ import { DefaultAnchoredOpeningProofModule } from './standard_modules/default_an
 import { TimeDelayModule } from './standard_modules/time_delay';
 import { UnsealConditionModule } from './types';
 import { ProofLibraryType } from '../proofs';
+import { SubTreeModule } from './standard_modules/sub_tree_module';
+import { ManualChoiceModule } from './standard_modules/manual_choice';
+import { TopLevelTreeModule } from './standard_modules/top_level_tree_module';
+import { HashPreimageModule } from './standard_modules/hash_preimage';
+import { ZKPassportDummyModule } from './dummy_modules/ZKPassportDummy';
+import { ZKEmailDummyModule } from './dummy_modules/ZKEmailDummy';
 
 export * from './standard_modules/default_anchored_opening_module';
 export * from './standard_modules/after_time_module';
@@ -41,6 +47,12 @@ export class StandardModuleLibrary extends ModuleLibraryType {
         ["AfterTimeModule"]: AfterTimeModule,
         ["TimeDelayModule"]: TimeDelayModule,
         ["BeforeTimeModule"]: BeforeTimeModule,
+        ["SubTreeModule"]: SubTreeModule,
+        ["TopLevelTreeModule"]: TopLevelTreeModule,
+        ["ManualChoiceModule"]: ManualChoiceModule,
+        ["HashPreimageModule"]: HashPreimageModule,
+        ["ZKPassportDummyModule"]: ZKPassportDummyModule,
+        ["ZKEmailDummyModule"]: ZKEmailDummyModule,
     };
     public custom: {[key: string]: new (...args: any[]) => UnsealConditionModule} = {};
     constructor() {
