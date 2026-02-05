@@ -30,16 +30,20 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
 
 export class ZKPassportDummyModule extends UnsealConditionModule {
     
-    
+    protected do_not_fork: boolean = true;
     
 
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("ZKPassportDummy", 
+        super("ZKPassportModule", 
             "ZKPassport Dummy Module", proofLibrary);
             this.description = `
                 This module is used to validate a ZKPassport.
+                It validates a random value that should appear in the proofs 'custom_data' (zkpassport specific), 
+                this value should come from a randomness source.
+                It validates a merkle root of all possible values that are allowed to be produced by ZKPassport.
+
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -59,9 +63,15 @@ export class ZKPassportDummyModule extends UnsealConditionModule {
             merkle_data_commitment: {
                 type_order: ["String"],
                 user_input: true,
-                description: "Merkle root commitment",
+                description: "This is a merkle root of all possible values that are allowed to be produced by ZKPassport",
                 required: true
             },
+            timestamp: {
+                type_order: ["Timestamp"],
+                user_input: false,
+                description: "The timestamp used to validate a recent ZKPassport proof",
+                required: true
+            }
         }
         
         
@@ -77,7 +87,7 @@ export class ZKPassportDummyModule extends UnsealConditionModule {
             type_order: ["String"],
             proof_key: manual_choice_proof_id,
             signal_key: "choice",
-            description: "The custom data",
+            description: "The custom data, this is a random value that should appear in the proof, should come from a randomness source",
         },
         }
     }

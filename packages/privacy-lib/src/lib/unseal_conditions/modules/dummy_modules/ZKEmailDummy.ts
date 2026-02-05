@@ -30,16 +30,18 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
 
 export class ZKEmailDummyModule extends UnsealConditionModule {
     
-    
+    protected do_not_fork: boolean = true;
     
 
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("ZKEmailDummy", 
+        super("ZKEmailModule", 
             "ZK Email Dummy Module", proofLibrary);
             this.description = `
                 This module is used to validate a ZK Email.
+                This module validates an email address and the content of the email header.
+                
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -52,14 +54,14 @@ export class ZKEmailDummyModule extends UnsealConditionModule {
             email_address: {
                 type_order: ["String"],
                 user_input: true,
-                description: "Email to validate",
+                description: "Email to required to send the email",
                 required: true
             },
             //Merkle proof of all zkpassport signals
             email_header_content: {
                 type_order: ["String"],
                 user_input: false,
-                description: "Email data commitment",
+                description: "Value that should appear in the email header",
                 required: true
             },
         }

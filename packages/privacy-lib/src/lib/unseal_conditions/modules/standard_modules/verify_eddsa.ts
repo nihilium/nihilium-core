@@ -28,7 +28,7 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class ManualChoiceModule extends UnsealConditionModule {
+export class VerifyEDDSAModule extends UnsealConditionModule {
     
     
     
@@ -36,10 +36,10 @@ export class ManualChoiceModule extends UnsealConditionModule {
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("ManualChoiceModule", 
-            "Manual Choice Module", proofLibrary);
+        super("VerifyEDDSAModule", 
+            "Verify EDDSA Module", proofLibrary);
             this.description = `
-                This module is used to validate a manual choice. When producing proofs the user can pick a 'fork' to proof.
+                This module is used to validate a EDDSA signature.
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -49,29 +49,44 @@ export class ManualChoiceModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            choice: {
-                type_order: ["Boolean"],
-                user_input: true,
-                description: "The choice, true/false",
+            
+            signer_address: {
+                type_order: ["String"],
+                user_input: false,
+                description: "The address of the signer",
+                required: true
+            },
+            message_hash: {
+                type_order: ["String"],
+                user_input: false,
+                description: "The message hash being signed",
                 required: true
             },
         }
         
         
         
-        var manual_choice_proof = proofLibrary.getProof("ManualChoiceProof");
+        var verify_eddsa_proof = proofLibrary.getProof("VerifyEDDSAProof");
         
-        var manual_choice_proof_id = this.addProof(manual_choice_proof);
-        this.addSignalEdge(undefined, manual_choice_proof_id, ["choice", "choice"], ModuleEdgeInput.user_input);      
+        var verify_eddsa_proof_id = this.addProof(verify_eddsa_proof);
+        this.addSignalEdge(undefined, verify_eddsa_proof_id, ["signer_address", "signer_address"], ModuleEdgeInput.external_input);      
+        this.addSignalEdge(undefined, verify_eddsa_proof_id, ["message_hash", "message_hash"], ModuleEdgeInput.external_input);      
     
         this.outputs = {
-           choice: {
-            type_order: ["Boolean"],
-            name: "choice",
-            description: "What has been chosen.",
-            proof_key: manual_choice_proof_id,
-            signal_key: "choice",
-           }
+            signer_address: {
+                type_order: ["String"],
+                name: "signer_address",
+                description: "The address of the signer",
+                proof_key: verify_eddsa_proof_id,
+                signal_key: "signer_address",
+            },
+            message_hash: {
+                type_order: ["String"],
+                name: "message_hash",
+                description: "The message hash being signed",
+                proof_key: verify_eddsa_proof_id,
+                signal_key: "message_hash",
+            }
         }
     }
   

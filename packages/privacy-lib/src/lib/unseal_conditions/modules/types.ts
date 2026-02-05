@@ -307,8 +307,10 @@ export abstract class UnsealConditionModule {
     public description: string = "";
     protected inputs: IOMap = {};
     protected forkingProof: string | undefined = undefined;
+    protected dataStreamOutputFields: string[] = [];
     protected outputs: ModuleOutputMap = {};
     protected proofLibrary: ProofLibraryType;
+    protected do_not_fork: boolean = false;
     protected proofs: { [key: string]: WrappedProof } = {};
     protected proofList: string[] = []
     protected edges: { [key: string]: SignalEdge } = {};
@@ -326,7 +328,7 @@ export abstract class UnsealConditionModule {
         return this.outputs;
     }
     canFork(): boolean {
-        return this.proofList.length == 1;
+        return this.proofList.length == 1 && !this.do_not_fork;
     }
 
     addProof(proof: UnsealConditionProof, easyId: boolean = true): string {
@@ -362,9 +364,7 @@ export abstract class UnsealConditionModule {
         return true;
     }
 
-    getPassedSignalForProof(input_key: string, previous_signals: any[][]): any {
-
-    }
+   
 
     getInputEdgesForProof(proof_id: string): SignalEdge[] {
         return Object.values(this.edges).filter(edge => edge.to.id === proof_id);

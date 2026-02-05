@@ -28,21 +28,22 @@ import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
 
 export class SubTreeModule extends UnsealConditionModule {
     
-   
+    protected do_not_fork: boolean = true;
     constructor(
         proofLibrary: ProofLibraryType,
     ){
         super("SubTreeModule", 
             "Sub Tree Module", proofLibrary);
             this.description = `
-                This module is used to validate a sub tree merkle proof.
+                A module that validates a merkle proof of a balanced merkle tree. 
+                This proof is non-zk, it doesn't hide the path.
             `;
         this.inputs = {
             
-            content_root: {
+            merkle_root: {
                 type_order: ["String"],
                 user_input: true,
-                description: "The computed root",
+                description: "Root of the merkle tree",
                 required: true
             },
             
@@ -53,19 +54,19 @@ export class SubTreeModule extends UnsealConditionModule {
         var sub_tree_proof = proofLibrary.getProof("SubTreeMerkleProof");
         var sub_tree_proof_id = this.addProof(sub_tree_proof);
 
-        this.addSignalEdge(undefined, sub_tree_proof_id, ["content_root", "computed_root"], ModuleEdgeInput.user_input);
+        this.addSignalEdge(undefined, sub_tree_proof_id, ["merkle_root", "merkle_root"], ModuleEdgeInput.user_input);
         this.outputs = {
             sub_tree_value: {
                 type_order: ["String"],
                 name: "sub_tree_value",
-                description: "The sub tree value",
+                description: "The value of the leaf of the tree",
                 proof_key: sub_tree_proof_id,
                 signal_key: "leaf_value",
             },
             sub_tree_index: {
                 type_order: ["Number"],
                 name: "sub_tree_index",
-                description: "The sub tree index",
+                description: "The index of the leaf of the tree",
                 proof_key: sub_tree_proof_id,
                 signal_key: "index",
             }

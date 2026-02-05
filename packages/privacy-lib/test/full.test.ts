@@ -285,7 +285,7 @@ describe("Processor-Client intereaction", () => {
     const modules = unsealing_process.getModulesForPath(proof_index);
     for(var module of modules) {
       switch(module.compiled_module.module_name) {
-        case "DefaultAnchoredOpeningModule":
+        case "UnsealOpeningModule":
           var typedModule = module.module as DefaultAnchoredOpeningProofModule;
           var result = await typedModule.produce_proofs(data_stream, processor_endpoint,
             single_seal.private_package.proof, single_seal.private_package.public_signals);

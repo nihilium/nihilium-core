@@ -36,6 +36,7 @@ export class AfterTimeModule extends UnsealConditionModule {
             "After Time Module", proofLibrary);
             this.description = `
                 This module is used to validate that a timestamp is after a certain time.
+                Calculation is: timestamp > threshold
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -48,13 +49,13 @@ export class AfterTimeModule extends UnsealConditionModule {
             timestamp: {
                 type_order: ["Timestamp", "Number"],
                 user_input: false,
-                description: "The timestamp to check",
+                description: "The timestamp to check in seconds",
                 required: true
             },
             threshold: {
                 type_order: ["Timestamp", "Number"],
                 user_input: true,
-                description: "The threshold timestamp",
+                description: "The threshold timestamp in seconds",
                 required: true
             },
         }

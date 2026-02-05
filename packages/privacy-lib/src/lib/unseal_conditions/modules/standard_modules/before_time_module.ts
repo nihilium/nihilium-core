@@ -28,6 +28,7 @@ export class BeforeTimeModule extends UnsealConditionModule {
             "Before Time Module", proofLibrary);
             this.description = `
                 This module is used to validate that a timestamp is before a certain time.
+                Calculation is: timestamp < threshold
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -46,7 +47,7 @@ export class BeforeTimeModule extends UnsealConditionModule {
             threshold: {
                 type_order: ["Timestamp", "Number"],
                 user_input: true,
-                description: "The threshold timestamp",
+                description: "The threshold timestamp in seconds",
                 required: true
             },
         }

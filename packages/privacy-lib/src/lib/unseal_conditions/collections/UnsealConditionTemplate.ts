@@ -83,12 +83,12 @@ export class UnsealConditionTemplate {
         if(input.module_id === undefined) {
             return input.name;
         }
-        return input.module_id + "_" + input.name;
+        return input.module_id + ":" + input.name;
     }
 
     private getInputFromMapping(input_mapping: { [key: string]: bigint }, input:RequiredUserInput): bigint {
-        if(input.module_id + "_" + input.name in input_mapping) {
-            return input_mapping[input.module_id + "_" + input.name];
+        if(input.module_id + ":" + input.name in input_mapping) {
+            return input_mapping[input.module_id + ":" + input.name];
         }
         if(input_mapping[input.name] === undefined) {
             throw new Error("Input " + input.name + " is not mapped");

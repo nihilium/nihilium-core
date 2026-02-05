@@ -13,7 +13,7 @@ export const TopLevelTreeProof = new UnsealConditionProof({
     description: "Top Level Tree Proof",
     version: "1.0.0",
     public_signals: {
-        computed_root: [0, 1],
+        merkle_root: [0, 1],
         block_timestamp: [1, 1],
         subtree_root: [2, 1],
         index: [3, 1],

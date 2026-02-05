@@ -28,7 +28,7 @@ import { cryptoTools } from "@nihilium/zkp-circuits";
 
 export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     
-   
+    protected do_not_fork: boolean = true;
     
     private opening_proof:UnsealConditionProof;
     private top_level_merkle_tree_proof:UnsealConditionProof;
@@ -38,11 +38,14 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("DefaultAnchoredOpeningModule", 
+        super("UnsealOpeningModule", 
             "Default Anchored Opening Module", proofLibrary);
             this.description = `
                 This module is the starting module for all further unseal conditions.
                 It validates the opening proof and sets the metadata, timestamp and merkle roots.
+                It validates two tree, the top level tree, which is anchored on chain.
+                And the sub tree, this is a tree constructed off chain. It's root is combined with
+                a timestamp to produce a leaf value for the top level tree.
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -55,7 +58,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             metadata_root_hash: {
                 type_order: ["String"],
                 user_input: true,
-                description: "The metadata root hash",
+                description: "The hash of a merkle root of a tree that can attach metadata to the unseal conditions",
                 required: true
             },
         }
@@ -77,7 +80,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         this.addSignalEdge(undefined, opening_proof_id, ["metadata_root_hash", "metadata_root_hash"], ModuleEdgeInput.user_input);
         this.addSignalEdge(opening_proof_id, keccack_tree_hash_proof_id, ["reveal_value", "plain_value"], ModuleEdgeInput.signal_pass);
         this.addSignalEdge(keccack_tree_hash_proof_id, sub_tree_merkle_tree_proof_id, ["tree_entry", "leaf_value"], ModuleEdgeInput.signal_pass);
-        this.addSignalEdge(sub_tree_merkle_tree_proof_id, top_level_merkle_tree_proof_id, ["computed_root", "subtree_root"], ModuleEdgeInput.signal_pass);
+        this.addSignalEdge(sub_tree_merkle_tree_proof_id, top_level_merkle_tree_proof_id, ["merkle_root", "subtree_root"], ModuleEdgeInput.signal_pass);
 
         //Represents a static input from the user
        
@@ -91,7 +94,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 type_order: ["String"],
                 proof_key: opening_proof_id,
                 signal_key: "reveal_value",
-                description: "The reveal value",
+                description: "The reveal value, this value is anchored on chain and is a signal that can be externally observed",
                 
             },
             reveal_value_tree_hash: {
@@ -99,23 +102,31 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 type_order: ["String"],
                 proof_key: keccack_tree_hash_proof_id,
                 signal_key: "tree_entry",
-                description: "The reveal value tree hash",
+                description: "The reveal value tree hash, which is keccak(reveal_value, 0)",
                 
             },
             sub_tree_merkle_root: {
                 name: "sub_tree_merkle_root",
                 type_order: ["String"], //Not randomness as influencable by datastream
                 proof_key: sub_tree_merkle_tree_proof_id,
-                signal_key: "computed_root",
-                description: "The sub tree merkle root",
+                signal_key: "merkle_root",
+                description: "The merkle root of a tree that is constructed off chain",
+                
+            },
+            sub_tree_index: {
+                name: "sub_tree_index",
+                type_order: ["Number"], //Not randomness as influencable by datastream
+                proof_key: sub_tree_merkle_tree_proof_id,
+                signal_key: "index",
+                description: "The index of the leaf of the sub tree",
                 
             },
             top_level_merkle_root: {
                 name: "top_level_merkle_root",
                 type_order: ["String", "Randomness"], //This root is defined by a mined block
                 proof_key: top_level_merkle_tree_proof_id,
-                signal_key: "computed_root",
-                description: "The top level merkle root",
+                signal_key: "merkle_root",
+                description: "The top level merkle root, is used to validate against a datastream.",
                 
             },
             metadata_root_hash: {
@@ -131,7 +142,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 type_order: ["Timestamp", "Number"],
                 proof_key: top_level_merkle_tree_proof_id,
                 signal_key: "block_timestamp",
-                description: "The timestamp",
+                description: "The timestamp of the block that contains the reveal value",
                 
             }
         }

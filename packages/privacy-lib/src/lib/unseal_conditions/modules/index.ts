@@ -11,6 +11,8 @@ import { TopLevelTreeModule } from './standard_modules/top_level_tree_module';
 import { HashPreimageModule } from './standard_modules/hash_preimage';
 import { ZKPassportDummyModule } from './dummy_modules/ZKPassportDummy';
 import { ZKEmailDummyModule } from './dummy_modules/ZKEmailDummy';
+import { VerifyECDSAModule } from './standard_modules/verify_ecdsa';
+import { VerifyEDDSAModule } from './standard_modules/verify_eddsa';
 
 export * from './standard_modules/default_anchored_opening_module';
 export * from './standard_modules/after_time_module';
@@ -43,16 +45,21 @@ export abstract class ModuleLibraryType {
 
 export class StandardModuleLibrary extends ModuleLibraryType {
     public standard: {[key: string]: new (...args: any[]) => UnsealConditionModule} = {
-        ["DefaultAnchoredOpeningModule"]: DefaultAnchoredOpeningProofModule,
-        ["AfterTimeModule"]: AfterTimeModule,
-        ["TimeDelayModule"]: TimeDelayModule,
-        ["BeforeTimeModule"]: BeforeTimeModule,
-        ["SubTreeModule"]: SubTreeModule,
-        ["TopLevelTreeModule"]: TopLevelTreeModule,
+        ["UnsealOpeningModule"]: DefaultAnchoredOpeningProofModule,
         ["ManualChoiceModule"]: ManualChoiceModule,
+        ["AfterTimeModule"]: AfterTimeModule,
+        
+        ["BeforeTimeModule"]: BeforeTimeModule,
+        ["TimeDelayModule"]: TimeDelayModule,
+        
+        ["TopLevelTreeModule"]: TopLevelTreeModule,
+        ["SubTreeModule"]: SubTreeModule,
+        
         ["HashPreimageModule"]: HashPreimageModule,
-        ["ZKPassportDummyModule"]: ZKPassportDummyModule,
-        ["ZKEmailDummyModule"]: ZKEmailDummyModule,
+        ["ZKPassportModule"]: ZKPassportDummyModule,
+        ["ZKEmailModule"]: ZKEmailDummyModule,
+        ["VerifyEDDSAModule"]: VerifyEDDSAModule,
+        ["VerifyECDSAModule"]: VerifyECDSAModule,
     };
     public custom: {[key: string]: new (...args: any[]) => UnsealConditionModule} = {};
     constructor() {

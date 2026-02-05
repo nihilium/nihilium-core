@@ -40,6 +40,7 @@ export class TimeDelayModule extends UnsealConditionModule {
             "Time Delay Module", proofLibrary);
             this.description = `
                 This module is used to validate that a timestamp is after a certain time delay.
+                The calculation is: timestamp_high - timestamp_low > offset
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -52,19 +53,19 @@ export class TimeDelayModule extends UnsealConditionModule {
             timestamp_low: {
                 type_order: ["Timestamp", "Number"],
                 user_input: false,
-                description: "The timestamp to check",
+                description: "The lower timestamp",
                 required: true
             },
             timestamp_high: {
                 type_order: ["Timestamp", "Number"],
                 user_input: false,
-                description: "The threshold timestamp",
+                description: "The higher timestamp",
                 required: true
             },
             offset: {
                 type_order: ["Number"],
                 user_input: true,
-                description: "The offset",
+                description: "The offset, the acceptable difference between timestamp_high and timestamp_low",
                 required: true
             },
         }

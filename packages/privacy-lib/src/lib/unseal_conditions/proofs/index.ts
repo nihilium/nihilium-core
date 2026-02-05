@@ -10,6 +10,8 @@ import { SmallerThanProof } from "./lib/004_smaller_than";
 import { UnsealConditionProof } from "./types"
 import { TimeDelayProof } from "./lib/006_time_delay";
 import { ManualChoiceProof } from "./lib/007_manual_choice";
+import { VerifyECDSAProof } from "./lib/009_verify_ecdsa";
+import { VerifyEDDSAProof } from "./lib/008_verify_eddsa";
 
 export abstract class ProofLibraryType {
     standard: {
@@ -61,6 +63,7 @@ export const standardProofs = {
     SmallerThanProof,
     GreaterOrEqualThenProof,
     TimeDelayProof,
-    
+    VerifyECDSAProof,
+    VerifyEDDSAProof,
     ManualChoiceProof
 }

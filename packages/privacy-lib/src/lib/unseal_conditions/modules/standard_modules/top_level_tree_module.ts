@@ -27,7 +27,7 @@ import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
  */
 
 export class TopLevelTreeModule extends UnsealConditionModule {
-    
+    protected do_not_fork: boolean = true;
    
     constructor(
         proofLibrary: ProofLibraryType,
@@ -53,40 +53,34 @@ export class TopLevelTreeModule extends UnsealConditionModule {
         var top_level_tree_proof = proofLibrary.getProof("TopLevelMerkleProof");
         var top_level_tree_proof_id = this.addProof(top_level_tree_proof);
 
-        /*
-         public_signals: {
-        computed_root: [0, 1],
-        block_timestamp: [1, 1],
-        subtree_root: [2, 1],
-        index: [3, 1],
-    },*/
-        this.addSignalEdge(undefined, top_level_tree_proof_id, ["top_level_merkle_root", "computed_root"], ModuleEdgeInput.user_input);
+    
+        this.addSignalEdge(undefined, top_level_tree_proof_id, ["top_level_merkle_root", "merkle_root"], ModuleEdgeInput.user_input);
         this.outputs = {
             top_level_merkle_root: {
                 type_order: ["String"],
                 name: "top_level_merkle_root",
                 description: "The sub tree value",
                 proof_key: top_level_tree_proof_id,
-                signal_key: "computed_root",
+                signal_key: "merkle_root",
             },
             timestamp: {
                 type_order: ["Timestamp", "Number"],
                 name: "timestamp",
-                description: "The sub tree index",
+                description: "The timestamp related to the leaf of the tree",
                 proof_key: top_level_tree_proof_id,
                 signal_key: "block_timestamp",
             },
             subtree_root: {
                 type_order: ["String"],
                 name: "subtree_root",
-                description: "The subtree root",
+                description: "The value used in combination with the timestamp to produce a leaf value for the tree",
                 proof_key: top_level_tree_proof_id,
                 signal_key: "subtree_root",
             },
             index: {
                 type_order: ["Number"],
                 name: "leaf_index",
-                description: "The index",
+                description: "The index of the leaf of the tree",
                 proof_key: top_level_tree_proof_id,
                 signal_key: "index",
             }

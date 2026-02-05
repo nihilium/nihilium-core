@@ -30,7 +30,7 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
 
 export class HashPreimageModule extends UnsealConditionModule {
     
-    
+    protected do_not_fork: boolean = true;
     
 
     constructor(
@@ -40,6 +40,7 @@ export class HashPreimageModule extends UnsealConditionModule {
             "Hash Preimage Module", proofLibrary);
             this.description = `
                 This module is used to validate a hash preimage.
+                It validates that a hash is the result of a keccak hash of a preimage.
             `;
         this.inputs = {
             //This is a stwarting module so no link required

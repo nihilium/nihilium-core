@@ -14,5 +14,6 @@ export type { SubTreeMerkleProof } from "./SubTreeMerkleProof";
 export type { TestVerifyAlwaysTrue } from "./TestVerifyAlwaysTrue";
 export type { TimeDelayProof } from "./TimeDelayProof";
 export type { TopLevelMerkleProof } from "./TopLevelMerkleProof";
+export type { VerifyECDSA } from "./VerifyECDSA";
 export type { VerifyEDDSA } from "./VerifyEDDSA";
 export type { Opening_proof } from "./Opening_proof";
