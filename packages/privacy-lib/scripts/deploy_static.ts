@@ -227,6 +227,7 @@ async function main() {
         { name: "AdditionProof", artifactPath: "contracts/proofs/AdditionProof.sol/AdditionProof", contractPath: "contracts/proofs/AdditionProof.sol:AdditionProof" },
         //ManualChoiceProof
         { name: "ManualChoice", artifactPath: "contracts/proofs/ManualChoice.sol/ManualChoice", contractPath: "contracts/proofs/ManualChoice.sol:ManualChoice" },
+        { name: "ValueInjection", artifactPath: "contracts/proofs/ValueInjection.sol/ValueInjection", contractPath: "contracts/proofs/ValueInjection.sol:ValueInjection" },
         //{ name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },

@@ -28,22 +28,18 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class ZKPassportDummyModule extends UnsealConditionModule {
+export class ValueInjectionModule extends UnsealConditionModule {
     
-    protected do_not_fork: boolean = true;
+    
     
 
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("ZKPassportModule", 
-            "ZKPassport Module", proofLibrary);
+        super("ValueInjectionModule", 
+            "Value Injection", proofLibrary);
             this.description = `
-                This module is used to validate a ZKPassport.
-                It validates a random value that should appear in the proofs 'custom_data' (zkpassport specific), 
-                this value should come from a randomness source.
-                It validates a merkle root of all possible values that are allowed to be produced by ZKPassport.
-
+                This module is used to inject a value into the proofs to be used accross forks.
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -53,42 +49,36 @@ export class ZKPassportDummyModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            random_value: {
-                type_order: ["Randomness"],
-                user_input: false,
-                description: "Random value that should appear in the proof, should come from a randomness source",
-                required: true
-            },
-            //Merkle proof of all zkpassport signals
-            merkle_data_commitment: {
-                type_order: ["String"],
+            // choice: {
+            //     type_order: ["Boolean"],
+            //     user_input: false,
+            //     description: "The choice, true/false",
+            //     required: true
+            // },
+            value: {
+                type_order: ["String", "Number", "Boolean", "Randomness"],
                 user_input: true,
-                description: "This is a merkle root of all possible values that are allowed to be produced by ZKPassport",
+                description: "The value to inject",
                 required: true
             },
-            timestamp: {
-                type_order: ["Timestamp"],
-                user_input: false,
-                description: "The timestamp used to validate a recent ZKPassport proof",
-                required: true
-            }
         }
         
         
         
-        var manual_choice_proof = proofLibrary.getProof("ManualChoiceProof");
+        var value_injection_proof = proofLibrary.getProof("ValueInjection");
         
-        var manual_choice_proof_id = this.addProof(manual_choice_proof);
-        //this.addSignalEdge(undefined, manual_choice_proof_id, ["choice", "choice"], ModuleEdgeInput.user_input);      
+        var value_injection_proof_id = this.addProof(value_injection_proof);
+        
+        // this.addSignalEdge(undefined, value_injection_proof_id, ["choice", "choice"], ModuleEdgeInput.);      
     
         this.outputs = {
-        custom_data: {
-            name: "custom_data",
-            type_order: ["String"],
-            proof_key: manual_choice_proof_id,
-            signal_key: "choice",
-            description: "The custom data, this is a random value that should appear in the proof, should come from a randomness source",
-        },
+           value: {
+            type_order: ["String", "Number", "Boolean", "Randomness"],
+            name: "value",
+            description: "The value to inject.",
+            proof_key: value_injection_proof_id,
+            signal_key: "value",
+           }
         }
     }
   

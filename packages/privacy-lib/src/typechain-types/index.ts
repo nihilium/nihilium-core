@@ -52,6 +52,8 @@ export type { TimeDelayProof } from "./contracts/proofs/TimeDelayProof";
 export { TimeDelayProof__factory } from "./factories/contracts/proofs/TimeDelayProof__factory";
 export type { TopLevelMerkleProof } from "./contracts/proofs/TopLevelMerkleProof";
 export { TopLevelMerkleProof__factory } from "./factories/contracts/proofs/TopLevelMerkleProof__factory";
+export type { ValueInjection } from "./contracts/proofs/ValueInjection";
+export { ValueInjection__factory } from "./factories/contracts/proofs/ValueInjection__factory";
 export type { VerifyECDSA } from "./contracts/proofs/VerifyECDSA";
 export { VerifyECDSA__factory } from "./factories/contracts/proofs/VerifyECDSA__factory";
 export type { VerifyEDDSA } from "./contracts/proofs/VerifyEDDSA";

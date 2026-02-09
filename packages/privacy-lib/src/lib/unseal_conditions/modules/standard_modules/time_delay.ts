@@ -50,19 +50,19 @@ export class TimeDelayModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            timestamp: {
-                type_order: ["Timestamp", "Number"],
-                user_input: false,
-                description: "The timestamp to check in seconds, should come from the opening proof",
-                required: true
-            },
+           
             top_level_merkle_root: {
                 type_order: ["String"],
                 user_input: false,
                 description: "The merkle root used to validate the delay, should come from the opening proof",
                 required: true
             },
-          
+            timestamp: {
+                type_order: ["Timestamp", "Number"],
+                user_input: false,
+                description: "The timestamp to check in seconds, should come from the opening proof",
+                required: true
+            },
             delay: {
                 type_order: ["Number"],
                 user_input: true,
@@ -88,13 +88,6 @@ export class TimeDelayModule extends UnsealConditionModule {
        
     
         this.outputs = {
-            delay: {
-                name: "delay",
-                type_order: ["Number"],
-                proof_key: time_delay_proof_id,
-                signal_key: "offset",
-                description: "The delay in seconds",
-            },
             timestamp_high: {
                 name: "timestamp_high",
                 type_order: ["Timestamp", "Number"],
@@ -102,6 +95,14 @@ export class TimeDelayModule extends UnsealConditionModule {
                 signal_key: "timestamp_high",
                 description: "The timestamp of the block that was used as high value for the delay",
             },
+            delay: {
+                name: "delay",
+                type_order: ["Number"],
+                proof_key: time_delay_proof_id,
+                signal_key: "offset",
+                description: "The delay in seconds",
+            },
+          
            
         }
     }

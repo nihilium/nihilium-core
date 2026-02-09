@@ -114,6 +114,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TopLevelMerkleProof__factory>;
     getContractFactory(
+      name: "ValueInjection",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ValueInjection__factory>;
+    getContractFactory(
       name: "VerifyECDSA",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.VerifyECDSA__factory>;
@@ -248,6 +252,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TopLevelMerkleProof>;
     getContractAt(
+      name: "ValueInjection",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ValueInjection>;
+    getContractAt(
       name: "VerifyECDSA",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -359,6 +368,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
     deployContract(
+      name: "ValueInjection",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ValueInjection>;
+    deployContract(
       name: "VerifyECDSA",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.VerifyECDSA>;
@@ -492,6 +505,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
+    deployContract(
+      name: "ValueInjection",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ValueInjection>;
     deployContract(
       name: "VerifyECDSA",
       args: any[],

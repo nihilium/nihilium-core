@@ -37,7 +37,7 @@ export class ZKEmailDummyModule extends UnsealConditionModule {
         proofLibrary: ProofLibraryType,
     ){
         super("ZKEmailModule", 
-            "ZK Email Dummy Module", proofLibrary);
+            "ZK Email Module", proofLibrary);
             this.description = `
                 This module is used to validate a ZK Email.
                 This module validates an email address and the content of the email header.

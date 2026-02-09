@@ -14,6 +14,9 @@ import { ZKEmailDummyModule } from './dummy_modules/ZKEmailDummy';
 import { VerifyECDSAModule } from './standard_modules/verify_ecdsa';
 import { VerifyEDDSAModule } from './standard_modules/verify_eddsa';
 import { AdjacentDataSelectionModule } from './standard_modules/adjacent_data_selection';
+import { ExclusionClaimModule } from './standard_modules/exclusion_claim';
+import { InclusionProofModule } from './standard_modules/inclusion_proof';
+import { ValueInjectionModule } from './standard_modules/value_injection';
 
 export * from './standard_modules/default_anchored_opening_module';
 export * from './standard_modules/after_time_module';
@@ -62,6 +65,9 @@ export class StandardModuleLibrary extends ModuleLibraryType {
         ["VerifyEDDSAModule"]: VerifyEDDSAModule,
         ["VerifyECDSAModule"]: VerifyECDSAModule,
         ["AdjacentDataSelectionModule"]: AdjacentDataSelectionModule,
+        ["ExclusionClaimModule"]: ExclusionClaimModule,
+        ["InclusionProofModule"]: InclusionProofModule,
+        ["ValueInjectionModule"]: ValueInjectionModule,
     };
     public custom: {[key: string]: new (...args: any[]) => UnsealConditionModule} = {};
     constructor() {

@@ -15,6 +15,7 @@ export type { SmallerThan } from "./SmallerThan";
 export type { TestVerifyAlwaysTrue } from "./TestVerifyAlwaysTrue";
 export type { TimeDelayProof } from "./TimeDelayProof";
 export type { TopLevelMerkleProof } from "./TopLevelMerkleProof";
+export type { ValueInjection } from "./ValueInjection";
 export type { VerifyECDSA } from "./VerifyECDSA";
 export type { VerifyEDDSA } from "./VerifyEDDSA";
 export type { Opening_proof } from "./Opening_proof";

@@ -13,6 +13,7 @@ import { ManualChoiceProof } from "./lib/007_manual_choice";
 import { VerifyECDSAProof } from "./lib/009_verify_ecdsa";
 import { VerifyEDDSAProof } from "./lib/008_verify_eddsa";
 import { AdditionProof } from "./lib/010_addition";
+import { ValueInjection } from "./lib/011_value_injection";
 
 export abstract class ProofLibraryType {
     standard: {
@@ -67,5 +68,6 @@ export const standardProofs = {
     VerifyECDSAProof,
     VerifyEDDSAProof,
     ManualChoiceProof,
-    AdditionProof
+    AdditionProof,
+    ValueInjection
 }

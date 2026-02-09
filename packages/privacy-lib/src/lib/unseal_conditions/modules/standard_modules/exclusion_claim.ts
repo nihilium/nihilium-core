@@ -54,14 +54,20 @@ export class ExclusionClaimModule extends UnsealConditionModule {
             
             signer_address: {
                 type_order: ["String"],
-                user_input: false,
+                user_input: true,
                 description: "The address of the claimer",
                 required: true
             },
             value: {
                 type_order: ["String"],
-                user_input: false,
+                user_input: true,
                 description: "The value NOT existing in the dataset",
+                required: true
+            },
+            top_level_merkle_root: {
+                type_order: ["String"],
+                user_input: false,
+                description: "The merkle root of the top level tree",
                 required: true
             },
             timestamp_low: {
@@ -86,6 +92,7 @@ export class ExclusionClaimModule extends UnsealConditionModule {
         this.addSignalEdge(undefined, verify_ecdsa_proof_id, ["signer_address", "signer_address"], ModuleEdgeInput.external_input);      
         this.addSignalEdge(undefined, verify_ecdsa_proof_id, ["message_hash", "message_hash"], ModuleEdgeInput.external_input);      
         this.dataStreamOutputFields = ["merkle_root"];
+        
         this.outputs = {
             signer_address: {
                 type_order: ["String"],
@@ -93,6 +100,13 @@ export class ExclusionClaimModule extends UnsealConditionModule {
                 description: "The address of the signer",
                 proof_key: verify_ecdsa_proof_id,
                 signal_key: "signer_address",
+            },
+            value: {
+                type_order: ["String"],
+                name: "value",
+                description: "The value that does not exist in the dataset, or if false does not exist in the dataset",
+                proof_key: verify_ecdsa_proof_id,
+                signal_key: "value",
             },
             merkle_root: {
                 type_order: ["String"],

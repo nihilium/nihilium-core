@@ -28,22 +28,19 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class ZKPassportDummyModule extends UnsealConditionModule {
+//TODO: Implement this module, still missing proof and datastream handling
+export class InclusionProofModule extends UnsealConditionModule {
     
-    protected do_not_fork: boolean = true;
+    
     
 
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("ZKPassportModule", 
-            "ZKPassport Module", proofLibrary);
+        super("InclusionProofModule", 
+            "Inclusion Proof", proofLibrary);
             this.description = `
-                This module is used to validate a ZKPassport.
-                It validates a random value that should appear in the proofs 'custom_data' (zkpassport specific), 
-                this value should come from a randomness source.
-                It validates a merkle root of all possible values that are allowed to be produced by ZKPassport.
-
+                This module is used to prove that a value exists in the dataset.
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -53,42 +50,56 @@ export class ZKPassportDummyModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            random_value: {
-                type_order: ["Randomness"],
-                user_input: false,
-                description: "Random value that should appear in the proof, should come from a randomness source",
-                required: true
-            },
-            //Merkle proof of all zkpassport signals
-            merkle_data_commitment: {
+            
+            value: {
                 type_order: ["String"],
                 user_input: true,
-                description: "This is a merkle root of all possible values that are allowed to be produced by ZKPassport",
+                description: "The value NOT existing in the dataset",
                 required: true
             },
-            timestamp: {
-                type_order: ["Timestamp"],
+            top_level_merkle_root: {
+                type_order: ["String"],
                 user_input: false,
-                description: "The timestamp used to validate a recent ZKPassport proof",
+                description: "The merkle root of the top level tree",
                 required: true
-            }
+            },
+            
+          
         }
         
         
+        var keccack_tree_hash_proof = proofLibrary.getProof("KeccakTreeEntry");
+        var keccack_tree_hash_proof_id = this.addProof(keccack_tree_hash_proof);
+        var merkle_proof = proofLibrary.getProof("MerkleTreeProof");
+        var merkle_proof_id = this.addProof(merkle_proof);
+        var top_level_tree_proof = proofLibrary.getProof("TopLevelMerkleProof");
+        var top_level_tree_proof_id = this.addProof(top_level_tree_proof);
         
-        var manual_choice_proof = proofLibrary.getProof("ManualChoiceProof");
+
+        this.addSignalEdge(undefined, keccack_tree_hash_proof_id, ["value", "plain_value"], ModuleEdgeInput.user_input);
+        this.addSignalEdge(keccack_tree_hash_proof_id, merkle_proof_id, ["tree_entry", "leaf_value"], ModuleEdgeInput.signal_pass);
+        this.addSignalEdge(merkle_proof_id, top_level_tree_proof_id, ["merkle_root", "subtree_root"], ModuleEdgeInput.signal_pass);
+
+        //this.addSignalEdge(undefined, merkle_proof_id, ["signer_address", "signer_address"], ModuleEdgeInput.external_input);      
+        //this.addSignalEdge(undefined, merkle_proof_id, ["message_hash", "message_hash"], ModuleEdgeInput.external_input);      
+        this.dataStreamOutputFields = ["top_level_merkle_root"];
         
-        var manual_choice_proof_id = this.addProof(manual_choice_proof);
-        //this.addSignalEdge(undefined, manual_choice_proof_id, ["choice", "choice"], ModuleEdgeInput.user_input);      
-    
         this.outputs = {
-        custom_data: {
-            name: "custom_data",
-            type_order: ["String"],
-            proof_key: manual_choice_proof_id,
-            signal_key: "choice",
-            description: "The custom data, this is a random value that should appear in the proof, should come from a randomness source",
-        },
+            
+            value: {
+                type_order: ["String"],
+                name: "value",
+                description: "The value that does not exist in the dataset, or if false does not exist in the dataset",
+                proof_key: keccack_tree_hash_proof_id,
+                signal_key: "value",
+            },
+            top_level_merkle_root: {
+                type_order: ["String"],
+                name: "merkle_root",
+                description: "The merkle root of the dataset",
+                proof_key: top_level_tree_proof_id,
+                signal_key: "message_hash",
+            }
         }
     }
   

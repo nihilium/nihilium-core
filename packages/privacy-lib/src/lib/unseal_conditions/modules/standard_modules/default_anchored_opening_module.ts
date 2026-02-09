@@ -104,22 +104,6 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 description: "The reveal value tree hash, which is keccak(reveal_value, 0)",
                 
             },
-            sub_tree_merkle_root: {
-                name: "sub_tree_merkle_root",
-                type_order: ["String"], //Not randomness as influencable by datastream
-                proof_key: sub_tree_merkle_tree_proof_id,
-                signal_key: "merkle_root",
-                description: "The merkle root of a tree that is constructed off chain",
-                
-            },
-            sub_tree_index: {
-                name: "sub_tree_index",
-                type_order: ["Number"], //Not randomness as influencable by datastream
-                proof_key: sub_tree_merkle_tree_proof_id,
-                signal_key: "index",
-                description: "The index of the leaf of the sub tree",
-                
-            },
             top_level_merkle_root: {
                 name: "top_level_merkle_root",
                 type_order: ["String", "Randomness"], //This root is defined by a mined block
@@ -128,6 +112,15 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 description: "The top level merkle root, is used to validate against a datastream.",
                 
             },
+            sub_tree_merkle_root: {
+                name: "sub_tree_merkle_root",
+                type_order: ["String"], //Not randomness as influencable by datastream
+                proof_key: sub_tree_merkle_tree_proof_id,
+                signal_key: "merkle_root",
+                description: "The merkle root of a tree that is constructed off chain",
+                
+            },
+           
             metadata_root_hash: {
                 name: "metadata_root_hash",
                 type_order: ["String"],
@@ -143,7 +136,15 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 signal_key: "block_timestamp",
                 description: "The timestamp of the block that contains the reveal value",
                 
-            }
+            },
+            sub_tree_index: {
+                name: "sub_tree_index",
+                type_order: ["Number"], //Not randomness as influencable by datastream
+                proof_key: sub_tree_merkle_tree_proof_id,
+                signal_key: "index",
+                description: "The index of the leaf of the sub tree",
+                
+            },
         }
     }
     // getConstructorFields(): {[key:string]:any} {
