@@ -1,6 +1,6 @@
 {
   "TopLevelMerkleProof": {
-    "address": "0x19f33b95aefb7cAC5888f5A5cc9EdF96eD73A6d4",
+    "address": "0x1605eA1Fd09715E5e24c965864b959f7Ac2Cd201",
     "abi": [
       {
         "type": "constructor",
@@ -124,8 +124,8 @@
       }
     ]
   },
-  "SubTreeMerkleProof": {
-    "address": "0x36b78982c14b662b2f02e3d7bc3034f8a35A4393",
+  "MerkleTreeProof": {
+    "address": "0xd14Aa271b2e1299E63D004A2BC70BeB69BB81925",
     "abi": [
       {
         "type": "constructor",
@@ -284,7 +284,7 @@
     ]
   },
   "KeccakTreeEntry": {
-    "address": "0x63f3A2112061cceE3D1DECDF807306980e471655",
+    "address": "0x9FD019bc1B51e4cd3E285d8B0A0163E88E72BefB",
     "abi": [
       {
         "type": "constructor",
@@ -374,7 +374,7 @@
     ]
   },
   "GreaterOrEqualThen": {
-    "address": "0xF44322009657387B9Ad9534fB2075B304445EF69",
+    "address": "0x04b008fcE433FCfAa613a7C9DDc892450Fb29861",
     "abi": [
       {
         "type": "constructor",
@@ -428,7 +428,7 @@
     ]
   },
   "SmallerThan": {
-    "address": "0x1b488abd68DFC25C77d9ed482a28B64f50fB3e70",
+    "address": "0x5E64e2eC1692938eD7B53930F35476add5f5D1B2",
     "abi": [
       {
         "type": "constructor",
@@ -482,7 +482,7 @@
     ]
   },
   "TimeDelayProof": {
-    "address": "0x23D0890bDC4bfF34c79A1C5cAcDba05F62337a6A",
+    "address": "0x4A9f7f3A0FDcBf5aaa7A730Ed583edc80d0596A2",
     "abi": [
       {
         "type": "constructor",
@@ -536,7 +536,7 @@
     ]
   },
   "opening_proof": {
-    "address": "0x6c03CB026FCB4E7608DF7D101C3ac7D70Fe6E44d",
+    "address": "0xc4E9acB446980198E6EC2B465b85C5001Ed18509",
     "abi": [
       {
         "type": "function",
@@ -671,7 +671,7 @@
     ]
   },
   "EmpheralMerkleTreeKeccak": {
-    "address": "0xe5fF49d3294600614C05C7C236e6bEa22D5E21c2",
+    "address": "0xa8DB626105bC332962b37456f653E13Ecb080436",
     "abi": [
       {
         "type": "constructor",
@@ -1228,7 +1228,7 @@
     ]
   },
   "ChainedProof": {
-    "address": "0x59c56c59CDE347c3319e1c43108090fCa5ad0aF4",
+    "address": "0xa48Bc0D561C0aA92E1FB55B8Be89856b5e913965",
     "abi": [
       {
         "type": "constructor",
@@ -2612,6 +2612,222 @@
           }
         ],
         "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "VerifyEDDSA": {
+    "address": "0xcf865895EaEE23F3B921204b778e20BAeABCB7Cb",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "VerifyECDSA": {
+    "address": "0xE208BD36211C8605FaB1ab62132eA6Dcf7502f4c",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "AdditionProof": {
+    "address": "0x229b1b885D31d885be3384041916bF037712918E",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ManualChoice": {
+    "address": "0xD06091F95260dBb787236CDC83ccC6ECF399aC9b",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
         "payable": false,
         "gas": null
       }

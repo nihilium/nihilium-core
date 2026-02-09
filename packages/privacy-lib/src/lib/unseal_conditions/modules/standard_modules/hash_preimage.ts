@@ -1,6 +1,6 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../../ChainedProof";
 import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
-import { SubTreeProof } from "../../proofs/lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
 import { IDataStream } from "../../../data_stream/types";
@@ -29,15 +29,13 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
  */
 
 export class HashPreimageModule extends UnsealConditionModule {
-    
-    protected do_not_fork: boolean = true;
-    
+  
 
     constructor(
         proofLibrary: ProofLibraryType,
     ){
         super("HashPreimageModule", 
-            "Hash Preimage Module", proofLibrary);
+            "Hash Preimage Check", proofLibrary);
             this.description = `
                 This module is used to validate a hash preimage.
                 It validates that a hash is the result of a keccak hash of a preimage.
@@ -51,12 +49,12 @@ export class HashPreimageModule extends UnsealConditionModule {
             //     required: true
             // },
             
-            preimage: {
+            expected_hash: {
                 type_order: ["String"],
                 user_input: true,
-                description: "Preimage to validate",
+                description: "The expected hash of the preimage",
                 required: true
-            },
+            }
         }
         
         
@@ -65,7 +63,7 @@ export class HashPreimageModule extends UnsealConditionModule {
         
         var keccak_tree_entry_proof_id = this.addProof(keccak_tree_entry_proof);
         
-        this.addSignalEdge(undefined, keccak_tree_entry_proof_id, ["preimage", "plain_value"], ModuleEdgeInput.user_input);      
+        this.addSignalEdge(undefined, keccak_tree_entry_proof_id, ["expected_hash", "tree_entry"], ModuleEdgeInput.user_input);      
     
         this.outputs = {
           hash: {

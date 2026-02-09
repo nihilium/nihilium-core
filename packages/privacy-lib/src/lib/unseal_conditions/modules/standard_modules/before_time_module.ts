@@ -25,7 +25,7 @@ export class BeforeTimeModule extends UnsealConditionModule {
         proofLibrary: ProofLibraryType,
     ){
         super("BeforeTimeModule", 
-            "Before Time Module", proofLibrary);
+            "Before Time Check", proofLibrary);
             this.description = `
                 This module is used to validate that a timestamp is before a certain time.
                 Calculation is: timestamp < threshold
@@ -56,13 +56,26 @@ export class BeforeTimeModule extends UnsealConditionModule {
         
         var greater_or_equal_then_proof = proofLibrary.getProof("GreaterOrEqualThen");
         var greater_or_equal_then_proof_id = this.addProof(greater_or_equal_then_proof);
-
+        this.forkingProof = greater_or_equal_then_proof_id;
         this.addSignalEdge(undefined, greater_or_equal_then_proof_id, ["timestamp", "timestamp"], ModuleEdgeInput.external_input);
         this.addSignalEdge(undefined, greater_or_equal_then_proof_id, ["threshold", "threshold"], ModuleEdgeInput.user_input);
             
     
         this.outputs = {
-           
+            timestamp: {
+                name: "timestamp",
+                type_order: ["Timestamp", "Number"],
+                proof_key: greater_or_equal_then_proof_id,
+                signal_key: "timestamp",
+                description: "The timestamp to check in seconds",
+            },
+            threshold: {
+                name: "threshold",
+                type_order: ["Timestamp", "Number"],
+                proof_key: greater_or_equal_then_proof_id,
+                signal_key: "threshold",
+                description: "The threshold timestamp in seconds",
+            },
         }
     }
   

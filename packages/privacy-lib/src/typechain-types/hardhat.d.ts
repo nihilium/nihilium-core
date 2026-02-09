@@ -50,6 +50,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.NihiliumRecoveryRegister__factory>;
     getContractFactory(
+      name: "AdditionProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AdditionProof__factory>;
+    getContractFactory(
       name: "Between",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Between__factory>;
@@ -86,6 +90,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ManualChoice__factory>;
     getContractFactory(
+      name: "MerkleTreeProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MerkleTreeProof__factory>;
+    getContractFactory(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Opening_proof__factory>;
@@ -93,10 +101,6 @@ declare module "hardhat/types/runtime" {
       name: "SmallerThan",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SmallerThan__factory>;
-    getContractFactory(
-      name: "SubTreeMerkleProof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SubTreeMerkleProof__factory>;
     getContractFactory(
       name: "TestVerifyAlwaysTrue",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -164,6 +168,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     getContractAt(
+      name: "AdditionProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AdditionProof>;
+    getContractAt(
       name: "Between",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -209,6 +218,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ManualChoice>;
     getContractAt(
+      name: "MerkleTreeProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MerkleTreeProof>;
+    getContractAt(
       name: "Opening_proof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -218,11 +232,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.SmallerThan>;
-    getContractAt(
-      name: "SubTreeMerkleProof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SubTreeMerkleProof>;
     getContractAt(
       name: "TestVerifyAlwaysTrue",
       address: string | ethers.Addressable,
@@ -286,6 +295,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     deployContract(
+      name: "AdditionProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AdditionProof>;
+    deployContract(
       name: "Between",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Between>;
@@ -322,6 +335,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ManualChoice>;
     deployContract(
+      name: "MerkleTreeProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MerkleTreeProof>;
+    deployContract(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
@@ -329,10 +346,6 @@ declare module "hardhat/types/runtime" {
       name: "SmallerThan",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SmallerThan>;
-    deployContract(
-      name: "SubTreeMerkleProof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SubTreeMerkleProof>;
     deployContract(
       name: "TestVerifyAlwaysTrue",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -400,6 +413,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
     deployContract(
+      name: "AdditionProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AdditionProof>;
+    deployContract(
       name: "Between",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -445,6 +463,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ManualChoice>;
     deployContract(
+      name: "MerkleTreeProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MerkleTreeProof>;
+    deployContract(
       name: "Opening_proof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -454,11 +477,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SmallerThan>;
-    deployContract(
-      name: "SubTreeMerkleProof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SubTreeMerkleProof>;
     deployContract(
       name: "TestVerifyAlwaysTrue",
       args: any[],

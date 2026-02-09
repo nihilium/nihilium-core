@@ -79,12 +79,6 @@ export class UnsealConditionTemplate {
         return this.unsealProofActions.length > 0;
     }
 
-    private userInputKey(input:RequiredUserInput): string {
-        if(input.module_id === undefined) {
-            return input.name;
-        }
-        return input.module_id + ":" + input.name;
-    }
 
     private getInputFromMapping(input_mapping: { [key: string]: bigint }, input:RequiredUserInput): bigint {
         if(input.module_id + ":" + input.name in input_mapping) {
@@ -235,7 +229,7 @@ if(unseal_proof_action.action === ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT) {
         return this.unsealProofActions;
     }
     getExpectedInputs(): string[] {
-        return Array.from(new Set(this.user_inputs.flat().map((user_input) => user_input.name)));
+        return Array.from(new Set(this.user_inputs.flat().map((user_input) => user_input.input_signal_name)));
     }
 
     async getUnsealRootForProof(proof_index: number): Promise<ProofPath> {

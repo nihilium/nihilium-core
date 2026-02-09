@@ -7,14 +7,14 @@ import { UnsealConditionProof } from "../types";
  * Provides a merkle proof of a datastream
  * Wraps circuit top_level_merkle_proof
  */
-export const SubTreeProof = new UnsealConditionProof({
-    name: "Sub Tree Proof",
-    addressMapKey: "SubTreeMerkleProof",
-    description: "Sub Tree Proof",
+export const AdditionProof = new UnsealConditionProof({
+    name: "Addition Proof",
+    addressMapKey: "AdditionProof",
+    description: "Addition Proof",
     version: "1.0.0",
     public_signals: {
-        merkle_root: [0, 1],
-        leaf_value: [1, 1],
-        index: [2, 1],
+        value1: [0, 1],
+        value2: [1, 1],
+        result: [2, 1],
     },
 });

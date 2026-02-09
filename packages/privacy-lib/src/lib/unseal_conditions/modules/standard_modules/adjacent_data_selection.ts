@@ -26,63 +26,71 @@ import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class TopLevelTreeModule extends UnsealConditionModule {
-    protected do_not_fork: boolean = true;   
+export class AdjacentDataSelectionModule extends UnsealConditionModule {
+    
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("TopLevelTreeModule", 
-            "Anchored Merkle Tree Proof", proofLibrary);
+        super("AdjacentDataSelectionModule", 
+            "Adjacent Data Selection", proofLibrary);
             this.description = `
-                This module is used to validate a top level merkle proof.
+                A module that selects the adjacent data of a given data stream.
+                An index from the reveal value is used as starting point.
+                This module enforces publication of data beyond the reveal value.
             `;
         this.inputs = {
             
-            top_level_merkle_root: {
+            merkle_root: {
                 type_order: ["String"],
                 user_input: false,
-                description: "The computed root",
+                description: "Root of the sub tree merkle tree, should come from the opening proof",
                 required: true
             },
+            previous_index: {
+                type_order: ["Number"],
+                user_input: false,
+                description: "The index of the reveal value in the sub tree merkle tree",
+                required: true
+            },
+            
             
         }
         
         
+        var addition_proof = proofLibrary.getProof("AdditionProof");
+        var addition_proof_id = this.addProof(addition_proof);
+        this.addSignalEdge(undefined, addition_proof_id, ["previous_index", "value1"], ModuleEdgeInput.user_input);
+        this.addSignalEdge(undefined, addition_proof_id, ["1", "value2"], ModuleEdgeInput.static_input);
+       
         
-        var top_level_tree_proof = proofLibrary.getProof("TopLevelMerkleProof");
-        var top_level_tree_proof_id = this.addProof(top_level_tree_proof);
+        var sub_tree_proof = proofLibrary.getProof("MerkleTreeProof");
+        var sub_tree_proof_id = this.addProof(sub_tree_proof);
+        this.addSignalEdge(addition_proof_id, sub_tree_proof_id, ["result", "index"], ModuleEdgeInput.signal_pass);
 
-    
-        this.addSignalEdge(undefined, top_level_tree_proof_id, ["top_level_merkle_root", "merkle_root"], ModuleEdgeInput.user_input);
+        this.addSignalEdge(undefined, sub_tree_proof_id, ["merkle_root", "merkle_root"], ModuleEdgeInput.user_input);
         this.outputs = {
-            top_level_merkle_root: {
+            value: {
                 type_order: ["String"],
-                name: "top_level_merkle_root",
-                description: "The sub tree value",
-                proof_key: top_level_tree_proof_id,
+                name: "sub_tree_value",
+                description: "The value of the leaf of the tree",
+                proof_key: sub_tree_proof_id,
+                signal_key: "leaf_value",
+            },
+            
+            merkle_root: {
+                type_order: ["String"],
+                name: "merkle_root",
+                description: "The merkle root of the tree",
+                proof_key: sub_tree_proof_id,
                 signal_key: "merkle_root",
-            },
-            timestamp: {
-                type_order: ["Timestamp", "Number"],
-                name: "timestamp",
-                description: "The timestamp related to the leaf of the tree",
-                proof_key: top_level_tree_proof_id,
-                signal_key: "block_timestamp",
-            },
-            subtree_root: {
-                type_order: ["String"],
-                name: "subtree_root",
-                description: "The value used in combination with the timestamp to produce a leaf value for the tree",
-                proof_key: top_level_tree_proof_id,
-                signal_key: "subtree_root",
             },
             index: {
                 type_order: ["Number"],
-                name: "leaf_index",
+                name: "index",
                 description: "The index of the leaf of the tree",
-                proof_key: top_level_tree_proof_id,
+                proof_key: sub_tree_proof_id,
                 signal_key: "index",
-            }
+            },
         }
     }
   

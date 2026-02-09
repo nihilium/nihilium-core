@@ -1,6 +1,6 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../../ChainedProof";
 import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
-import { SubTreeProof } from "../../proofs/lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
 import { IDataStream } from "../../../data_stream/types";

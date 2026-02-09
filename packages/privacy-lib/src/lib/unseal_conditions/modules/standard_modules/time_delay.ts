@@ -1,6 +1,6 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../../ChainedProof";
 import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
-import { SubTreeProof } from "../../proofs/lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
 import { IDataStream } from "../../../data_stream/types";
@@ -37,7 +37,7 @@ export class TimeDelayModule extends UnsealConditionModule {
         proofLibrary: ProofLibraryType,
     ){
         super("TimeDelayModule", 
-            "Time Delay Module", proofLibrary);
+            "Time Delay Check", proofLibrary);
             this.description = `
                 This module is used to validate that a timestamp is after a certain time delay.
                 The calculation is: timestamp_high - timestamp_low > offset
@@ -50,42 +50,63 @@ export class TimeDelayModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            timestamp_low: {
+            timestamp: {
                 type_order: ["Timestamp", "Number"],
                 user_input: false,
-                description: "The lower timestamp",
+                description: "The timestamp to check in seconds, should come from the opening proof",
                 required: true
             },
-            timestamp_high: {
-                type_order: ["Timestamp", "Number"],
+            top_level_merkle_root: {
+                type_order: ["String"],
                 user_input: false,
-                description: "The higher timestamp",
+                description: "The merkle root used to validate the delay, should come from the opening proof",
                 required: true
             },
-            offset: {
+          
+            delay: {
                 type_order: ["Number"],
                 user_input: true,
-                description: "The offset, the acceptable difference between timestamp_high and timestamp_low",
+                description: "The delay in seconds",
                 required: true
             },
         }
         
         
+        var top_level_tree_proof = proofLibrary.getProof("TopLevelMerkleProof");
+        var top_level_tree_proof_id = this.addProof(top_level_tree_proof);
+
+        this.addSignalEdge(undefined, top_level_tree_proof_id, ["top_level_merkle_root", "merkle_root"], ModuleEdgeInput.external_input);
+        //this.addSignalEdge(undefined, top_level_tree_proof_id, ["offset", "offset"], ModuleEdgeInput.user_input);
         
         var time_delay_proof = proofLibrary.getProof("TimeDelayProof");
         
         var time_delay_proof_id = this.addProof(time_delay_proof);
-        this.addSignalEdge(undefined, time_delay_proof_id, ["timestamp_low", "timestamp_low"], ModuleEdgeInput.external_input);
-        this.addSignalEdge(undefined, time_delay_proof_id, ["timestamp_high", "timestamp_high"], ModuleEdgeInput.external_input);
-        this.addSignalEdge(undefined, time_delay_proof_id, ["offset", "offset"], ModuleEdgeInput.user_input);
+        this.forkingProof = time_delay_proof_id;
+        this.addSignalEdge(undefined, time_delay_proof_id, ["timestamp", "timestamp_low"], ModuleEdgeInput.external_input);
+        this.addSignalEdge(top_level_tree_proof_id, time_delay_proof_id, ["block_timestamp", "timestamp_high"], ModuleEdgeInput.signal_pass);
+        this.addSignalEdge(undefined, time_delay_proof_id, ["delay", "offset"], ModuleEdgeInput.user_input);
        
     
         this.outputs = {
+            delay: {
+                name: "delay",
+                type_order: ["Number"],
+                proof_key: time_delay_proof_id,
+                signal_key: "offset",
+                description: "The delay in seconds",
+            },
+            timestamp_high: {
+                name: "timestamp_high",
+                type_order: ["Timestamp", "Number"],
+                proof_key: time_delay_proof_id,
+                signal_key: "timestamp_high",
+                description: "The timestamp of the block that was used as high value for the delay",
+            },
            
         }
     }
   
-
+    //TODO implement this, requires a datastream to request a merkle proof from a late 
     async produce_proofs(timestamp: bigint, threshold: bigint): Promise<ModuleProof> {
         var return_proofs = ["0x"];
         if(timestamp >= threshold) {

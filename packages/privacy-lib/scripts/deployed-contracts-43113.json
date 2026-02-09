@@ -124,7 +124,7 @@
       }
     ]
   },
-  "SubTreeMerkleProof": {
+  "MerkleTreeProof": {
     "address": "0xc55E082B122ca11FCA8BE31a14405e2b7495CE91",
     "abi": [
       {

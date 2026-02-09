@@ -10,10 +10,10 @@ import { ChainedProofWrapper } from "../src/lib/contract_wrappers/ChainedProofWr
 import { ethers } from "hardhat";
 import { deployedProtocolContracts } from "../src/static_contracts";
 import { UnsealConditionCollection } from "../src/lib/unseal_conditions/collections/UnsealConditionCollection";
-import { ChangedType, CollectionNode, CollectionEdge, CollectionEdgeInput } from "../src/lib/unseal_conditions/collections/types";
+import { ChangedType, CollectionNode, CollectionEdge, CollectionEdgeInput, AddressMap } from "../src/lib/unseal_conditions/collections/types";
 import { AfterTimeModule } from "../src/lib/unseal_conditions/modules/standard_modules/after_time_module";
 import { TimeDelayModule } from "../src/lib/unseal_conditions/modules/standard_modules/time_delay";
-import { SubTreeModule } from "../src/lib/unseal_conditions/modules/standard_modules/sub_tree_module";
+import { MerkleTreeModule } from "../src/lib/unseal_conditions/modules/standard_modules/merkle_tree_module";
 //import { DefaultAnchoredOpeningProofModuleList } from "../src/lib/unseal_conditions/modules/standard_modules/default_anchored_opening_module_2";
 
 
@@ -22,7 +22,7 @@ describe("ChainedProofs", () => {
     var chainedProof: ChainedProofWrapper;
     var verifierContract: any;
     var verifierAddress: string;
-    var addressMap: { [key: string]: string };
+    var addressMap: AddressMap;
     before("should deploy ChainedProof contract", async () => {
         const verifier = await ethers.getContractFactory("TestVerifyAlwaysTrue");
         verifierContract = await verifier.deploy();
@@ -75,17 +75,19 @@ describe("ChainedProofs", () => {
         const timeDelayNodeId = collection.add_node(timeDelayModule);
         collection.add_edge(openingNodeId, afterTimeNodeId, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
-        collection.add_edge(openingNodeId, timeDelayNodeId, ["timestamp", "timestamp_low"],
+        collection.add_edge(openingNodeId, timeDelayNodeId, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
-        collection.add_edge(openingNodeId, timeDelayNodeId, ["timestamp", "timestamp_high"],
+        collection.add_edge(openingNodeId, timeDelayNodeId, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
-        collection.add_edge(undefined, timeDelayNodeId, ["offset", "offset"],
+        collection.add_edge(openingNodeId, timeDelayNodeId, ["top_level_merkle_root", "top_level_merkle_root"],
+                CollectionEdgeInput.signal_pass);
+        collection.add_edge(undefined, timeDelayNodeId, ["delay", "delay"],
                 CollectionEdgeInput.user_input);
         collection.add_data_stream("test_data_stream", openingNodeId, "metadata_root_hash");
         const compiledTemplate = collection.createTemplate(addressMap);
         compiledTemplate.compile({
             "threshold": 1234567890n,
-            "offset": 1234567890n,
+            "delay": 1234567890n,
             "metadata_root_hash": 1234567890n,
         }, {
             "test_data_stream": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
@@ -154,7 +156,7 @@ describe("ChainedProofs", () => {
         const timeDelayModuleRoot = new TimeDelayModule(new StandardProofLibrary());
         const timeDelayModuleFork1 = new TimeDelayModule(new StandardProofLibrary());
         const timeDelayModuleFork2 = new TimeDelayModule(new StandardProofLibrary());
-        const subTreeModule = new SubTreeModule(new StandardProofLibrary());
+        const subTreeModule = new MerkleTreeModule(new StandardProofLibrary());
         const oR = collection.add_node(openingModule);
         const r1 = collection.add_node(afterTimeModule);
         const r2 = collection.add_node(timeDelayModuleRoot);
@@ -163,19 +165,25 @@ describe("ChainedProofs", () => {
         const f2 = collection.add_node(timeDelayModuleFork2, r1);
         var edge_root1 =collection.add_edge(oR, r1, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
-        var edge_root2 = collection.add_edge(oR, r2, ["timestamp", "timestamp_low"],
+        var edge_root2 = collection.add_edge(oR, r2, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
+        var edge_root3 = collection.add_edge(oR, r2, ["top_level_merkle_root", "top_level_merkle_root"],
+                CollectionEdgeInput.signal_pass);
         
-        var edge_root3 = collection.add_edge(oR, r2, ["timestamp", "timestamp_high"],
+        var edge_root3 = collection.add_edge(oR, r2, ["timestamp", "timestamp"],
                 CollectionEdgeInput.signal_pass);
-        var edge_fork1 = collection.add_edge(oR, f1, ["timestamp", "timestamp_high"],
+        var edge_fork1 = collection.add_edge(oR, f1, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
-        var edge_fork1 = collection.add_edge(f0, f1, ["sub_tree_index", "timestamp_low"],
+        var edge_fork1 = collection.add_edge(f0, f1, ["leaf_index", "timestamp"],
                 CollectionEdgeInput.signal_pass);
-        var edge_fork2 = collection.add_edge(oR, f2, ["timestamp", "timestamp_high"],
+        var edge_fork2 = collection.add_edge(oR, f2, ["timestamp", "timestamp"],
             CollectionEdgeInput.signal_pass);
-        var edge_fork3 = collection.add_edge(f0, f2, ["sub_tree_index", "timestamp_low"],
+        var edge_fork3 = collection.add_edge(f0, f2, ["leaf_index", "timestamp"],
                 CollectionEdgeInput.signal_pass);
+        collection.add_edge(oR, f1, ["top_level_merkle_root", "top_level_merkle_root"],
+                CollectionEdgeInput.signal_pass);
+        collection.add_edge(oR, f2, ["top_level_merkle_root", "top_level_merkle_root"],
+                    CollectionEdgeInput.signal_pass);
         collection.add_data_stream("test_data_stream", oR, "metadata_root_hash");
         var visual_forks = collection.visual_forks();
         var visual_edges_all = collection.visual_edges_all();
@@ -184,9 +192,9 @@ describe("ChainedProofs", () => {
         const compiledTemplate = collection.createTemplate(addressMap);
         compiledTemplate.compile({
             "threshold": 10000000000n,
-            "offset": 5000000000n,
+            "delay": 5000000000n,
             "metadata_root_hash": 9999999999n,
-            "content_root": 9999999999n,
+            "merkle_root": 9999999999n,
         }, {
             "test_data_stream": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
         });
@@ -209,6 +217,11 @@ describe("ChainedProofs", () => {
         for(var i = 0; i < visual_forks3.length; i++) {
             assert.equal(visual_forks3[i], visual_forks2[i]);
         }
+        var countedForks = compiledTemplate.unsealProofActions[1]
+             .filter(a => a.action == 'prepare_next_proof')
+             .filter(b => b.params.verifier_must_be_true == false);
+        //The fork should have at least one false evaluation in it.
+        assert.equal(countedForks.length, 1);
         console.log(collection.visual_forks());
         console.log(compiledTemplate);
     });

@@ -1,4 +1,6 @@
+import { toPaddedHex } from "../../utils";
 import { ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT, ACTION_STATIC_INPUT_FROM_USER } from "../ChainedProof";
+import { AddressMap } from "../collections/types";
 import { ProofLibraryType } from "../proofs";
 import { UnsealConditionProof } from "../proofs/types";
 import { UnsealProofAction } from "../types";
@@ -128,7 +130,7 @@ export class SignalEdge {
         if (this.mapping[0] === undefined || this.mapping[1] === undefined) {
             return false;
         }
-        if (this.input_type === "signal_pass") {
+        if (this.input_type === ModuleEdgeInput.signal_pass) {
             if (this.from === undefined) {
                 console.log("From is undefined");
                 return false;
@@ -143,7 +145,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "static_input") {
+        if (this.input_type === ModuleEdgeInput.static_input) {
             if (this.from !== undefined) {
                 console.log("From is not undefined");
                 return false;
@@ -154,7 +156,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "user_input") {
+        if (this.input_type === ModuleEdgeInput.user_input) {
             if (this.from !== undefined) {
                 console.log("From is not undefined");
                 return false;
@@ -165,7 +167,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "external_input") {
+        if (this.input_type === ModuleEdgeInput.external_input) {
             if (this.from !== undefined) {
                 console.log("From is not undefined");
                 return false;
@@ -176,18 +178,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "link") {
-            // Link edges require a from node to define ordering
-            if (this.from === undefined) {
-                console.log("From is undefined for link edge");
-                return false;
-            }
-            if (this.to === undefined) {
-                console.log("To is undefined for link edge");
-                return false;
-            }
-            return true;
-        }
+        
         return false;
     }
 
@@ -310,7 +301,7 @@ export abstract class UnsealConditionModule {
     protected dataStreamOutputFields: string[] = [];
     protected outputs: ModuleOutputMap = {};
     protected proofLibrary: ProofLibraryType;
-    protected do_not_fork: boolean = false;
+    
     protected proofs: { [key: string]: WrappedProof } = {};
     protected proofList: string[] = []
     protected edges: { [key: string]: SignalEdge } = {};
@@ -328,7 +319,7 @@ export abstract class UnsealConditionModule {
         return this.outputs;
     }
     canFork(): boolean {
-        return this.proofList.length == 1 && !this.do_not_fork;
+        return this.forkingProof !== undefined;
     }
 
     addProof(proof: UnsealConditionProof, easyId: boolean = true): string {
@@ -402,7 +393,7 @@ export abstract class UnsealConditionModule {
         return input_mapping;
     }
 
-    compile(external_node_id: string, address_map: { [key: string]: string }, input_mapping: {
+    compile(external_node_id: string, address_map: AddressMap, input_mapping: {
         [key: string]: {
             output_proof_index: number;
             output_signal_indexes: number[];
@@ -465,7 +456,7 @@ export abstract class UnsealConditionModule {
                         action: ACTION_STATIC_INPUT,
                         params: {
                             public_input_index: public_input_index,
-                            value: input_edge.mapping[1],
+                            value: toPaddedHex(BigInt(input_edge.mapping[0]), 32),
                         }
                     });
                 }

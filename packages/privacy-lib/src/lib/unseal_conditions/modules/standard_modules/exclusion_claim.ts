@@ -28,7 +28,8 @@ import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class ManualChoiceModule extends UnsealConditionModule {
+//TODO: Implement this module, still missing proof and datastream handling
+export class ExclusionClaimModule extends UnsealConditionModule {
     
     
     
@@ -36,10 +37,11 @@ export class ManualChoiceModule extends UnsealConditionModule {
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("ManualChoiceModule", 
-            "Manual Choice", proofLibrary);
+        super("ExclusionClaimModule", 
+            "Exclusion Claim", proofLibrary);
             this.description = `
-                This module is used to validate a manual choice. When producing proofs the user can pick a 'fork' to proof.
+                This module is used to claim an exclusion.
+                This means that a value does not exist in the dataset over a certain time period.
             `;
         this.inputs = {
             //This is a stwarting module so no link required
@@ -49,30 +51,56 @@ export class ManualChoiceModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            // choice: {
-            //     type_order: ["Boolean"],
-            //     user_input: false,
-            //     description: "The choice, true/false",
-            //     required: true
-            // },
+            
+            signer_address: {
+                type_order: ["String"],
+                user_input: false,
+                description: "The address of the claimer",
+                required: true
+            },
+            value: {
+                type_order: ["String"],
+                user_input: false,
+                description: "The value NOT existing in the dataset",
+                required: true
+            },
+            timestamp_low: {
+                type_order: ["Timestamp", "Number"],
+                user_input: false,
+                description: "Lower bound of the claim",
+                required: true
+            },
+            timestamp_high: {
+                type_order: ["Timestamp", "Number"],
+                user_input: false,
+                description: "Upper bound of the claim",
+                required: true
+            },
         }
         
         
         
-        var manual_choice_proof = proofLibrary.getProof("ManualChoiceProof");
+        var verify_ecdsa_proof = proofLibrary.getProof("VerifyECDSAProof");
         
-        var manual_choice_proof_id = this.addProof(manual_choice_proof);
-        this.forkingProof = manual_choice_proof_id;
-        // this.addSignalEdge(undefined, manual_choice_proof_id, ["choice", "choice"], ModuleEdgeInput.);      
-    
+        var verify_ecdsa_proof_id = this.addProof(verify_ecdsa_proof);
+        this.addSignalEdge(undefined, verify_ecdsa_proof_id, ["signer_address", "signer_address"], ModuleEdgeInput.external_input);      
+        this.addSignalEdge(undefined, verify_ecdsa_proof_id, ["message_hash", "message_hash"], ModuleEdgeInput.external_input);      
+        this.dataStreamOutputFields = ["merkle_root"];
         this.outputs = {
-           choice: {
-            type_order: ["Boolean"],
-            name: "choice",
-            description: "What has been chosen.",
-            proof_key: manual_choice_proof_id,
-            signal_key: "choice",
-           }
+            signer_address: {
+                type_order: ["String"],
+                name: "signer_address",
+                description: "The address of the signer",
+                proof_key: verify_ecdsa_proof_id,
+                signal_key: "signer_address",
+            },
+            merkle_root: {
+                type_order: ["String"],
+                name: "merkle_root",
+                description: "The merkle root of the dataset",
+                proof_key: verify_ecdsa_proof_id,
+                signal_key: "message_hash",
+            }
         }
     }
   

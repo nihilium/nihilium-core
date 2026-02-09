@@ -133,10 +133,10 @@ describe("Processor-Client intereaction", () => {
       // subTreeMerkleProofAddress = await subTreeMerkleProof.getAddress();
       // console.log(subTreeMerkleProofAddress);
 
-      const subTreeMerkleProofC = await ethers.getContractFactory("SubTreeMerkleProof");
+      const subTreeMerkleProofC = await ethers.getContractFactory("MerkleTreeProof");
       subTreeMerkleProof = await subTreeMerkleProofC.deploy();
       //subTreeMerkleProofAddress = await subTreeMerkleProof.getAddress();
-      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["SubTreeMerkleProof"] =   
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["MerkleTreeProof"] =   
       {address: await subTreeMerkleProof.getAddress(),
       bytecode: subTreeMerkleProofC.bytecode,
       abi: subTreeMerkleProofC.interface.fragments.map((fragment: any) => fragment)}

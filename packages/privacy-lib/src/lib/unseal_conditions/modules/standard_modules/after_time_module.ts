@@ -1,6 +1,6 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../../ChainedProof";
 import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
-import { SubTreeProof } from "../../proofs/lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
 import { IDataStream } from "../../../data_stream/types";
@@ -33,7 +33,7 @@ export class AfterTimeModule extends UnsealConditionModule {
         proofLibrary: ProofLibraryType,
     ){
         super("AfterTimeModule", 
-            "After Time Module", proofLibrary);
+            "After Time Check", proofLibrary);
             this.description = `
                 This module is used to validate that a timestamp is after a certain time.
                 Calculation is: timestamp > threshold
@@ -64,12 +64,27 @@ export class AfterTimeModule extends UnsealConditionModule {
         
         var smaller_than_proof = proofLibrary.getProof("SmallerThan");
         var smaller_than_proof_id = this.addProof(smaller_than_proof);
-
+        this.forkingProof = smaller_than_proof_id;
         this.addSignalEdge(undefined, smaller_than_proof_id, ["timestamp", "timestamp"], ModuleEdgeInput.external_input);
         this.addSignalEdge(undefined, smaller_than_proof_id, ["threshold", "threshold"], ModuleEdgeInput.user_input);
         
     
         this.outputs = {
+            
+            timestamp: {
+                name: "timestamp",
+                type_order: ["Timestamp", "Number"],
+                proof_key: smaller_than_proof_id,
+                signal_key: "timestamp",
+                description: "The timestamp to check in seconds",
+            },
+            threshold: {
+                name: "threshold",
+                type_order: ["Timestamp", "Number"],
+                proof_key: smaller_than_proof_id,
+                signal_key: "threshold",
+                description: "The threshold timestamp in seconds",
+            },
            
         }
     }

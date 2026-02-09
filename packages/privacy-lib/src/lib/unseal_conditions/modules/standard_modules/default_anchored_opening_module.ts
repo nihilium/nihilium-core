@@ -1,6 +1,6 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../../ChainedProof";
 import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
-import { SubTreeProof } from "../../proofs/lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
 import { IDataStream } from "../../../data_stream/types";
@@ -28,7 +28,6 @@ import { cryptoTools } from "@nihilium/zkp-circuits";
 
 export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
     
-    protected do_not_fork: boolean = true;
     
     private opening_proof:UnsealConditionProof;
     private top_level_merkle_tree_proof:UnsealConditionProof;
@@ -39,7 +38,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         proofLibrary: ProofLibraryType,
     ){
         super("UnsealOpeningModule", 
-            "Default Anchored Opening Module", proofLibrary);
+            "Opening Module", proofLibrary);
             this.description = `
                 This module is the starting module for all further unseal conditions.
                 It validates the opening proof and sets the metadata, timestamp and merkle roots.
@@ -67,7 +66,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         
         this.opening_proof = proofLibrary.getProof("opening_proof");
         this.top_level_merkle_tree_proof = proofLibrary.getProof("TopLevelMerkleProof");
-        this.sub_tree_merkle_tree_proof = proofLibrary.getProof("SubTreeMerkleProof");
+        this.sub_tree_merkle_tree_proof = proofLibrary.getProof("MerkleTreeProof");
         this.keccack_tree_hash_proof = proofLibrary.getProof("KeccakTreeEntry");
 
         var opening_proof_id = this.addProof(this.opening_proof);

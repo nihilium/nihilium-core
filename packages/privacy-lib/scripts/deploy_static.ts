@@ -216,16 +216,18 @@ async function main() {
     // --- DEPLOY VERIFIERS ---
     const verifierConfigs = [
         { name: "TopLevelMerkleProof", artifactPath: "contracts/proofs/TopLevelMerkleProof.sol/TopLevelMerkleProof", contractPath: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
-        { name: "SubTreeMerkleProof", artifactPath: "contracts/proofs/SubTreeMerkleProof.sol/SubTreeMerkleProof", contractPath: "contracts/proofs/SubTreeMerkleProof.sol:SubTreeMerkleProof" },
+        { name: "MerkleTreeProof", artifactPath: "contracts/proofs/MerkleTreeProof.sol/MerkleTreeProof", contractPath: "contracts/proofs/MerkleTreeProof.sol:MerkleTreeProof" },
         { name: "KeccakTreeEntry", artifactPath: "contracts/proofs/KeccakTreeEntry.sol/KeccakTreeEntry", contractPath: "contracts/proofs/KeccakTreeEntry.sol:KeccakTreeEntry" },
         { name: "GreaterOrEqualThen", artifactPath: "contracts/proofs/GreaterOrEqualThen.sol/GreaterOrEqualThen", contractPath: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
         { name: "SmallerThan", artifactPath: "contracts/proofs/SmallerThan.sol/SmallerThan", contractPath: "contracts/proofs/SmallerThan.sol:SmallerThan" },
         { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
         { name: "VerifyEDDSA", artifactPath: "contracts/proofs/VerifyEDDSA.sol/VerifyEDDSA", contractPath: "contracts/proofs/VerifyEDDSA.sol:VerifyEDDSA" },
         { name: "VerifyECDSA", artifactPath: "contracts/proofs/VerifyECDSA.sol/VerifyECDSA", contractPath: "contracts/proofs/VerifyECDSA.sol:VerifyECDSA" },
+        
+        { name: "AdditionProof", artifactPath: "contracts/proofs/AdditionProof.sol/AdditionProof", contractPath: "contracts/proofs/AdditionProof.sol:AdditionProof" },
         //ManualChoiceProof
-        { name: "ManualChoiceProof", artifactPath: "contracts/proofs/ManualChoiceProof.sol/ManualChoiceProof", contractPath: "contracts/proofs/ManualChoiceProof.sol:ManualChoiceProof" },
-        { name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
+        { name: "ManualChoice", artifactPath: "contracts/proofs/ManualChoice.sol/ManualChoice", contractPath: "contracts/proofs/ManualChoice.sol:ManualChoice" },
+        //{ name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },

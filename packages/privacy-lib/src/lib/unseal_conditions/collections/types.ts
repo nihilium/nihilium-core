@@ -226,9 +226,28 @@ export type ChangedCallback = (changes: {
     edges?: CollectionEdge[],
     data_streams?: CollectionDataStream[],
     starting_node?: CollectionNode|undefined,
-    
+    comments?: {[key: string]: string},
 }) => void;
 
+
+// export class RequiredUserInput { 
+//     proof_index: number;
+//     signal_indexes: [number, number];
+//     name: string;
+//     module_id: string;
+//     description: string;
+//     input_signal_name: string;
+    
+//     constructor(data: Omit<RequiredUserInput, 'input_signal_name'>) {
+//         this.proof_index = data.proof_index;
+//         this.signal_indexes = data.signal_indexes;
+//         this.name = data.name;
+//         this.module_id = data.module_id;
+//         this.description = data.description;
+//         this.input_signal_name = this.module_id + ":" + this.name;
+//     }
+    
+// }
 
 export type RequiredUserInput = { 
     proof_index: number;
@@ -236,6 +255,7 @@ export type RequiredUserInput = {
     name: string;
     module_id: string;
     description: string;
+    input_signal_name: string;
 }
 
 
@@ -253,4 +273,33 @@ export type CompiledCollectionExport = {
     data_stream_inputs: DataStreamInput[][];
     collection_id: string;
     collection_export: any;
+}
+
+export interface AddressMap {
+    getAddress(key: string): string;
+}
+
+export class BasicAddressMap implements AddressMap {
+    address_map: {[key: string]: string};
+    constructor(address_map: {[key: string]: string}) {
+        this.address_map = address_map;
+    }
+    getAddress(key: string): string {
+        return this.address_map[key];
+    }
+    addAddress(key: string, address: string): void {
+        this.address_map[key] = address;
+    }
+}
+
+export class AddressMapWithDefault implements AddressMap {
+    address_map: {[key: string]: string};
+    default_address: string;
+    constructor(address_map: {[key: string]: string}, default_address: string) {
+        this.address_map = address_map;
+        this.default_address = default_address;
+    }
+    getAddress(key: string): string {
+        return this.address_map[key] || this.default_address;
+    }
 }

@@ -1,6 +1,6 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "../../ChainedProof";
 import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
-import { SubTreeProof } from "../../proofs/lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
 import { IDataStream } from "../../../data_stream/types";
@@ -26,14 +26,14 @@ import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
  * NOTE: During collection creation we are not yet aware of the reveal value
  */
 
-export class SubTreeModule extends UnsealConditionModule {
+export class MerkleTreeModule extends UnsealConditionModule {
     
     protected do_not_fork: boolean = true;
     constructor(
         proofLibrary: ProofLibraryType,
     ){
-        super("SubTreeModule", 
-            "Sub Tree Module", proofLibrary);
+        super("MerkleTreeModule", 
+            "Merkle Proof", proofLibrary);
             this.description = `
                 A module that validates a merkle proof of a balanced merkle tree. 
                 This proof is non-zk, it doesn't hide the path.
@@ -51,19 +51,19 @@ export class SubTreeModule extends UnsealConditionModule {
         
         
         
-        var sub_tree_proof = proofLibrary.getProof("SubTreeMerkleProof");
+        var sub_tree_proof = proofLibrary.getProof("MerkleTreeProof");
         var sub_tree_proof_id = this.addProof(sub_tree_proof);
 
         this.addSignalEdge(undefined, sub_tree_proof_id, ["merkle_root", "merkle_root"], ModuleEdgeInput.user_input);
         this.outputs = {
-            sub_tree_value: {
+            leaf_value: {
                 type_order: ["String"],
                 name: "sub_tree_value",
                 description: "The value of the leaf of the tree",
                 proof_key: sub_tree_proof_id,
                 signal_key: "leaf_value",
             },
-            sub_tree_index: {
+            leaf_index: {
                 type_order: ["Number"],
                 name: "sub_tree_index",
                 description: "The index of the leaf of the tree",

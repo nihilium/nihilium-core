@@ -7,6 +7,8 @@ import networkConfig from "../scripts/chain_config.json";
 // @ts-ignore
 import deployedContractsAnvil from "../scripts/deployed-contracts-31337.json";
 
+import { AddressMap, BasicAddressMap } from "./lib/unseal_conditions/collections/types";
+
 export var NETWORK_IDS = {
   ANVIL: 31337,
   GENANCHE: 1337,
@@ -21,18 +23,18 @@ export var deployedProtocolContracts = {
   [NETWORK_IDS.CUSTOM]: {},
 }
 
-export function toAddressMap(networkId: number) {
+export function toAddressMap(networkId: number): AddressMap {
   if (!deployedProtocolContracts[networkId]) {
     throw new Error(`Network ID ${networkId} not found`);
   }
   var aaa = deployedProtocolContracts[networkId]
-  return {
+  return new BasicAddressMap({
     "opening_proof": deployedProtocolContracts[networkId]?.opening_proof?.address,
     "TopLevelMerkleProof": deployedProtocolContracts[networkId].TopLevelMerkleProof.address,
-    "SubTreeMerkleProof": deployedProtocolContracts[networkId]?.SubTreeMerkleProof?.address,
+    "MerkleTreeProof": deployedProtocolContracts[networkId]?.MerkleTreeProof?.address,
     "KeccakTreeEntry": deployedProtocolContracts[networkId]?.KeccakTreeEntry?.address,
     "GreaterOrEqualThen": deployedProtocolContracts[networkId]?.GreaterOrEqualThen?.address,
     "SmallerThan": deployedProtocolContracts[networkId]?.SmallerThan?.address,
     "TimeDelayProof": deployedProtocolContracts[networkId]?.TimeDelayProof?.address,
-  }
+  });
 }

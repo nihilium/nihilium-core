@@ -1,6 +1,6 @@
 
 import { UnsealOpeningProof } from "./lib/000_unseal_opening_proof"
-import { SubTreeProof } from "./lib/001_sub_tree_proof";
+import { MerkleTreeProof } from "./lib/001_merkle_proof";
 import { TopLevelTreeProof } from "./lib/002_top_level_tree_proof";
 import { KeccakTreeEntryProof } from "./lib/003_keccak_tree_entry";
 import { GreaterOrEqualThenProof } from "./lib/005_greater_or_equal";
@@ -12,6 +12,7 @@ import { TimeDelayProof } from "./lib/006_time_delay";
 import { ManualChoiceProof } from "./lib/007_manual_choice";
 import { VerifyECDSAProof } from "./lib/009_verify_ecdsa";
 import { VerifyEDDSAProof } from "./lib/008_verify_eddsa";
+import { AdditionProof } from "./lib/010_addition";
 
 export abstract class ProofLibraryType {
     standard: {
@@ -58,12 +59,13 @@ export class StandardProofLibrary extends ProofLibraryType {
 export const standardProofs = {
     UnsealOpeningProof,
     TopLevelTreeProof,
-    SubTreeProof,
+    MerkleTreeProof,
     KeccakTreeEntryProof,
     SmallerThanProof,
     GreaterOrEqualThenProof,
     TimeDelayProof,
     VerifyECDSAProof,
     VerifyEDDSAProof,
-    ManualChoiceProof
+    ManualChoiceProof,
+    AdditionProof
 }

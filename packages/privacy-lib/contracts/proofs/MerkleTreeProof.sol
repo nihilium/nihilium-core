@@ -27,7 +27,7 @@ pub fn main(
 
  */
 
-contract SubTreeMerkleProof is IVerifier {
+contract MerkleTreeProof is IVerifier {
  
   event Log(bytes32 v1, bytes32 v2, bytes32 v3);
  function extractBytes32List(bytes memory data) public pure returns (bytes32[] memory) {

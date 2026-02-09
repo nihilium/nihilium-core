@@ -1,4 +1,5 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PREPARE_NEXT_PROOF } from "../ChainedProof";
+import { AddressMap } from "../collections/types";
 import { UnsealProofAction } from "../types";
 
 export type Proof = {
@@ -40,22 +41,22 @@ export class UnsealConditionProof {
     getName(): string {
         return this.data.name;
     }
-    compile(addresses: {[key: string]: string}, verifier_must_be_true: boolean = true): CompiledProof {
-        if(!addresses[this.data.addressMapKey]) {
+    compile(addresses: AddressMap, verifier_must_be_true: boolean = true): CompiledProof {
+        if(!addresses.getAddress(this.data.addressMapKey)) {
             throw new Error("Address not found for proof " + this.data.name);
         }
         return {
             prepare_action: {
                 action: ACTION_PREPARE_NEXT_PROOF,
                 params: {
-                    verifier_address: addresses[this.data.addressMapKey],
+                    verifier_address: addresses.getAddress(this.data.addressMapKey),
                     verifier_must_be_true: verifier_must_be_true,
                 },
             },
             validate_action: {
                 action: ACTION_CHAIN_PROOF_VERIFY,
                 params: {
-                    verifier_address: addresses[this.data.addressMapKey],
+                    verifier_address: addresses.getAddress(this.data.addressMapKey),
                 },
             },
         }

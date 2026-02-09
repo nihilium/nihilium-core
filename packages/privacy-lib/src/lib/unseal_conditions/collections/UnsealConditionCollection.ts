@@ -1,4 +1,4 @@
-import { CollectionNode, CollectionEdge, ChangedType, ChangedCallback, CollectionEdgeInput, import_collectionnode_from_json, import_collectionedge_from_json, CompiledCollectionExport, RequiredUserInput, CollectionDataStream, DataStreamInput } from "./types";
+import { CollectionNode, CollectionEdge, ChangedType, ChangedCallback, CollectionEdgeInput, import_collectionnode_from_json, import_collectionedge_from_json, CompiledCollectionExport, RequiredUserInput, CollectionDataStream, DataStreamInput, AddressMapWithDefault, AddressMap } from "./types";
 import { ProofLibraryType } from "../proofs";
 import { CompiledModule, ModuleLibraryType, UnsealConditionModule } from "../modules";
 import { ACTION_STATIC_INPUT_FROM_USER, ProvingState } from "../ChainedProof";
@@ -13,6 +13,7 @@ import { cryptoTools } from "@nihilium/zkp-circuits";
 export class UnsealConditionCollection {
     public nodes: {[key: string]: CollectionNode} = {};
     public edges: {[key: string]: CollectionEdge} = {};
+    public comments: {[key: string]: string} = {};
     public data_streams: CollectionDataStream[] = [];
     public name: string;
     public description: string;
@@ -64,7 +65,21 @@ export class UnsealConditionCollection {
         }
         return toReturn;
     }
-
+    comment(id: string, comment: string): void {
+        if(comment == "") {
+            delete this.comments[id];
+            this.changed_callback({
+                action: ChangedType.removed,
+                comments: {[id]: ""},
+            });
+            return;
+        }
+        this.comments[id] = comment;
+        this.changed_callback({
+            action: ChangedType.added,
+            comments: {[id]: comment},
+        });
+    }
     add_data_stream(datastream_id: string, from_node_id: string, field_name: string): void {
         if(this.nodes[from_node_id] === undefined) {
             throw new Error("From node not found");
@@ -348,6 +363,7 @@ It then returns the list
             fork_list: this.fork_list,
             node_to_fork_map: this.node_to_fork_map,
             index_counter: this.index_counter,
+            comments: this.comments,
         };
     }
 
@@ -375,6 +391,7 @@ It then returns the list
         this.node_to_fork_map = data.node_to_fork_map;
         this.starting_node = this.nodes[data.starting_node];
         this.index_counter = data.index_counter;
+        this.comments = data.comments || {};
         this.changed_callback({
             action: ChangedType.added,
             starting_node: this.starting_node,
@@ -393,89 +410,14 @@ It then returns the list
                 data_streams: this.data_streams,   
             });
         }
+        if(Object.keys(this.comments).length > 0) {
+            this.changed_callback({
+                action: ChangedType.added,
+                comments: this.comments,   
+            });
+        }
     }
 
-/*
-    sort_nodes_old(): string[] | undefined {
-        // Perform a depth-first topological sort starting from starting_node
-        // Only signal_pass and link edges define ordering dependencies
-
-        if (!this.starting_node) {
-            return undefined;
-        }
-
-        const nodeIds = Object.keys(this.nodes);
-        if (nodeIds.length === 0) {
-            return [];
-        }
-
-        // Build adjacency list for ordering edges (signal_pass and link only)
-        const adjacencyList: { [id: string]: string[] } = {};
-        for (const nodeId of nodeIds) {
-            adjacencyList[nodeId] = [];
-        }
-
-        for (const edge of Object.values(this.edges)) {
-            // Only signal_pass and link edges define ordering
-            if ((edge.input_type === CollectionEdgeInput.signal_pass || edge.input_type === CollectionEdgeInput.link) &&
-                edge.from && edge.to && edge.from.node_id && edge.to.node_id) {
-                const fromId = edge.from.node_id;
-                const toId = edge.to.node_id;
-                if (!adjacencyList[fromId].includes(toId)) {
-                    adjacencyList[fromId].push(toId);
-                }
-            }
-        }
-
-        // Track visited nodes and nodes in current path (for cycle detection)
-        const visited: Set<string> = new Set();
-        const inPath: Set<string> = new Set();
-        const sorted: string[] = [];
-
-        // DFS helper function (pre-order traversal for topological sort)
-        // If A -> B, we want A before B, so we add A before visiting B
-        const dfs = (nodeId: string): boolean => {
-            if (inPath.has(nodeId)) {
-                return false; // Cycle detected
-            }
-            if (visited.has(nodeId)) {
-                return true; // Already processed
-            }
-
-            inPath.add(nodeId);
-            visited.add(nodeId);
-            sorted.push(nodeId); // Add node before visiting dependencies (pre-order)
-            
-            // Visit all neighbors (dependencies come after this node)
-            for (const neighborId of adjacencyList[nodeId]) {
-                if (!this.nodes[neighborId]) {
-                    return false; // Edge references non-existent node
-                }
-                if (!dfs(neighborId)) {
-                    return false; // Propagate failure
-                }
-            }
-
-            inPath.delete(nodeId);
-            return true;
-        };
-
-        // Start DFS from starting_node
-        if (!this.nodes[this.starting_node.node_id]) {
-            return undefined; // Starting node not found in nodes
-        }
-        if (!dfs(this.starting_node.node_id)) {
-            return undefined; // Cycle or invalid edge detected
-        }
-
-        // Verify all nodes are reachable from starting_node
-        if (sorted.length !== nodeIds.length) {
-            return undefined; // Orphan nodes detected
-        }
-
-        return sorted;
-    }
-*/
 
     getEdgesToNode(node_id: string): CollectionEdge[] {
         var edges: CollectionEdge[] = [];
@@ -500,14 +442,29 @@ It then returns the list
         return cryptoTools.uint8ArrayToHex(sha256(Buffer.from(JSON.stringify(this.export_to_json()))));
     }
 
-    createTemplate(address_map: {[key: string]: string}): UnsealConditionTemplate {
+
+    generateProofCode(fork_nr:number): string {
+        var code = "";
+        var fork_id = this.fork_list[fork_nr];
+        var {nodes: sorted_nodes, forking: forking} = this.all_nodes_for_fork(fork_id);
+        var address_map = new AddressMapWithDefault({}, "0x0000000000000000000000000000000000000000");
+        var result= this.createTemplatePerFork(address_map, sorted_nodes, forking);
+        var compiled_modules = result.compiled_modules;
+        var user_inputs = result.user_inputs;
+        var data_stream_inputs = result.data_stream_inputs;
+        //TODO actually implement code generatino, see test code for inspiration
+        //And use module_id instead of name
+        return code
+        
+    }
+    createTemplate(address_map: AddressMap): UnsealConditionTemplate {
         
         var compiled_modules: CompiledModule[][] = [];
         var user_inputs: RequiredUserInput[][] = [];
         var data_stream_inputs: DataStreamInput[][] = [];
        
          //  var a=     {compiled_modules: CompiledModule[], user_inputs: RequiredUserInput[], data_stream_inputs: DataStreamInput[]} {
-        console.log("Fork list: " + this.fork_list);
+       // console.log("Fork list: " + this.fork_list);
          for(var fork_id of this.fork_list) {
             var {nodes: sorted_nodes, forking: forking} = this.all_nodes_for_fork(fork_id);
             var result= this.createTemplatePerFork(address_map, sorted_nodes, forking);
@@ -525,8 +482,8 @@ It then returns the list
            });
            return toReturn;
     }
-    //TODO handle branching
-    createTemplatePerFork(address_map: {[key: string]: string}, sorted_nodes: string[], forking:string[]): {
+    
+    createTemplatePerFork(address_map: AddressMap, sorted_nodes: string[], forking:string[]): {
         compiled_modules: CompiledModule[], user_inputs: RequiredUserInput[], data_stream_inputs: DataStreamInput[]} {
 
         // var sorted_nodes = this.sort_nodes();
@@ -595,6 +552,7 @@ It then returns the list
                         name: action.params.module_input_key,
                         description: input.description || "",
                         module_id: compiled_module.module_id,
+                        input_signal_name: compiled_module.module_id + ":" + action.params.module_input_key,
                     });
                 }
             }
@@ -634,6 +592,8 @@ It then returns the list
         };
 
     }
+
+    
 
 
     
