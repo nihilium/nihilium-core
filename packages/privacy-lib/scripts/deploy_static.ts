@@ -160,6 +160,26 @@ function needsRedeployment(contractName: string, newBytecode: string, existingDe
     return false;
 }
 
+// Helper to save deployment state to files
+function saveDeploymentState(chainId: string, deploymentData: DeploymentData, bytecodeMap: BytecodeMap): void {
+    const deploymentFilename = `deployed-contracts-${chainId}.json`;
+    const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
+    
+    // Save deployment data (without bytecode)
+    fs.writeFileSync(
+        path.join(__dirname, deploymentFilename),
+        JSON.stringify(deploymentData, null, 2)
+    );
+    
+    // Save bytecode separately
+    fs.writeFileSync(
+        path.join(__dirname, deploymentByteCodeFilename),
+        JSON.stringify(bytecodeMap, null, 2)
+    );
+    
+    console.log(`Deployment state saved (${deploymentFilename}, ${deploymentByteCodeFilename})`);
+}
+
 async function main() {
     console.log("Starting deployment of static contracts...");
 
@@ -228,12 +248,14 @@ async function main() {
         //ManualChoiceProof
         { name: "ManualChoice", artifactPath: "contracts/proofs/ManualChoice.sol/ManualChoice", contractPath: "contracts/proofs/ManualChoice.sol:ManualChoice" },
         { name: "ValueInjection", artifactPath: "contracts/proofs/ValueInjection.sol/ValueInjection", contractPath: "contracts/proofs/ValueInjection.sol:ValueInjection" },
+        { name: "Poseidon2Verifier", artifactPath: "contracts/proofs/Poseidon2.sol/Poseidon2Verifier", contractPath: "contracts/proofs/Poseidon2.sol:Poseidon2Verifier" },
         //{ name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
         // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
         { name: "opening_proof", artifactPath: "contracts/proofs/opening_proof.sol/opening_proof", contractPath: "contracts/proofs/opening_proof.sol:opening_proof" },
+        { name: "hash_tie", artifactPath: "contracts/proofs/hash_tie.sol/hash_tie", contractPath: "contracts/proofs/hash_tie.sol:hash_tie" },
         // { name: "validated_sig_he_add", artifactPath: "contracts/proofs/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/proofs/validated_sig_he_add.sol:validated_sig_he_add" },
     ];
 
@@ -251,12 +273,16 @@ async function main() {
             bytecodeMap[verifier.name] = verifier.bytecode;
             verifierAddresses[config.name] = verifier.address;
             nonce++;
+            // Save state after successful deployment
+            saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
         } else {
             // If ABI is missing from existing deployment, add it
             const existing = existingDeployments[config.name];
             if (!existing.abi || existing.abi.length === 0) {
                 existing.abi = getContractABI(config.artifactPath);
                 deploymentData[config.name] = existing;
+                // Save state after updating ABI
+                saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
             }
             verifierAddresses[config.name] = existing.address;
         }
@@ -275,9 +301,13 @@ async function main() {
         };
         bytecodeMap[empheralMerkleTree.name] = empheralMerkleTree.bytecode;
         nonce++;
+        // Save state after successful deployment
+        saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
     } else if (!existingDeployments[empheralName].abi || existingDeployments[empheralName].abi.length === 0) {
         existingDeployments[empheralName].abi = getContractABI(`contracts/${empheralName}.sol/${empheralName}`);
         deploymentData[empheralName] = existingDeployments[empheralName];
+        // Save state after updating ABI
+        saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
     }
 
     // // SubTreeMerkleProof
@@ -327,9 +357,13 @@ async function main() {
             abi: chainedProof.abi
         };
         bytecodeMap[chainedProof.name] = chainedProof.bytecode;
+        // Save state after successful deployment
+        saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
     } else if (!existingDeployments[chainedProofName].abi || existingDeployments[chainedProofName].abi.length === 0) {
         existingDeployments[chainedProofName].abi = getContractABI(`contracts/${chainedProofName}.sol/${chainedProofName}`);
         deploymentData[chainedProofName] = existingDeployments[chainedProofName];
+        // Save state after updating ABI
+        saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
     }
 
     // // KeccakTreeEntry
@@ -414,22 +448,9 @@ async function main() {
     }
     console.log(JSON.stringify(displayData, null, 2));
 
-    const deploymentFilename = `deployed-contracts-${chainId}.json`;
-    const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
-    
-    // Save deployment data (without bytecode)
-    fs.writeFileSync(
-        path.join(__dirname, deploymentFilename),
-        JSON.stringify(deploymentData, null, 2)
-    );
-    console.log(`\nDeployment data saved to ${deploymentFilename} in privacy-lib/scripts/`);
-    
-    // Save bytecode separately
-    fs.writeFileSync(
-        path.join(__dirname, deploymentByteCodeFilename),
-        JSON.stringify(bytecodeMap, null, 2)
-    );
-    console.log(`Bytecode data saved to ${deploymentByteCodeFilename} in privacy-lib/scripts/`);
+    // Final save to ensure everything is persisted (though it should already be saved)
+    saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
+    console.log(`\nFinal deployment state saved.`);
 }
 
 main().catch((error) => {

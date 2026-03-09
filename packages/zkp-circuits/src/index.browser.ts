@@ -13,6 +13,7 @@
 import { WrappedCircomCircuit } from './circom-wrapper';
 import type { IPFSConfig } from './circom-wrapper';
 import openingProofIPFS from './ipfsrefs/opening_proof.json';
+import hashTieIPFS from './ipfsrefs/hash_tie.json';
 
 // Create IPFS configuration for opening_proof circuit
 const openingProofIPFSConfig: IPFSConfig = {
@@ -21,7 +22,15 @@ const openingProofIPFSConfig: IPFSConfig = {
   files: openingProofIPFS.files
 };
 
+// Create IPFS configuration for hash_tie circuit
+const hashTieIPFSConfig: IPFSConfig = {
+  gateway: 'https://ipfs.io',
+  circuitName: hashTieIPFS.circuitName,
+  files: hashTieIPFS.files
+};
+
 export const circomOpeningProof = WrappedCircomCircuit.fromIPFS(openingProofIPFSConfig);
+export const circomHashTie = WrappedCircomCircuit.fromIPFS(hashTieIPFSConfig);
 //var topLevelMerkleProofJson = JSON.parse(JSON.stringify(topLevelMerkleProofJson2));
 //export const mimcTest = require('./tscircuits/mimc_test/mimc_test.json');
 // import mimcTest from './tscircuits/mimc_test/mimc_test.json';

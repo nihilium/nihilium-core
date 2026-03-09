@@ -46,10 +46,19 @@
     "rename-circom-files2": "cp ./circom-circuits/build/opening_proof/groth16_verifier.sol ./circom-circuits/build/opening_proof/opening_proof.sol",
     "harmonise-circom-files": "node ./harmonise_verification_circom.js ./circom-circuits/build/opening_proof/opening_proof.sol",
     "build-circom-circuits": "rm -rf ./circom-circuits/build/opening_proof && npx circomkit setup opening_proof && npx circomkit contract opening_proof",
+    "build-circom-circuits-hash-tie": "rm -rf ./circom-circuits/build/hash_tie && npx circomkit setup hash_tie && npx circomkit contract hash_tie",
     "build-circom": "npm run build-circom-circuits && npm run rename-circom-files2 && npm run harmonise-circom-files && ./rename_contract_circom.sh opening_proof ./circom-circuits/build/opening_proof/opening_proof.sol && npm run copy-circom-to-lib",
+    "build-circom-hash-tie": "npm run build-circom-circuits-hash-tie && npm run rename-circom-files2-hash-tie && npm run harmonise-circom-files-hash-tie && ./rename_contract_circom.sh hash_tie ./circom-circuits/build/hash_tie/hash_tie.sol && npm run copy-circom-to-lib-hash-tie",
     "copy-circom-to-lib": "cp ./circom-circuits/build/opening_proof/opening_proof.sol ../privacy-lib/contracts/proofs/opening_proof.sol",
     "copy-circom-build": "rm -rf ./src/circom-circuits/build/opening_proof && mkdir -p ./src/circom-circuits/build && cp -r ./circom-circuits/build/opening_proof ./src/circom-circuits/build/opening_proof",
-    "upload-to-pinata": "node ./scripts/upload_to_pinata.js"
+    "copy-circom-build-hash-tie": "rm -rf ./src/circom-circuits/build/hash_tie && mkdir -p ./src/circom-circuits/build && cp -r ./circom-circuits/build/hash_tie ./src/circom-circuits/build/hash_tie",
+    "copy-circom-to-lib-hash-tie": "cp ./circom-circuits/build/hash_tie/hash_tie.sol ../privacy-lib/contracts/proofs/hash_tie.sol",
+    "rename-circom-files-hash-tie": "cp ./circom-circuits/build/hash_tie/groth16_verifier.sol ./circom-circuits/build/hash_tie/hash_tie.sol && mv ./circom-circuits/build/hash_tie/groth16_pkey.zkey ./circom-circuits/build/hash_tie/hash_tie.zkey && mv ./circom-circuits/build/hash_tie/groth16_vkey.json ./circom-circuits/build/hash_tie/hash_tie_vkey.json",
+    "rename-circom-files2-hash-tie": "cp ./circom-circuits/build/hash_tie/groth16_verifier.sol ./circom-circuits/build/hash_tie/hash_tie.sol",
+    "harmonise-circom-files-hash-tie": "node ./harmonise_verification_circom.js ./circom-circuits/build/hash_tie/hash_tie.sol",
+    "upload-to-pinata": "node ./scripts/upload_to_pinata.js",
+    "upload:opening_proof": "node ./scripts/upload_to_pinata.js opening_proof",
+    "upload:hash_tie": "node ./scripts/upload_to_pinata.js hash_tie"
   },
   "dependencies": {
     

@@ -34,6 +34,8 @@ export type { Encrypt_proof } from "./contracts/proofs/encrypt_proof.sol/Encrypt
 export { Encrypt_proof__factory } from "./factories/contracts/proofs/encrypt_proof.sol/Encrypt_proof__factory";
 export type { GreaterOrEqualThen } from "./contracts/proofs/GreaterOrEqualThen";
 export { GreaterOrEqualThen__factory } from "./factories/contracts/proofs/GreaterOrEqualThen__factory";
+export type { Hash_tie } from "./contracts/proofs/Hash_tie";
+export { Hash_tie__factory } from "./factories/contracts/proofs/Hash_tie__factory";
 export type { KeccakPreImage } from "./contracts/proofs/KeccakPreImage";
 export { KeccakPreImage__factory } from "./factories/contracts/proofs/KeccakPreImage__factory";
 export type { KeccakTreeEntry } from "./contracts/proofs/KeccakTreeEntry";
@@ -44,6 +46,8 @@ export type { MerkleTreeProof } from "./contracts/proofs/MerkleTreeProof";
 export { MerkleTreeProof__factory } from "./factories/contracts/proofs/MerkleTreeProof__factory";
 export type { Opening_proof } from "./contracts/proofs/Opening_proof";
 export { Opening_proof__factory } from "./factories/contracts/proofs/Opening_proof__factory";
+export type { Poseidon2Verifier } from "./contracts/proofs/Poseidon2.sol/Poseidon2Verifier";
+export { Poseidon2Verifier__factory } from "./factories/contracts/proofs/Poseidon2.sol/Poseidon2Verifier__factory";
 export type { SmallerThan } from "./contracts/proofs/SmallerThan";
 export { SmallerThan__factory } from "./factories/contracts/proofs/SmallerThan__factory";
 export type { TestVerifyAlwaysTrue } from "./contracts/proofs/TestVerifyAlwaysTrue";

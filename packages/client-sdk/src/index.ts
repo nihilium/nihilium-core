@@ -5,6 +5,7 @@ import axios from "axios";
 import { SelectableDataStream, SelectableProcessor,  } from "./lib/types";
 import { getDatastreams, getProcessors, getProcessorEndpoint } from './lib/endpoint-selection';
 import { DataStream } from '@nihilium/privacy-lib';
+import { circomHashTie, circomOpeningProof } from '@nihilium/zkp-circuits';
 export type SingleSealStoragePackage = nhsdk.protocolTypes.SingleSealStoragePackage;
 export { getFullDatastreams, getFullProcessors } from './lib/endpoint-selection';
 export { getProcessorEndpoint, setApiEndpoint } from './lib/endpoint-selection';
@@ -77,6 +78,9 @@ export async function getDefaultUnsealingProcess(seal: nhsdk.protocolTypes.Singl
     return unsealingProcess;
 }
 
-
+export async function preload_circuits() {
+    await circomOpeningProof.init(true);
+    await circomHashTie.init(true);
+}
 
 export { nhsdk }

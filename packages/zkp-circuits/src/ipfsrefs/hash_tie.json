@@ -1,0 +1,9 @@
+{
+  "circuitName": "hash_tie",
+  "files": {
+    "verifier.sol": "Qmf6zG4f22jbVohHoZLrg6EhG7bzBbWbPhdYwu7iUXZweL",
+    "vkey.json": "QmcfWtsU4xR78vALkLF98LedpxNjnY5uebWSvZX68QZ1vD",
+    "zkey.zkey": "QmaMNqMgfcXHGyAELqXdUcDbFisurx5VCkafNAeb6vtb5K",
+    "wasm.wasm": "Qmf4KbEhXEZmFbiAshqNr7FPnWppu5zBdpv2CUJghdJwY5"
+  }
+}

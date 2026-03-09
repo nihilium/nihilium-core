@@ -3,6 +3,7 @@ declare const unstringifyBigInts: (obj: object) => any;
 import { PrivKey, PubKey, Keypair, babyJub } from "./types";
 import { BabyJubAffinePoint, BabyJubExtPoint, SNARK_FIELD_SIZE } from "./types";
 import { ExtPointType } from "@noble/curves/abstract/edwards";
+export * as poseidonTools from "poseidon-lite";
 export { babyJub, SNARK_FIELD_SIZE };
 export type { BabyJubAffinePoint, BabyJubExtPoint, PrivKey, PubKey, Keypair };
 export declare function createNobleBlakeHash(data: Buffer): Buffer<ArrayBuffer>;

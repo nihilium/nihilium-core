@@ -33,6 +33,7 @@ import { precompute } from "./utils/precompute";
 //import { generic_adjacent_tree_proofInputType } from './tscircuits/generic_adjacent_tree_proof';
 import { WrappedCircomCircuit, IPFSConfig } from './circom-wrapper';
 import openingProofIPFS from './ipfsrefs/opening_proof.json';
+import hashTieIPFS from './ipfsrefs/hash_tie.json';
 
 // Create IPFS configuration for opening_proof circuit
 const openingProofIPFSConfig: IPFSConfig = {
@@ -41,11 +42,19 @@ const openingProofIPFSConfig: IPFSConfig = {
   files: openingProofIPFS.files
 };
 
+// Create IPFS configuration for hash_tie circuit
+const hashTieIPFSConfig: IPFSConfig = {
+  gateway: 'https://ipfs.io',
+  circuitName: hashTieIPFS.circuitName,
+  files: hashTieIPFS.files
+};
+
 export const circomOpeningProof = WrappedCircomCircuit.fromIPFS(openingProofIPFSConfig);
+export const circomHashTie = WrappedCircomCircuit.fromIPFS(hashTieIPFSConfig);
 
 export {
-   
-    cryptoTools, decodeCypherText,
+    cryptoTools,
+    decodeCypherText,
     WrappedCircomCircuit,
     IPFSConfig,
     precompute

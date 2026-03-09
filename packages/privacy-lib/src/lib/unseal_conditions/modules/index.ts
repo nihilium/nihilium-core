@@ -17,9 +17,30 @@ import { AdjacentDataSelectionModule } from './standard_modules/adjacent_data_se
 import { ExclusionClaimModule } from './standard_modules/exclusion_claim';
 import { InclusionProofModule } from './standard_modules/inclusion_proof';
 import { ValueInjectionModule } from './standard_modules/value_injection';
+import { ZKEmailModule } from './standard_modules/ZKEmail';
+import { HashTieModule } from './standard_modules/hash_tie';
 
-export * from './standard_modules/default_anchored_opening_module';
-export * from './standard_modules/after_time_module';
+export {
+    BeforeTimeModule,
+    AfterTimeModule,
+    DefaultAnchoredOpeningProofModule,
+    TimeDelayModule,
+    MerkleTreeModule,
+    ManualChoiceModule,
+    TopLevelTreeModule,
+    HashPreimageModule,
+    ZKPassportDummyModule,
+    ZKEmailDummyModule,
+    VerifyECDSAModule,
+    VerifyEDDSAModule,
+    AdjacentDataSelectionModule,
+    ExclusionClaimModule,
+    InclusionProofModule,
+    ValueInjectionModule,
+    ZKEmailModule,
+    HashTieModule
+}
+
 export * from './types';
 
 
@@ -61,23 +82,17 @@ export class StandardModuleLibrary extends ModuleLibraryType {
         
         ["HashPreimageModule"]: HashPreimageModule,
         ["ZKPassportModule"]: ZKPassportDummyModule,
-        ["ZKEmailModule"]: ZKEmailDummyModule,
+        ["ZKEmailModule"]: ZKEmailModule,
         ["VerifyEDDSAModule"]: VerifyEDDSAModule,
         ["VerifyECDSAModule"]: VerifyECDSAModule,
         ["AdjacentDataSelectionModule"]: AdjacentDataSelectionModule,
         ["ExclusionClaimModule"]: ExclusionClaimModule,
         ["InclusionProofModule"]: InclusionProofModule,
         ["ValueInjectionModule"]: ValueInjectionModule,
+        ["HashTieModule"]: HashTieModule,
     };
     public custom: {[key: string]: new (...args: any[]) => UnsealConditionModule} = {};
     constructor() {
         super();
     }
-}
-
-export const standardModules = {
-    DefaultAnchoredOpeningModule: DefaultAnchoredOpeningProofModule,
-    AfterTimeModule: AfterTimeModule,
-    TimeDelayModule: TimeDelayModule,
-    BeforeTimeModule: BeforeTimeModule,
 }

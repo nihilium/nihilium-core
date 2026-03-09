@@ -67,7 +67,7 @@ const genCircuitInputsEncrypt = (
   } };
 };
 
-
+const PRECOMPUTE_SIZE = 20;
 export class Processor {
   // private encrypt_proof_circuit: WrappedCircuit | null = null;
   // private key_he_add_circuit: WrappedCircuit | null = null;
@@ -104,14 +104,14 @@ export class Processor {
     this.chained_proof_address = chained_proof_address;
     this.forced_opening_address = forced_opening_address;
     this.signer = signer;
-    var lookupPath = path.join(__dirname, './x19xlookupTable.json')
+    var lookupPath = path.join(__dirname, `./x${PRECOMPUTE_SIZE}xlookupTable.json`)
     if(!fs.existsSync(lookupPath)) {
-      var lookupTable = precompute(19);
+      var lookupTable = precompute(PRECOMPUTE_SIZE);
       fs.writeFileSync(lookupPath, JSON.stringify(lookupTable));
     }else{
       console.log(`Lookup table found at ${lookupPath}`);
     }
-    this.dlogSolver = new DlogSolver(19, lookupPath);
+    this.dlogSolver = new DlogSolver(PRECOMPUTE_SIZE, lookupPath);
   }
   
   get_chain_id(): number {

@@ -23,6 +23,7 @@ import { sha256 } from "@noble/hashes/sha2";
 import * as zkJub from "@zk-kit/baby-jubjub";
 import { blake2b } from "@noble/hashes/blake2b";
 import { poseidon16, poseidon8 } from "poseidon-lite";
+export * as poseidonTools from "poseidon-lite";
 import CryptoJS from "crypto-js";
 export { babyJub, SNARK_FIELD_SIZE };
 var aaa = CURVE;

@@ -127,7 +127,7 @@ export class WrappedCircomCircuit {
      *   zkeyPath: 'https://ipfs.io/ipfs/QmYyy...' (IPFS URL)
      *   vkeyPath: 'https://ipfs.io/ipfs/QmZzz...' (IPFS URL)
      */
-    async init() {
+    async init(forceFetch = false) {
         // Check if paths are IPFS URLs
         const isIPFSUrl = (url) => url.includes('/ipfs/');
         if (isIPFSUrl(this.config.wasmPath)) {
@@ -172,6 +172,10 @@ export class WrappedCircomCircuit {
             // Some distros expose default export; normalize
             if (this.snarkjs?.default?.groth16 && !this.snarkjs.groth16)
                 this.snarkjs = this.snarkjs.default;
+        }
+        if (forceFetch) {
+            fetch(this.resolvedWasmPath);
+            fetch(this.resolvedZkeyPath);
         }
     }
     /**

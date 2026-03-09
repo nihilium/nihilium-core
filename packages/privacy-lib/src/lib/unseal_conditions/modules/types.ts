@@ -361,6 +361,17 @@ export abstract class UnsealConditionModule {
         return Object.values(this.edges).filter(edge => edge.to.id === proof_id);
     }
 
+    obtain_outputs(public_signals: any[][]): { [key: string]: any } {
+        var toReturn: { [key: string]: any } = {};
+        
+        for (var output_key of Object.keys(this.outputs)) {
+            var output = this.outputs[output_key];
+            var proof = this.proofs[output.proof_key];
+            toReturn[output_key] = public_signals[this.proofList.indexOf(this.outputs[output_key].proof_key)][
+                proof.proof.getSignalIndex(output.signal_key)[0]];
+        }
+        return toReturn;
+    }
 
     /**
      * Produces the proofs for the module

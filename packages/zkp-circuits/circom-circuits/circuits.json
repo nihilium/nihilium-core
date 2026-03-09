@@ -4,5 +4,10 @@
       "protocol": "groth16",
       "template": "ValidatedSigHEAdd"
      
+    },
+    "hash_tie": {
+      "file": "HashTie",
+      "protocol": "groth16",
+      "template": "HashTie"
     }
 }

@@ -14,6 +14,9 @@ import { VerifyECDSAProof } from "./lib/009_verify_ecdsa";
 import { VerifyEDDSAProof } from "./lib/008_verify_eddsa";
 import { AdditionProof } from "./lib/010_addition";
 import { ValueInjection } from "./lib/011_value_injection";
+import { Poseidon2Verifier } from "./lib/012_poseidon2";
+import { ZKEmailProof } from "./zk_proofs/zk_email";
+import { HashTieProof } from "./zk_proofs/hash_tie";
 
 export abstract class ProofLibraryType {
     standard: {
@@ -69,5 +72,8 @@ export const standardProofs = {
     VerifyEDDSAProof,
     ManualChoiceProof,
     AdditionProof,
-    ValueInjection
+    ValueInjection,
+    Poseidon2Verifier,
+    ZKEmailProof,
+    HashTieProof
 }

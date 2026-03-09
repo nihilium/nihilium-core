@@ -204,14 +204,8 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         return {proofs: return_proofs, 
             public_inputs: return_public_inputs, 
             //TODO: automate this from the signals
-            outputs: {
-                ["top_level_merkle_root"]: toPaddedHex(BigInt(data_stream_merkle_proof[0].pathRoot.toString()))
-                // ["sub_tree_merkle_root"]: sub_tree_merkle_tree_proof_id,
-                // ["reveal_value_tree_hash"]: keccack_tree_hash_proof_id,
-                // ["reveal_value"]: opening_proof_id,
-                // ["metadata_root_hash"]: opening_proof_id,
-                // ["timestamp"]: top_level_merkle_tree_proof_id,
-            }}
+            outputs: this.obtain_outputs(return_public_inputs)
+        }
 
     }
 

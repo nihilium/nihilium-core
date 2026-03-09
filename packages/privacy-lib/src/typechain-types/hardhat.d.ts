@@ -74,6 +74,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GreaterOrEqualThen__factory>;
     getContractFactory(
+      name: "Hash_tie",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Hash_tie__factory>;
+    getContractFactory(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
@@ -97,6 +101,10 @@ declare module "hardhat/types/runtime" {
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Opening_proof__factory>;
+    getContractFactory(
+      name: "Poseidon2Verifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Poseidon2Verifier__factory>;
     getContractFactory(
       name: "SmallerThan",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -202,6 +210,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.GreaterOrEqualThen>;
     getContractAt(
+      name: "Hash_tie",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Hash_tie>;
+    getContractAt(
       name: "IVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -231,6 +244,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Opening_proof>;
+    getContractAt(
+      name: "Poseidon2Verifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Poseidon2Verifier>;
     getContractAt(
       name: "SmallerThan",
       address: string | ethers.Addressable,
@@ -328,6 +346,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GreaterOrEqualThen>;
     deployContract(
+      name: "Hash_tie",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Hash_tie>;
+    deployContract(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
@@ -351,6 +373,10 @@ declare module "hardhat/types/runtime" {
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
+    deployContract(
+      name: "Poseidon2Verifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Poseidon2Verifier>;
     deployContract(
       name: "SmallerThan",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -456,6 +482,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GreaterOrEqualThen>;
     deployContract(
+      name: "Hash_tie",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Hash_tie>;
+    deployContract(
       name: "IVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -485,6 +516,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
+    deployContract(
+      name: "Poseidon2Verifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Poseidon2Verifier>;
     deployContract(
       name: "SmallerThan",
       args: any[],
