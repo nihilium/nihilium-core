@@ -12,6 +12,14 @@ However, it does show the code that produces the results from the paper.
 If you want a walkthrough, contact us, we are actively looking for capable people willing to solve a big problem.
 
 
+What still needs to be done:
+- Processor and datastream registry + slashing
+- Combinational Threshold integration in the sealing phase, current implementation and tests are mostly on a single processor.
+- Massive cleanup
+
+A demo application (password recovery) using the protocol can be found here:
+https://recovery.nihilium.io
+
 # Manual relevant locations
 
 The core circuit can be found in: /packages/zkp-circuits/circom-circuits/circuits/nihilium_core.circom
