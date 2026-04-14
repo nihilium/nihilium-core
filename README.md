@@ -22,11 +22,9 @@ Starting point for full circle test is: /packages/privacy-lib/test/full.test.ts
 
 Note to the above: there is still a lot of mentions of shamir, this was origanlly used and to be implemented in the client-sdk. As the combinational threshold encryption became integeral to the core protocol this is now moved into the privacy. Leaving the client SDK quite empty.
 
-Below the AI summary:
-
 # Nihilium Core
 
-A privacy-preserving computation system built with zero-knowledge proofs. Data is encrypted using homomorphic encryption on the Baby Jubjub curve, stored in on-chain Merkle trees, and unlocked only when configurable unseal conditions are satisfied — all verified via ZKP circuits written in Noir and Circom.
+A privacy-preserving computation system built with zero-knowledge proofs. Data is encrypted using homomorphic encryption on the Baby Jubjub curve, stored in on-chain Merkle trees, and unlocked only when configurable unseal conditions are satisfied — all verified via ZKP circuits written in Circom (Groth16).
 
 ## Repository Structure
 
@@ -38,29 +36,20 @@ This is an **NPM workspaces monorepo** (`privacy-accounts`) with four packages a
 
 Zero-knowledge proof circuits with TypeScript wrappers.
 
-**Noir circuits** (compiled with Nargo, verified via Barretenberg):
+**Circom circuits** (compiled with Circomkit, Groth16) — the active circuit path:
 
-| Circuit | Purpose |
-|---|---|
-| `encrypt_proof` | Homomorphic encryption proof |
-| `generic_tree_proof` | Generic Merkle tree membership |
-| `top_level_merkle_proof` | Top-level tree proof with timestamp validation |
-| `sub_tree_merkle_proof` | Sub-tree membership proof |
-| `validated_sig_he_add` | Signature validation with homomorphic addition |
-| `generic_adjacent_tree_proof` | Adjacent tree proof |
-| `data_stream_roots_proof` | Data stream roots verification |
-| `mimc_test` | MiMC hash test circuit |
+| Circuit | File(s) | Purpose |
+|---|---|---|
+| `opening_proof` | `encrypt.circom` + `validated_sig_he_add.circom` | Elliptic-curve homomorphic encryption opening proof |
+| `hash_tie` | `HashTie.circom` | Hash binding proof |
 
-**Circom circuits** (compiled with Circomkit, Groth16):
+The core circuit is `circom-circuits/circuits/nihilium_core.circom`. The build pipeline generates Solidity verifier contracts (placed in `packages/privacy-lib/contracts/proofs/`) and TypeScript bindings. Circuit artifacts for Circom proofs are pinned to IPFS for browser usage.
 
-| Circuit | Purpose |
-|---|---|
-| `opening_proof` (`encrypt.circom` + `validated_sig_he_add.circom`) | Elliptic-curve homomorphic encryption opening proof |
-| `hash_tie` (`HashTie.circom`) | Hash binding proof |
+**Noir circuits** (`noir-circuits/`) — older protocol iteration, kept for reference but no longer the primary path:
 
-The build pipeline generates Solidity verifier contracts (placed in `packages/privacy-lib/contracts/`) and TypeScript bindings. Circuit artifacts for Circom proofs are pinned to IPFS for browser usage.
+`encrypt_proof`, `generic_tree_proof`, `top_level_merkle_proof`, `sub_tree_merkle_proof`, `validated_sig_he_add`, `generic_adjacent_tree_proof`, `data_stream_roots_proof`, `mimc_test`
 
-Also exports `cryptoTools` (Baby Jubjub utilities, key formatting, random number generation) and a `precompute` helper for lookup-table based discrete-log solving.
+Also exports `cryptoTools` (Baby Jubjub utilities, key formatting, random number generation) and a `precompute` helper for lookup-table based discrete-log solving. The combinational threshold encryption (DTE) lives in `src/utils/dte.ts`.
 
 #### `packages/dlog-solver-rs` — `@nihilium/dlog-solver-rs`
 
@@ -82,7 +71,7 @@ Core protocol library covering data streams, processors, and client interactions
 | `ChainedProofV2` | Generic chained proof verification engine |
 | `NihiliumRecoveryRegister` | Recovery key registration |
 | `Interfaces` (`IVerifier`, `IDataStream`) | Shared interfaces for verifiers and data streams |
-| `proofs/*` (19 contracts) | Individual proof verifiers: `opening_proof`, `hash_tie`, `MerkleTreeProof`, `TopLevelMerkleProof`, `KeccakTreeEntry`, `SmallerThan`, `GreaterOrEqualThen`, `TimeDelayProof`, `ManualChoice`, `VerifyECDSA`, `VerifyEDDSA`, `AdditionProof`, `ValueInjection`, `Poseidon2`, `Between`, `KeccakPreImage`, `encrypt_proof`, `TestVerifyAlwaysTrue` |
+| `proofs/*` (20 contracts) | Individual proof verifiers: `opening_proof`, `encrypt_proof`, `hash_tie`, `MerkleTreeProof`, `TopLevelMerkleProof`, `KeccakTreeEntry`, `KeccakPreImage`, `SmallerThan`, `GreaterOrEqualThen`, `Between`, `TimeDelayProof`, `ManualChoice`, `VerifyECDSA`, `VerifyEDDSA`, `AdditionProof`, `ValueInjection`, `Poseidon2`, `TestVerifyAlwaysTrue`, `IVerifier` |
 
 **Source modules** (in `src/lib/`):
 
@@ -92,8 +81,8 @@ Core protocol library covering data streams, processors, and client interactions
 - **`contract_wrappers/`** — `ChainedProofWrapperV2`, `EmpheralMerkleTreeWrapper`, `LocalVMExecutor` (in-memory Hardhat EVM for testing)
 - **`client/`** — `ClientSingleShareSealingProcess`, `ClientSingleShareUnsealingProcess`
 - **`unseal_conditions/`** — Composable unseal condition system:
-  - **Proofs** (13): opening, Merkle, top-level tree, keccak tree entry, smaller-than, greater-or-equal, time delay, manual choice, EDDSA verify, ECDSA verify, addition, value injection, Poseidon2
-  - **Modules** (16): before/after time, inclusion proof, exclusion claim, hash preimage, hash tie, manual choice, time delay, verify ECDSA/EDDSA, value injection, adjacent data selection, ZKEmail, and more
+  - **Proofs** (13 standard + 2 ZK): opening, Merkle, top-level tree, keccak tree entry, smaller-than, greater-or-equal, time delay, manual choice, EDDSA verify, ECDSA verify, addition, value injection, Poseidon2; plus ZK email and hash tie
+  - **Modules** (17): before/after time, time delay, opening, inclusion proof, exclusion claim, adjacent data selection, hash preimage, hash tie, manual choice, value injection, verify ECDSA, verify EDDSA, ZKEmail; plus dummy stubs for ZKPassport
   - **Collections** — `UnsealConditionCollection` and `UnsealConditionTemplate` for composing modules into chained proof instructions
   - **Templates** — Pre-built templates (e.g. `reveal_only_template`)
 
@@ -138,7 +127,7 @@ Express HTTP server performing seal/unseal operations via the `Processor` class.
 | `/get_public_keys` | GET | Processor's signing and HE public keys |
 | `/identity` | GET | Processor identity (chained proof address, chain ID, keys) |
 | `/request_seal` | POST | Process a sealing request |
-| `/request_unseal` | POST | Process an unsealing request |
+| `/request_unseal` | POST | Process an unsealing request (10 MB body limit) |
 | `/status` | GET | API status check |
 | `/health` | GET | Health check |
 
@@ -152,9 +141,9 @@ React 18 testing interface built with Material-UI and `@nihilium/client-sdk`. Us
 
 The `docker/` directory provides Docker Compose configurations for both services:
 
-- `Dockerfile.datastream` / `docker-compose.datastream.yml` — builds and runs the datastream server with persistent volume for stream data
-- `Dockerfile.processor` / `docker-compose.processor.yml` — builds and runs the processor server
-- Both include health checks and configurable environment variables
+- `Dockerfile.datastream` / `docker-compose.datastream.yml` — builds and runs the datastream server with persistent volume for stream data; env vars: `PRIVATE_KEY`, `CONTRACT_ADDRESS`, `RPC_URL`, `CHAIN_ID`
+- `Dockerfile.processor` / `docker-compose.processor.yml` — builds and runs the processor server; env vars: `PRIVATE_KEY`, `PRIVATE_KEY_HE`, `CHAINED_PROOF_CONTRACT_ADDRESS`, `RPC_URL`, `CHAIN_ID`, `OPENING_PROOF_ADDRESS`
+- Both services expose port **3006**, include health checks, and run as non-root users
 
 ## Getting Started
 
@@ -162,8 +151,8 @@ The `docker/` directory provides Docker Compose configurations for both services
 
 - **Node.js** 18+
 - **Rust** (stable) — for building `dlog-solver-rs`
-- **Nargo** — for compiling Noir circuits (optional, pre-compiled artifacts included)
-- **Barretenberg (`bb`)** — for generating Noir Solidity verifiers (optional)
+- **Circomkit** / **snarkjs** — for compiling Circom circuits (optional, pre-compiled artifacts included)
+- **Nargo** / **Barretenberg (`bb`)** — only needed to recompile the legacy Noir circuits
 - **Docker** (optional) — for containerised deployment
 
 ### Installation
@@ -237,13 +226,13 @@ npm start
 1. **Clients** use the SDK to create unseal condition templates, encrypt data via homomorphic encryption, and initiate seal/unseal flows
 2. **Datastream servers** manage encrypted data in on-chain Merkle trees and serve membership proofs over HTTP
 3. **Processors** hold HE private keys, perform homomorphic operations, verify chained proofs, and execute seal/unseal logic
-4. **ZKP circuits** (Noir & Circom) prove encryption correctness, tree membership, and various unseal conditions without revealing plaintext
+4. **ZKP circuits** (Circom/Groth16) prove encryption correctness, tree membership, and various unseal conditions without revealing plaintext
 5. **Smart contracts** verify proofs on-chain via `ChainedProofV2` and individual proof verifier contracts
 
 ## Key Technologies
 
-- **Noir** (Barretenberg backend) — primary ZKP circuit language
-- **Circom** (Groth16/snarkjs) — legacy circuits for opening proofs and hash ties
+- **Circom** (Groth16/snarkjs) — active ZKP circuit language for opening proofs and hash ties
+- **Noir** (Barretenberg backend) — older circuit iteration, kept for reference
 - **Baby Jubjub** — elliptic curve for homomorphic encryption (twisted Edwards, BN254 base field)
 - **Hardhat** — Solidity compilation, testing, and deployment
 - **ethers.js v6** — blockchain interaction
