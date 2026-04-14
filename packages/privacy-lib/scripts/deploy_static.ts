@@ -338,7 +338,7 @@ async function main() {
     // }
 
     // ChainedProof
-    const chainedProofName = "ChainedProof";
+    const chainedProofName = "ChainedProofV2";
     const chainedProofBytecode = getContractBytecode(`contracts/${chainedProofName}.sol/${chainedProofName}`);
     if (needsRedeployment(chainedProofName, chainedProofBytecode, existingDeployments, existingBytecodeMap)) {
         // We need to provide two verifier addresses for ChainedProof.

@@ -149,3 +149,6 @@ packages/privacy-lib/anvil-state.json
 packages/privacy-lib/scripts/deployed-contracts-bytecode-31337.json
 packages/privacy-lib/scripts/deployed-contracts-bytecode-43113.json
 x19xlookupTable.json
+apps/processor/.env.anvil
+apps/processor/.env.avax
+packages/zkp-circuits/lookupTables/x16xlookupTable.json

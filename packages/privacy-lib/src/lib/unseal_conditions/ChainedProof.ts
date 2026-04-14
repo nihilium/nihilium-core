@@ -234,7 +234,6 @@ export class ChainedProof {
         return new_state;
     }
 
-
 static async calculateUnsealRoot(unseal_proof_actions: UnsealProofAction[]): Promise<string> {
     var proof_counter = 0;
     var proof_state: any | ProvingState = {};

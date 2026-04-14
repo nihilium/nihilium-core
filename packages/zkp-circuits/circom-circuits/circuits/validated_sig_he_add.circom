@@ -5,6 +5,8 @@ include "../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
 include "../../../node_modules/circomlib/circuits/babyjub.circom";
 include "../../../node_modules/circomlib/circuits/poseidon.circom";
 
+
+//Old nihilium version of the circuit, not used anymore.
 template ValidatedSigHEAdd() {
     // Signature public key
     signal input Ax;

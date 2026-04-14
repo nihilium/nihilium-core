@@ -34,6 +34,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.HashFunction__factory>;
     getContractFactory(
+      name: "ChainedProofV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ChainedProofV2__factory>;
+    getContractFactory(
+      name: "HashFunctionV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.HashFunctionV2__factory>;
+    getContractFactory(
       name: "EmpheralMerkleTreeKeccak",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak__factory>;
@@ -160,6 +168,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.HashFunction>;
     getContractAt(
+      name: "ChainedProofV2",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ChainedProofV2>;
+    getContractAt(
+      name: "HashFunctionV2",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.HashFunctionV2>;
+    getContractAt(
       name: "EmpheralMerkleTreeKeccak",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -306,6 +324,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.HashFunction>;
     deployContract(
+      name: "ChainedProofV2",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ChainedProofV2>;
+    deployContract(
+      name: "HashFunctionV2",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.HashFunctionV2>;
+    deployContract(
       name: "EmpheralMerkleTreeKeccak",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak>;
@@ -431,6 +457,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.HashFunction>;
+    deployContract(
+      name: "ChainedProofV2",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ChainedProofV2>;
+    deployContract(
+      name: "HashFunctionV2",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.HashFunctionV2>;
     deployContract(
       name: "EmpheralMerkleTreeKeccak",
       args: any[],

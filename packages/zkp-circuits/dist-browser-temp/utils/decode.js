@@ -1,6 +1,9 @@
 import fs from "fs";
+import { precompute } from "./precompute";
 // Add base point cache at the top of the file after imports
 const basePointCache = new Map();
+const decode16Cache = new Map();
+let decode16Ready = false;
 // Optimized base point function with caching
 function getOrComputeBasePoint(babyJubBase, scalar) {
     const key = scalar.toString();
@@ -10,14 +13,42 @@ function getOrComputeBasePoint(babyJubBase, scalar) {
     return basePointCache.get(key);
 }
 function fetch_table(precomputeSize) {
-    const file = fs.readFileSync(`./lookupTables/x${precomputeSize}xlookupTable.json`);
-    const table = JSON.parse(file.toString());
-    // Convert to Map for better performance
-    lookupTableMap = new Map(Object.entries(table));
-    return table;
+    if (!fs.existsSync(`./lookupTables/x${precomputeSize}xlookupTable.json`)) {
+        var table = precompute(precomputeSize);
+        lookupTableMap = new Map(Object.entries(table));
+        fs.writeFileSync(`./lookupTables/x${precomputeSize}xlookupTable.json`, JSON.stringify(table));
+    }
+    else {
+        const file = fs.readFileSync(`./lookupTables/x${precomputeSize}xlookupTable.json`);
+        const table = JSON.parse(file.toString());
+        // Convert to Map for better performance
+        lookupTableMap = new Map(Object.entries(table));
+    }
+    return lookupTableMap;
 }
 let lookupTable;
 let lookupTableMap;
+function pointKey(point) {
+    const affine = point.toAffine();
+    return `${affine.x.toString()}:${affine.y.toString()}`;
+}
+function ensureDecode16Table(babyJubBase) {
+    if (decode16Ready)
+        return;
+    for (let m = 0n; m < 65536n; m++) {
+        const p = babyJubBase.multiplyUnsafe(m);
+        decode16Cache.set(pointKey(p), m);
+    }
+    decode16Ready = true;
+}
+function decode16(babyJubBase, encoded) {
+    ensureDecode16Table(babyJubBase);
+    const value = decode16Cache.get(pointKey(encoded));
+    if (value === undefined) {
+        throw new Error("Not Found!");
+    }
+    return value;
+}
 // Optimized decode function
 function optimizedDecode(babyJubBase, encoded, precomputeSize) {
     // Initialize lookup table and map if needed
@@ -90,4 +121,4 @@ function split64(x) {
     else
         throw new Error("The input should be 64-bit bigint");
 }
-export { decode, optimizedDecode, encode, split64 };
+export { decode, decode16, optimizedDecode, encode, split64 };

@@ -10,7 +10,7 @@ template HashTie() {
     signal output tied_value;
     component poseidonHash = Poseidon(1);
     poseidonHash.inputs <== [pre_image];
-
+    //Probably need to add operations to properly constrain input=> output relations
     tied_hash <== poseidonHash.out;
     tied_value <== tied_value_input;
 

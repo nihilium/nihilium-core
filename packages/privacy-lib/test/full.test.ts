@@ -166,10 +166,10 @@ describe("Processor-Client intereaction", () => {
       // bytecode: merkleTree.bytecode,
       // abi: merkleTree.interface.fragments.map((fragment: any) => fragment)}
 
-      const chainedProofC = await ethers.getContractFactory("ChainedProof");
+      const chainedProofC = await ethers.getContractFactory("ChainedProofV2");
       chainedProofContract = await chainedProofC.deploy(openingProofAddress, openingProofAddress);
       //chainedProofAddress = await chainedProofContract.getAddress();
-      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProof"] =   
+      deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProofV2"] =   
       {address: await chainedProofContract.getAddress(),
       bytecode: chainedProofC.bytecode,
       abi: chainedProofC.interface.fragments.map((fragment: any) => fragment)}
@@ -196,7 +196,7 @@ describe("Processor-Client intereaction", () => {
       processor = new Processor(
         signing_key.privKey.toString(), 
         he_encryption.privKey.toString(),        
-        deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProof"].address ,
+        deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProofV2"].address ,
         deployedProtocolContracts[NETWORK_IDS.CUSTOM]["opening_proof"].address ,        
         signers[0]
       );

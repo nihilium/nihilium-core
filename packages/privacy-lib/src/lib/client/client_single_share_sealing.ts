@@ -16,6 +16,7 @@ import { IDataStream } from "../data_stream/types";
 //import { encryptProofCircuit } from "@nihilium/zkp-circuits";
 import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
+import { toPaddedHex } from "../utils";
 
 
 
@@ -257,14 +258,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
                 throw new Error("Failed to verify proof");
             //}
         }
-        //const encrypt_proof_circuit = await circuit_ENCRYPT_PROOF();
-        // const severed_commitment_circuit = await circuit_SEVERED_COMMITMENT();
-        // const key_he_add_circuit = await circuit_KEY_HE_ADD();
-
-        // var result = await encrypt_proof_circuit.verifyProof({
-        //     proof: processor_response.proof,
-        //     publicSignals: processor_response.public_signals
-        // })
+     
       
         var msg = cryptoTools.hashCypherText(processor_response.cyphertexts.map(bigint => BigInt(bigint)),
          processor_response.empheral_keys.map(bigint => BigInt(bigint)),
@@ -292,30 +286,14 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         
         var signatureValid = this.zkeddsa.verifySignature(msg, 
             sig, [this.processor.public_verification_key[0], this.processor.public_verification_key[1] ]); //TODO not on curve?
-        // var sig_eddsa: zkeddsa.Signature = {
-        //     R8: [
-        //         this.babyJub.F.toObject(hexToBytes(processor_response.signature_R8x)),
-        //         this.babyJub.F.toObject(hexToBytes(processor_response.signature_R8y))
-        //     ],
-        //     S: BigInt("0x" + processor_response.signature_S)
-        // }
-        // var zkeddsa_pub_key: [bigint, bigint] = [this.babyJub.F.toObject(cryptoTools.bigInt2Buffer(this.processor.public_verification_key[0])), 
-        // this.babyJub.F.toObject(cryptoTools.bigInt2Buffer(this.processor.public_verification_key[1]))]
-        //  var externallyValid =    zkeddsa.verifySignature(msg, sig_eddsa, zkeddsa_pub_key);
+       
        var hashed_preimage_plus_random_value = poseidon2([
             hashed_reveal_value_preimage,
             //NOTE: we need to send the random value plain and NOT as a buffer
             //Whilst the hashed value must be a buffer
             BigInt(processor_response.severed_commitment_random_value)
         ])
-        var hashed_preimage_plus_random_value_bigint = hashed_preimage_plus_random_value;
-       // var hashed_combined_fe = this.babyJub.F.toObject(hashed_preimage_plus_random_value)
-        //console.log(hashed_preimage_plus_random_value_bigint);
-        // var severed_commitment_signatureValid = this.eddsa.verifyPoseidon(hashed_preimage_plus_random_value, 
-        //     severed_commitment_sig, 
-        //     [cryptoTools.bigInt2Buffer(this.processor.public_verification_key[0]), 
-        //     cryptoTools.bigInt2Buffer(this.processor.public_verification_key[1]) ]); //TODO not on curve?
-//processor_response.cyphertexts, processor_response.empheral_keys
+      
         if(!signatureValid) {
             this.phase = ClientProcessorSealingPhase.ERROR;
             throw new Error("Failed to verify proof");
@@ -354,11 +332,10 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
        //This does mean we can have infinite possible combinations of private keys generated
        //However only one set of unseal conditions for them, so this should not be an issue.
        var valueToAdd = cryptoTools.generateRandom248BitNumber();
+       //We reduce some values here to not overflow the final sum
        valueToAdd = cryptoTools.shrinkToBits(valueToAdd, 247);
        var metadata_root_shrinked = cryptoTools.shrinkToBits(this.metadata_root, 247);
-       var test1 = this.unseal_condition_root % 21888242871839275222246405745257275088548364400416034343698204186575808495617n //babyjub modulus
-       var test2 = this.unseal_condition_root % 21888242871839275222246405745257275088614511777268538073601725287587578984328n //babyjub modulus
-        var input = genCircuitInputsHEAdd(hePubKey, valueToAdd,
+       var input = genCircuitInputsHEAdd(hePubKey, valueToAdd,
             point_p,
             empheral_p,            
             [this.processor.public_verification_key[0], this.processor.public_verification_key[1]],
@@ -373,45 +350,45 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         );
         console.time("circomOpeningProof.proof");
         await circomOpeningProof.init()
+        
         var proof = await circomOpeningProof.generateProof({input: input.input_circom});
         console.timeEnd("circomOpeningProof.proof");
+        var encrypted_value = cryptoTools.HEEncrypt(valueToAdd + metadata_root_shrinked, cryptoTools.toBigIntArray(hePubKey), encrypted_nonces)
+        var encrypted_value_added = cryptoTools.HEAddAll(
+            encrypted_value.ephemeral_keys, 
+            empheral_p, 
+            encrypted_value.encrypted_messages, 
+            point_p)
+        
+        var encrypted_value_added_hash = toPaddedHex(cryptoTools.hashExtPoints(encrypted_value_added.encryptedMessages), 32);
+        var empheral_keys_hash = toPaddedHex(cryptoTools.hashExtPoints(encrypted_value_added.ephemeralKeys), 32);
+        var encrypted_message_hexes = encrypted_value_added.encryptedMessages.map(a => cryptoTools.toBigIntArray(a)).flat().map(a => toPaddedHex(a, 32));
+        var encrypted_empheral_hexes = encrypted_value_added.ephemeralKeys.map(a => cryptoTools.toBigIntArray(a)).flat().map(a => toPaddedHex(a, 32));
         //await validatedSigHeAddCircuit.init()
-        //var proof = await validatedSigHeAddCircuit.generateProof({input: input.encoded});
+        //Here we validated that the local HE addition is the same as the one in the circuit
+        if(encrypted_value_added_hash != proof.publicSignals[4]) {
+            this.phase = ClientProcessorSealingPhase.ERROR;
+            throw new Error("Failed to verify encrypted value added hash");
+        }
+        if(empheral_keys_hash != proof.publicSignals[3]) {
+            this.phase = ClientProcessorSealingPhase.ERROR;
+            throw new Error("Failed to verify empheral keys hash");
+        }
         if(!proof) {
             this.phase = ClientProcessorSealingPhase.ERROR;
             throw new Error("Failed to generate proof");
         }
-        // var random_value = BigInt("0x" + processor_response.severed_commitment_random_value)
-        // const circuitInputs = {            
-        //     Ax: this.babyJub.F.toObject(cryptoTools.bigInt2Buffer(this.processor.public_verification_key[0])),
-        //     Ay: this.babyJub.F.toObject(cryptoTools.bigInt2Buffer(this.processor.public_verification_key[1])),
-        //     S: severed_commitment_sig.S,
-        //     R8x: this.babyJub.F.toObject(severed_commitment_sig.R8[0]),
-        //     R8y: this.babyJub.F.toObject(severed_commitment_sig.R8[1]),
-        //     random_value: random_value,
-        //     pre_image: this.reveal_value_preimage
-        // };
-
-        // var proof_severed_commitment = await severed_commitment_circuit?.generateProof({input: circuitInputs});
-        // if(!proof_severed_commitment) {
-        //     this.phase = ClientProcessorSealingPhase.ERROR;
-        //     throw new Error("Failed to generate proof");
-        // }
-        
+      
+        //TODO should be removed and replaced with the DTE method
         // -------------------------------------------------------------------------------------------
         //encrypt shamir secret using ECC
         // -------------------------------------------------------------------------------------------  
-        var newCombinedPublicKeyX = BigInt(proof.publicSignals[39])
-        var newCombinedPublicKeyY = BigInt(proof.publicSignals[40])
+        var newCombinedPublicKeyX = BigInt(proof.publicSignals[9])
+        var newCombinedPublicKeyY = BigInt(proof.publicSignals[10])
            
         var encrypted_shamir_key = cryptoTools.encryptECCBabyJub(this.secret, cryptoTools.coordinatesToExtPointBigint(newCombinedPublicKeyX, newCombinedPublicKeyY) )
-        
-        //TODO do the HEHomomorphic addition similar to the circuit and calculate them separately.
-        //Make sure they are the same, if they are the same, hash them and prepare for the circuit
-        //to remove the actual cihpertexts from the circuit and only return the hashes.
-        //So that the cipher texts can be omitted.
-        var encrypted_add_value =cryptoTools.HEEncrypt(valueToAdd + metadata_root_shrinked, cryptoTools.toBigIntArray(hePubKey), encrypted_nonces)
-        
+ 
+         
         
         
         console.debug('Generated random AES key for shamir secret encryption');
@@ -420,8 +397,8 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         
         return {
             private_package: {
-                cyphertexts:  proof.publicSignals.slice(3,19).map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[0] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),
-                empheral_keys:  proof.publicSignals.slice(19,35).map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[1] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),                
+                cyphertexts:  encrypted_message_hexes.map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[0] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),
+                empheral_keys:  encrypted_empheral_hexes.map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[1] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),                
                 public_key_he: [this.processor.public_he_encryption_key[0].toString(), this.processor.public_he_encryption_key[1].toString()],
                 public_verification_key: [this.processor.public_verification_key[0].toString(), this.processor.public_verification_key[1].toString()],
                 proof: "0x" + cryptoTools.uint8ArrayToHex(proof.proof),

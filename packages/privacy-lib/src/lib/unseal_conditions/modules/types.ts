@@ -311,6 +311,10 @@ export abstract class UnsealConditionModule {
 
         this.proofLibrary = proofLibrary;
     }
+
+    getProofByIndex(proof_index: number): WrappedProof {
+        return this.proofs[this.proofList[proof_index]];
+    }
     getUserInputs(): IOMap {
 
         return this.inputs;

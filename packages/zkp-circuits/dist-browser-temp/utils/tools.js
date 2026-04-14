@@ -262,6 +262,22 @@ export function HEEncryptFromPoint(message, pubKey, nonces = [], exportNonces = 
         nonces: exportNonces ? noncesToUse : []
     };
 }
+export function SimpelElgamalEncrypt(message, pubKey, bitSize = 16) {
+    if (message.toString(2).length <= bitSize) {
+        throw new Error("Message is too large to encrypt");
+    }
+    var nonce = generateRandom248BitNumber();
+    var encrypted = encrypt(pubKey, encode(babyJub.BASE, message), nonce);
+    var encrypted_message = encrypted.encrypted_message.toHex();
+    var ephemeral_key = encrypted.ephemeral_key.toHex();
+    return { ephemeral_key: ephemeral_key, encrypted_message: encrypted_message };
+}
+export function SimpelElgamalDecrypt(encrypted_message, ephemeral_key, privKey) {
+    var encrypted_message_point = babyJub.fromHex(encrypted_message);
+    var ephemeral_key_point = babyJub.fromHex(ephemeral_key);
+    var decrypted = decrypt(privKey, ephemeral_key_point, encrypted_message_point);
+    return decode(babyJub.BASE, decrypted, 16);
+}
 export function HEEncrypt(message, pubKey, nonces = [], exportNonces = false) {
     return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
 }
@@ -312,6 +328,10 @@ export function HEDecryptSync(privKey, cypherTexts, ephemeralKeys) {
     }
     return combineChunksWithCarry(decrypted_p);
 }
+export const hashExtPoints = (extPoints) => {
+    var extPointsArray = extPoints.map(point => toBigIntArray(point)).flat();
+    return poseidon16(extPointsArray);
+};
 export const hashCypherText = (message, ephemeralKey, relatedPublicKey, preimage_hash, random_value, unseal_condition_root_hash, metadata_root_commit) => {
     const pointPoseidon = poseidon16(message);
     const emphPoseidon = poseidon16(ephemeralKey);
@@ -427,10 +447,11 @@ function xor(a, b) {
     return new Uint8Array(a.map((byte, i) => byte ^ b[i]));
 }
 // Encrypt and return hex-encoded ciphertext + ephemeral public key
-function encryptECCBabyJub(message, recipientPubKey) {
+//Both nonce and emperalKey must be set correctly, otherwise the encryption will not be correct.
+function encryptECCBabyJub(message, recipientPubKey, nonce = undefined, emperalKey = undefined) {
     const msgBytes = bigInt2Buffer(message);
-    const r = generateRandom248BitNumber(); // ephemeral priv
-    const R = babyJub.BASE.multiply(r); // ephemeral pub key
+    const r = nonce ?? generateRandom248BitNumber(); // ephemeral priv
+    const R = emperalKey ?? babyJub.BASE.multiply(r); // ephemeral pub key
     const S = recipientPubKey.multiply(r); // shared secret
     const sharedBytes = concatBytes(toBytesLE(S.x), toBytesLE(S.y));
     const key = sha256(sharedBytes).slice(0, msgBytes.length); // KDF
@@ -568,6 +589,22 @@ export function decrypt(privKey, ephemeral_key, encrypted_message) {
     const decrypted_message = encrypted_message.add(masking_key.negate());
     return decrypted_message;
 }
+export function HEAdd(empheralKey1, empheralKey2, encryptedMessage1, encryptedMessage2) {
+    const ephemeralKey = empheralKey1.add(empheralKey2);
+    const encryptedMessage = encryptedMessage1.add(encryptedMessage2);
+    return { ephemeralKey, encryptedMessage };
+}
+export function HEAddAll(empheralKeys1, empheralKeys2, encryptedMessages1, encryptedMessages2) {
+    var ephemeralKeys = [];
+    var encryptedMessages = [];
+    for (let i = 0; i < empheralKeys1.length; i++) {
+        const ephemeralKey = empheralKeys1[i].add(empheralKeys2[i]);
+        const encryptedMessage = encryptedMessages1[i].add(encryptedMessages2[i]);
+        ephemeralKeys.push(ephemeralKey);
+        encryptedMessages.push(encryptedMessage);
+    }
+    return { ephemeralKeys, encryptedMessages };
+}
 function babyJubAdd(a, b) {
     return (a + b) % SNARK_FIELD_SIZE;
 }
@@ -593,4 +630,4 @@ function rerandomize(pubKey, ephemeral_key, encrypted_message, randomVal) {
     const randomized_encryptedMessage = encrypted_message.add(pubKey.multiply(nonce));
     return { randomized_ephemeralKey, randomized_encryptedMessage };
 }
-export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };
+export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, toBytesLE, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };

@@ -1,0 +1,9 @@
+R1CS does not exist, creating it now.
+template instances: 410
+non-linear constraints: 35675
+linear constraints: 0
+public inputs: 0
+private inputs: 54 (49 belong to witness)
+public outputs: 41
+wires: 35676
+labels: 201950

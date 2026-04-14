@@ -24,6 +24,10 @@ export class UnsealConditionProof {
     constructor(data: UnsealConditionProofData) {
         this.data = data;
     }
+
+    getOutputSize(): number {
+        return Object.values(this.data.public_signals).reduce((acc, curr) => acc + curr[1], 0);
+    }
    
     getSignalIndex(signal: string): [number, number] {
         return this.data.public_signals[signal];

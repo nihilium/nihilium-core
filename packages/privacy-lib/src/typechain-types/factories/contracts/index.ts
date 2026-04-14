@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as chainedProofSol from "./ChainedProof.sol";
+export * as chainedProofV2Sol from "./ChainedProofV2.sol";
 export * as interfacesSol from "./Interfaces.sol";
 export * as proofs from "./proofs";
 export { EmpheralMerkleTreeKeccak__factory } from "./EmpheralMerkleTreeKeccak__factory";

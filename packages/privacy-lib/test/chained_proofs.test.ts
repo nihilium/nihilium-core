@@ -1,7 +1,7 @@
 //Tests that test hashing equilivance of actions.ts and the solidity contract using hardhat
 
 import { assert, expect } from "chai";
-import { ChainedProof } from "../src/lib/unseal_conditions/ChainedProof";
+import { ChainedProofV2 as ChainedProof } from "../src/lib/unseal_conditions/ChainedProofV2";
 import { DefaultAnchoredOpeningProofModule } from "../src/lib/unseal_conditions/modules";
 import {  StandardProofLibrary } from "../src/lib/unseal_conditions/proofs";
 import { StandardModuleLibrary } from "../src/lib/unseal_conditions/modules";

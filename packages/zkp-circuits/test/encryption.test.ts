@@ -17,11 +17,10 @@ import {pruneTo32Bits, BabyJubExtPoint,
     bufferToBigInt, hashCypherText,  encryptECCBabyJub, decryptECCBabyJub, bigInt2Buffer,
     encrypt, decrypt, genPubKey, PrivKey
 } from '../src/utils/tools'
-
+import { FDTEncrypt, FDTDecrypt } from '../src/utils/dte'
 import * as cryptoTools from '../src/utils/tools'
 // import { buildPoseidon, buildBabyjub, buildEddsa } from "circomlibjs";
-import { encryptProofCircuit, 
-    encrypt_proofInputType, validatedSigHeAddCircuit, validated_sig_he_addInputType, circomOpeningProof } from "../src";
+import { circomOpeningProof } from "../src";
 // Load chai-as-promised support
 chai.use(chaiAsPromised);
 
@@ -165,7 +164,7 @@ const genCircuitInputsHEAdd = (
         y: pubKeyXY[1].toString()
     }
     
-    let input_encrypt: validated_sig_he_addInputType = {
+    let input_encrypt: any = {
         input_add: value.toString(),
         nonceKey: noncesAdd.map(n => n.toString()),
         point_org: points.map(point => {    
@@ -270,7 +269,7 @@ const genCircuitInputsEncrypt = (
     //     y: ccc[1].toString(),
     // }
     var bigIntXY = toBigIntArray(keypair.pubKey)
-    let input_encrypt: encrypt_proofInputType = {
+    let input_encrypt = {
         privateKeyScalar: p.toString(),
         
         nonceKey_p: noncesP.map(nonce => nonce.toString()),
@@ -393,264 +392,287 @@ describe("Testing ElGamal Scheme Circuits\n", () => {
             expect(decoded).to.equal(splitValueToEncrypt[0]);
         });
 
+        it("Test full AON Encryption & Decryption", async () => {
+            // Generate a long random text (~10kb), then encode it as bytes
+           var totalKeys = 15
+           var threshold = 5
+           var privateKeys = Array.from({ length: totalKeys }, () => generateRandom248BitNumber());
+           var pubKeys = privateKeys.map(privateKey => babyJub.BASE.multiply(privateKey));
+           var message = generateRandom248BitNumber();
+           var encrypted = FDTEncrypt(message, pubKeys, threshold);
+           var totalCiphertexts = Object.keys(encrypted.cipherTexts).length;
+           console.log("totalCiphertexts", totalCiphertexts);
+           var encryptedJson = JSON.stringify(encrypted);
+           var jsonSize = encryptedJson.length;
+           var jsonSizeKB = jsonSize/1024;
+           console.log("jsonSizeKB", jsonSizeKB);
+           //Pick threshold random keys from the privateKeys, making sure not to pick the same key twice
+           for (let i = 0; i < threshold; i++) {
+               var selectedPrivateKeys = privateKeys.sort(() => Math.random() - 0.5).slice(0, threshold);
+               var decrypted = FDTDecrypt(selectedPrivateKeys, encrypted.cipherTexts, encrypted.empheralKey);
+               expect(decrypted).to.equal(message.toString());
+           }
+           
+          
+        });
         
         /**
          * Tests the full circuit interactions
          */
-        it("Verify Encrypt & Validate Signature circuit", async () => {
+        // it("Verify Encrypt & Validate Signature circuit", async () => {
 
-            var circuitInputs = genCircuitInputsEncrypt(keypair, privateKeyScalar);
-            var splitPrivateKeyScalar = splitLargeNumber(privateKeyScalar)
+        //     var circuitInputs = genCircuitInputsEncrypt(keypair, privateKeyScalar);
+        //     var splitPrivateKeyScalar = splitLargeNumber(privateKeyScalar)
             
-            let metadata_root: bigint = generateRandom248BitNumber()
-            metadata_root = cryptoTools.shrinkToBits(metadata_root, 247);
-            var scalarToAdd = generateRandom248BitNumber()
-            scalarToAdd = cryptoTools.shrinkToBits(scalarToAdd, 247);
-            var commitment_preimage = generateRandom248BitNumber()
-            var unseal_condition_root = generateRandom248BitNumber()
-            var preimage_hash = poseidon1([commitment_preimage])
-            var unseal_condition_root_hash = poseidon2([unseal_condition_root, preimage_hash])
-            var splitScalarToAdd = splitLargeNumber(scalarToAdd + metadata_root)
-            const summedArray = splitPrivateKeyScalar.map((value, index) => value + splitScalarToAdd[index]);
-            //Calculate public key from private key scalar
-            const privateKeyScalarPubKey = privateScalarToPubKey(privateKeyScalar);
-            const scalarToAddPubKey = privateScalarToPubKey(scalarToAdd);
+        //     let metadata_root: bigint = generateRandom248BitNumber()
+        //     metadata_root = cryptoTools.shrinkToBits(metadata_root, 247);
+        //     var scalarToAdd = generateRandom248BitNumber()
+        //     scalarToAdd = cryptoTools.shrinkToBits(scalarToAdd, 247);
+        //     var commitment_preimage = generateRandom248BitNumber()
+        //     var unseal_condition_root = generateRandom248BitNumber()
+        //     var preimage_hash = poseidon1([commitment_preimage])
+        //     var unseal_condition_root_hash = poseidon2([unseal_condition_root, preimage_hash])
+        //     var splitScalarToAdd = splitLargeNumber(scalarToAdd + metadata_root)
+        //     const summedArray = splitPrivateKeyScalar.map((value, index) => value + splitScalarToAdd[index]);
+        //     //Calculate public key from private key scalar
+        //     const privateKeyScalarPubKey = privateScalarToPubKey(privateKeyScalar);
+        //     const scalarToAddPubKey = privateScalarToPubKey(scalarToAdd);
             
-            //Test if the combined public key is the same as the private key scalar + scalar to add
-            const combinedPubKey = combineTwoPublicKeys(privateKeyScalarPubKey, scalarToAddPubKey);
-            const combinedPubKey2 = combineTwoPublicKeysPlain(privateKeyScalarPubKey, scalarToAddPubKey);
-            const combinedPrivateKey = privateKeyScalar + scalarToAdd;
+        //     //Test if the combined public key is the same as the private key scalar + scalar to add
+        //     const combinedPubKey = combineTwoPublicKeys(privateKeyScalarPubKey, scalarToAddPubKey);
+        //     const combinedPubKey2 = combineTwoPublicKeysPlain(privateKeyScalarPubKey, scalarToAddPubKey);
+        //     const combinedPrivateKey = privateKeyScalar + scalarToAdd;
             
             
-            const combinedPrivateKeyPubKey = privateScalarToPubKey(combinedPrivateKey);
-            expect(combinedPubKey[0]).to.equal(combinedPrivateKeyPubKey[0])
-            expect(combinedPubKey[1]).to.equal(combinedPrivateKeyPubKey[1])
+        //     const combinedPrivateKeyPubKey = privateScalarToPubKey(combinedPrivateKey);
+        //     expect(combinedPubKey[0]).to.equal(combinedPrivateKeyPubKey[0])
+        //     expect(combinedPubKey[1]).to.equal(combinedPrivateKeyPubKey[1])
             
-            console.log(privateKeyScalar)
-            console.log("splitP", splitPrivateKeyScalar,  combineChunksWithCarry(splitPrivateKeyScalar))
+        //     console.log(privateKeyScalar)
+        //     console.log("splitP", splitPrivateKeyScalar,  combineChunksWithCarry(splitPrivateKeyScalar))
             
-            // assert(combineChunksWithCarry(summedArray) == valueP+valueQ)
-            var cipherTexts_p: { message: ExtPointType; ephemeral_key: ExtPointType; encrypted_message: ExtPointType; nonce: bigint; }[] = []
-            const encrypted_point_coordinates: bigint[][] = [];
-            var encrypted_ephemeral_key_coordinates: bigint[][] = [];
-            splitPrivateKeyScalar.forEach((value, index) => {
-                var encrypted = encrypt(keypair.pubKey, encode(babyJub.BASE, value), BigInt(circuitInputs.plain.nonceKey_p[index]))
-                cipherTexts_p.push(encrypted)
-                encrypted_point_coordinates.push(toBigIntArray(encrypted.encrypted_message))
-                encrypted_ephemeral_key_coordinates.push(toBigIntArray(encrypted.ephemeral_key))
-            })
+        //     // assert(combineChunksWithCarry(summedArray) == valueP+valueQ)
+        //     var cipherTexts_p: { message: ExtPointType; ephemeral_key: ExtPointType; encrypted_message: ExtPointType; nonce: bigint; }[] = []
+        //     const encrypted_point_coordinates: bigint[][] = [];
+        //     var encrypted_ephemeral_key_coordinates: bigint[][] = [];
+        //     splitPrivateKeyScalar.forEach((value, index) => {
+        //         var encrypted = encrypt(keypair.pubKey, encode(babyJub.BASE, value), BigInt(circuitInputs.plain.nonceKey_p[index]))
+        //         cipherTexts_p.push(encrypted)
+        //         encrypted_point_coordinates.push(toBigIntArray(encrypted.encrypted_message))
+        //         encrypted_ephemeral_key_coordinates.push(toBigIntArray(encrypted.ephemeral_key))
+        //     })
            
-            //Here we encrypt the value, this is the message create by the processor
+        //     //Here we encrypt the value, this is the message create by the processor
          
           
-            // Load the circuit
-            //const circuit = await circomkit.readCircuits(circuitName);
-            console.time('Proving Time');
-            //for(let i = 0; i < 5; i++) {
-            // Execute the circuit with the provided inputs
+        //     // Load the circuit
+        //     //const circuit = await circomkit.readCircuits(circuitName);
+        //     console.time('Proving Time');
+        //     //for(let i = 0; i < 5; i++) {
+        //     // Execute the circuit with the provided inputs
             
-            await encryptProofCircuit.init()
-            var circuit = await encryptProofCircuit.generateProof({input: circuitInputs.encoded})
+        //     await encryptProofCircuit.init()
+        //     var circuit = await encryptProofCircuit.generateProof({input: circuitInputs.encoded})
             
-            const ouputPubKeyX = circuit.publicSignals[0];
-            const ouputPubKeyY = circuit.publicSignals[1];
+        //     const ouputPubKeyX = circuit.publicSignals[0];
+        //     const ouputPubKeyY = circuit.publicSignals[1];
             
-            expect(BigInt(ouputPubKeyX)).to.equal(privateKeyScalarPubKey[0])
-            expect(BigInt(ouputPubKeyY)).to.equal(privateKeyScalarPubKey[1])
+        //     expect(BigInt(ouputPubKeyX)).to.equal(privateKeyScalarPubKey[0])
+        //     expect(BigInt(ouputPubKeyY)).to.equal(privateKeyScalarPubKey[1])
 
-            const point_p:BabyJubExtPoint[] = [];
-            const point_coordinates: bigint[][] = [];
+        //     const point_p:BabyJubExtPoint[] = [];
+        //     const point_coordinates: bigint[][] = [];
             
-            for (let i = 0; i < 8; i++) {
+        //     for (let i = 0; i < 8; i++) {
                 
-                var x = BigInt(circuit.publicSignals[2 + i*2])
-                var y = BigInt(circuit.publicSignals[2 + i*2 + 1])
-                point_coordinates.push([x,y])
-                point_p.push(coordinatesToExtPointBigint(x,y));
-            }
-            // var field = ""
-            // for (let i = 0; i < 8; i++) {
-            //     field = `main.point_p[${i*2}]`
-            //     var x = (await circuit.readWitness(b, [field]))[field]
-            //     field = `main.point_p[${(i*2)+1}]`
-            //     var y:any = (await circuit.readWitness(b, [field]))[field]
-            //     point_coordinates.push([x,y])
-            //     point_p.push(coordinatesToExtPointBigint(x,y));
-            // }
+        //         var x = BigInt(circuit.publicSignals[2 + i*2])
+        //         var y = BigInt(circuit.publicSignals[2 + i*2 + 1])
+        //         point_coordinates.push([x,y])
+        //         point_p.push(coordinatesToExtPointBigint(x,y));
+        //     }
+        //     // var field = ""
+        //     // for (let i = 0; i < 8; i++) {
+        //     //     field = `main.point_p[${i*2}]`
+        //     //     var x = (await circuit.readWitness(b, [field]))[field]
+        //     //     field = `main.point_p[${(i*2)+1}]`
+        //     //     var y:any = (await circuit.readWitness(b, [field]))[field]
+        //     //     point_coordinates.push([x,y])
+        //     //     point_p.push(coordinatesToExtPointBigint(x,y));
+        //     // }
 
          
 
-            const empheral_p: BabyJubExtPoint[] = [];
-            const empheral_p_coordinates: bigint[][] = [];
+        //     const empheral_p: BabyJubExtPoint[] = [];
+        //     const empheral_p_coordinates: bigint[][] = [];
             
-            for (let i = 0; i < 8; i++) {
+        //     for (let i = 0; i < 8; i++) {
                 
-                var x = BigInt(circuit.publicSignals[18 + i*2])
-                var y = BigInt(circuit.publicSignals[18 + i*2 + 1])
-                empheral_p_coordinates.push([x,y])
-                empheral_p.push(coordinatesToExtPointBigint(x,y));
-            }
-            // const empheral_p_coordinates: bigint[][] = [];
-            // for (let i = 0; i < 8; i++) {
-            //     field = `main.ephemeralKey_p[${i*2}]`
-            //     var x = (await circuit.readWitness(b, [field]))[field]
-            //     field = `main.ephemeralKey_p[${(i*2)+1}]`
-            //     var y:any = (await circuit.readWitness(b, [field]))[field]
-            //     empheral_p_coordinates.push([x,y])
-            //     empheral_p.push(coordinatesToExtPointBigint(x,y));
-            // }
+        //         var x = BigInt(circuit.publicSignals[18 + i*2])
+        //         var y = BigInt(circuit.publicSignals[18 + i*2 + 1])
+        //         empheral_p_coordinates.push([x,y])
+        //         empheral_p.push(coordinatesToExtPointBigint(x,y));
+        //     }
+        //     // const empheral_p_coordinates: bigint[][] = [];
+        //     // for (let i = 0; i < 8; i++) {
+        //     //     field = `main.ephemeralKey_p[${i*2}]`
+        //     //     var x = (await circuit.readWitness(b, [field]))[field]
+        //     //     field = `main.ephemeralKey_p[${(i*2)+1}]`
+        //     //     var y:any = (await circuit.readWitness(b, [field]))[field]
+        //     //     empheral_p_coordinates.push([x,y])
+        //     //     empheral_p.push(coordinatesToExtPointBigint(x,y));
+        //     // }
 
           
-            const prvKeyBuffer = Buffer.from(keypair.privKey.toString(16), 'hex');
-            var random_severed_commit = generateRandom248BitNumber()
-            const pubValidationKey = zkeddsa.derivePublicKey(prvKeyBuffer);
-            //Different pubkey from homomorphic addition
-            // const pubKeyArrayBigint = [bufferToBigInt(pubValidationKey[0]), bufferToBigInt(pubValidationKey[1])]
-            // const pubKeyArray = toBigIntArray(keypair.pubKey);
-            // const pubKeySelf = toBigIntArray(prv2pub(prvKeyBuffer))
-            var hashed_metadata_root = poseidon2([metadata_root, commitment_preimage])
-            var msg = hashCypherText(point_coordinates.flat(), 
-                empheral_p_coordinates.flat(), privateKeyScalarPubKey, preimage_hash,                
-                random_severed_commit,
-                unseal_condition_root_hash,
-                hashed_metadata_root
-            )
-            //Sign the message using EdDSA
-            const signature = zkeddsa.signMessage(prvKeyBuffer, msg);
-            const _pubKey = zkeddsa.derivePublicKey(prvKeyBuffer);
-            const signature_verified = zkeddsa.verifySignature(msg, signature, _pubKey);
-            expect(signature_verified).to.equal(true)
-            //const pSignature = eddsa.packSignature(signature);
+        //     const prvKeyBuffer = Buffer.from(keypair.privKey.toString(16), 'hex');
+        //     var random_severed_commit = generateRandom248BitNumber()
+        //     const pubValidationKey = zkeddsa.derivePublicKey(prvKeyBuffer);
+        //     //Different pubkey from homomorphic addition
+        //     // const pubKeyArrayBigint = [bufferToBigInt(pubValidationKey[0]), bufferToBigInt(pubValidationKey[1])]
+        //     // const pubKeyArray = toBigIntArray(keypair.pubKey);
+        //     // const pubKeySelf = toBigIntArray(prv2pub(prvKeyBuffer))
+        //     var hashed_metadata_root = poseidon2([metadata_root, commitment_preimage])
+        //     var msg = hashCypherText(point_coordinates.flat(), 
+        //         empheral_p_coordinates.flat(), privateKeyScalarPubKey, preimage_hash,                
+        //         random_severed_commit,
+        //         unseal_condition_root_hash,
+        //         hashed_metadata_root
+        //     )
+        //     //Sign the message using EdDSA
+        //     const signature = zkeddsa.signMessage(prvKeyBuffer, msg);
+        //     const _pubKey = zkeddsa.derivePublicKey(prvKeyBuffer);
+        //     const signature_verified = zkeddsa.verifySignature(msg, signature, _pubKey);
+        //     expect(signature_verified).to.equal(true)
+        //     //const pSignature = eddsa.packSignature(signature);
 
 
-            var decrypted_p: bigint[] = []
-            for (let i = 0; i < 8; i++) {
-                decrypted_p.push(decode(babyJub.BASE, decrypt(keypair.privKey, empheral_p[i], point_p[i]), 19))
-            }
+        //     var decrypted_p: bigint[] = []
+        //     for (let i = 0; i < 8; i++) {
+        //         decrypted_p.push(decode(babyJub.BASE, decrypt(keypair.privKey, empheral_p[i], point_p[i]), 19))
+        //     }
 
-            //Test that the decrypted values are the same as the original values
-            for(let i = 0; i < 8; i++) {
-                expect(decrypted_p[i]).to.equal(splitPrivateKeyScalar[i])
+        //     //Test that the decrypted values are the same as the original values
+        //     for(let i = 0; i < 8; i++) {
+        //         expect(decrypted_p[i]).to.equal(splitPrivateKeyScalar[i])
                 
-            }
-        //}
-            console.timeEnd('Proving Time');
+        //     }
+        // //}
+        //     console.timeEnd('Proving Time');
 
             
 
 
-            //---------------------- do the homomorphic addition ----------------------
+        //     //---------------------- do the homomorphic addition ----------------------
 
-            /*
+        //     /*
 
-             var metadata_root_shrinked = cryptoTools.shrinkToBits(this.metadata_root, 247);
-        var input = genCircuitInputsHEAdd(hePubKey, valueToAdd,
-            point_p,
-            empheral_p,            
-            [this.processor.public_verification_key[0], this.processor.public_verification_key[1]],
-            [BigInt(processor_response.new_public_key[0]), BigInt(processor_response.new_public_key[1])],            
-            sig,
-            this.reveal_value_preimage,
+        //      var metadata_root_shrinked = cryptoTools.shrinkToBits(this.metadata_root, 247);
+        // var input = genCircuitInputsHEAdd(hePubKey, valueToAdd,
+        //     point_p,
+        //     empheral_p,            
+        //     [this.processor.public_verification_key[0], this.processor.public_verification_key[1]],
+        //     [BigInt(processor_response.new_public_key[0]), BigInt(processor_response.new_public_key[1])],            
+        //     sig,
+        //     this.reveal_value_preimage,
                   
-            BigInt(processor_response.severed_commitment_random_value),
-            this.unseal_condition_root,
-            metadata_root_shrinked
-        );
-            */
+        //     BigInt(processor_response.severed_commitment_random_value),
+        //     this.unseal_condition_root,
+        //     metadata_root_shrinked
+        // );
+        //     */
 
 
         
-            var circuitInputsHEAdd = genCircuitInputsHEAdd(keypair.pubKey, scalarToAdd, point_p, empheral_p, 
-                pubValidationKey, privateKeyScalarPubKey, signature,
-                 commitment_preimage, random_severed_commit, unseal_condition_root, metadata_root, babyJubCircom)
-        console.time('Circom Time')
-            var circomCircuitInputs:any = {publicSignals: []}
-            await measureMemory(async () => {
-                circomCircuitInputs = await circomCircuit.generateProof({input: circuitInputsHEAdd.input_circom})
-            });
-            var rawProof = cryptoTools.uint8ArrayToHex(circomCircuitInputs.proof)
-            console.log("rawProof", rawProof)
+        //     var circuitInputsHEAdd = genCircuitInputsHEAdd(keypair.pubKey, scalarToAdd, point_p, empheral_p, 
+        //         pubValidationKey, privateKeyScalarPubKey, signature,
+        //          commitment_preimage, random_severed_commit, unseal_condition_root, metadata_root, babyJubCircom)
+        // console.time('Circom Time')
+        //     var circomCircuitInputs:any = {publicSignals: []}
+        //     await measureMemory(async () => {
+        //         circomCircuitInputs = await circomCircuit.generateProof({input: circuitInputsHEAdd.input_circom})
+        //     });
+        //     var rawProof = cryptoTools.uint8ArrayToHex(circomCircuitInputs.proof)
+        //     console.log("rawProof", rawProof)
             
-            const mem = (globalThis as any).__lastMemReport;
+        //     const mem = (globalThis as any).__lastMemReport;
             
             
-            var circomSignals = circomCircuitInputs.publicSignals.map(signal => BigInt(signal))
-            console.timeEnd('Circom Time')
+        //     var circomSignals = circomCircuitInputs.publicSignals.map(signal => BigInt(signal))
+        //     console.timeEnd('Circom Time')
 
-            var circuitNameHeAdd = 'validate-sig';
+        //     var circuitNameHeAdd = 'validate-sig';
         
-            await validatedSigHeAddCircuit.init()
-            console.time('Noir Time')
-            var bAdd = await validatedSigHeAddCircuit.generateProof({input: circuitInputsHEAdd.encoded})
-            console.timeEnd('Noir Time')
-            var signals_bigint = bAdd.publicSignals.map(signal => BigInt(signal))
+        //     await validatedSigHeAddCircuit.init()
+        //     console.time('Noir Time')
+        //     var bAdd = await validatedSigHeAddCircuit.generateProof({input: circuitInputsHEAdd.encoded})
+        //     console.timeEnd('Noir Time')
+        //     var signals_bigint = bAdd.publicSignals.map(signal => BigInt(signal))
 
-            for(let i = 0; i < circomSignals.length; i++) {
-                expect(circomSignals[i]).to.equal(signals_bigint[i])
-            }
-            var newCombinedPublicKey = BigInt(bAdd.publicSignals[39])
-            expect(newCombinedPublicKey).to.equal(combinedPrivateKeyPubKey[0])
-            var newCombinedPublicKeyY = BigInt(bAdd.publicSignals[40])
-            expect(newCombinedPublicKeyY).to.equal(combinedPrivateKeyPubKey[1])
-            const point_he: BabyJubExtPoint[] = [];
-            for (let i = 0; i < 8; i++) {
-                var x = BigInt(bAdd.publicSignals[3 + i*2])
-                var y = BigInt(bAdd.publicSignals[3 + i*2 + 1])
+        //     for(let i = 0; i < circomSignals.length; i++) {
+        //         expect(circomSignals[i]).to.equal(signals_bigint[i])
+        //     }
+        //     var newCombinedPublicKey = BigInt(bAdd.publicSignals[39])
+        //     expect(newCombinedPublicKey).to.equal(combinedPrivateKeyPubKey[0])
+        //     var newCombinedPublicKeyY = BigInt(bAdd.publicSignals[40])
+        //     expect(newCombinedPublicKeyY).to.equal(combinedPrivateKeyPubKey[1])
+        //     const point_he: BabyJubExtPoint[] = [];
+        //     for (let i = 0; i < 8; i++) {
+        //         var x = BigInt(bAdd.publicSignals[3 + i*2])
+        //         var y = BigInt(bAdd.publicSignals[3 + i*2 + 1])
                
-                point_he.push(coordinatesToExtPointBigint(x,y));
-            }
+        //         point_he.push(coordinatesToExtPointBigint(x,y));
+        //     }
 
-            const empheral_he: BabyJubExtPoint[] = [];
-            for (let i = 0; i < 8; i++) {
-                var x = BigInt(bAdd.publicSignals[19 + i*2])
-                var y = BigInt(bAdd.publicSignals[19 + i*2 + 1])
+        //     const empheral_he: BabyJubExtPoint[] = [];
+        //     for (let i = 0; i < 8; i++) {
+        //         var x = BigInt(bAdd.publicSignals[19 + i*2])
+        //         var y = BigInt(bAdd.publicSignals[19 + i*2 + 1])
                
-                empheral_he.push(coordinatesToExtPointBigint(x,y));
-            }
-            console.time('Decrypt Time');
-            const decrypted_he: bigint[] = [];
-            for (let i = 0; i < 8; i++) {
-                const decryptedValue = decode(
-                    babyJub.BASE,
-                    decrypt(keypair.privKey, empheral_he[i], point_he[i]),
-                    19
-                );
-                decrypted_he.push(decryptedValue);
-            }
-            console.timeEnd('Decrypt Time');
-            // Test that the decrypted homomorphic addition values are correct
-            for (let i = 0; i < 8; i++) {
-                expect(decrypted_he[i]).to.equal(splitScalarToAdd[i] + splitPrivateKeyScalar[i]);
-            }
+        //         empheral_he.push(coordinatesToExtPointBigint(x,y));
+        //     }
+        //     console.time('Decrypt Time');
+        //     const decrypted_he: bigint[] = [];
+        //     for (let i = 0; i < 8; i++) {
+        //         const decryptedValue = decode(
+        //             babyJub.BASE,
+        //             decrypt(keypair.privKey, empheral_he[i], point_he[i]),
+        //             19
+        //         );
+        //         decrypted_he.push(decryptedValue);
+        //     }
+        //     console.timeEnd('Decrypt Time');
+        //     // Test that the decrypted homomorphic addition values are correct
+        //     for (let i = 0; i < 8; i++) {
+        //         expect(decrypted_he[i]).to.equal(splitScalarToAdd[i] + splitPrivateKeyScalar[i]);
+        //     }
 
-            var combined_encrypted_message = combineChunksWithCarry(decrypted_he)
-            var combined_encrypted_message_minus_metadata_root = combined_encrypted_message - metadata_root
-            var combinedKey = privateKeyScalar + scalarToAdd
+        //     var combined_encrypted_message = combineChunksWithCarry(decrypted_he)
+        //     var combined_encrypted_message_minus_metadata_root = combined_encrypted_message - metadata_root
+        //     var combinedKey = privateKeyScalar + scalarToAdd
             
-            expect(combined_encrypted_message_minus_metadata_root).to.equal(combinedKey)
+        //     expect(combined_encrypted_message_minus_metadata_root).to.equal(combinedKey)
 
 
 
-            //const witness = await circomkit.prove(circuitName, 'input_test', circuitInputsEncoded);
+        //     //const witness = await circomkit.prove(circuitName, 'input_test', circuitInputsEncoded);
             
-            // Optionally, you can check constraints and print the witness
-            //await circuit.checkConstraints(witness);
+        //     // Optionally, you can check constraints and print the witness
+        //     //await circuit.checkConstraints(witness);
            
-            //console.log('Witness:', witness);
+        //     //console.log('Witness:', witness);
             
 
-            // const { proof, publicSignals } = await snarkjs.groth16.fullProve(
-            //     input_encrypt,
-            //     wasm_path_encrypt,
-            //     zkey_path_encrypt,
-            // );
-            // const vKey = JSON.parse(
-            //     fs.readFileSync("./circuits/artifacts/encrypt_test/encrypt.vkey.json"),
-            // );
+        //     // const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+        //     //     input_encrypt,
+        //     //     wasm_path_encrypt,
+        //     //     zkey_path_encrypt,
+        //     // );
+        //     // const vKey = JSON.parse(
+        //     //     fs.readFileSync("./circuits/artifacts/encrypt_test/encrypt.vkey.json"),
+        //     // );
 
-            // const res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
-            // expect(res).to.equal(true);
-        });
+        //     // const res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
+        //     // expect(res).to.equal(true);
+        // });
 
        
     });

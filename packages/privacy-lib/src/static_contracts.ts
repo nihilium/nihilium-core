@@ -31,6 +31,13 @@ deployedProtocolContracts[NETWORK_IDS.AVAX_TESTNET]["zk_email_proof"] = {
   description: "A proof that a ZK Email is valid.",
 }
 
+deployedProtocolContracts[NETWORK_IDS.ANVIL]["zk_email_proof"] = {
+  address: "0x10Bbfc8340BE6eFa09753741d6b838CB495aAd4b",
+  name: "ZKEmailProof",
+  version: "1.0.0",
+  description: "A proof that a ZK Email is valid.",
+}
+
 export function toAddressMap(networkId: number): AddressMap {
   if (!deployedProtocolContracts[networkId]) {
     throw new Error(`Network ID ${networkId} not found`);
