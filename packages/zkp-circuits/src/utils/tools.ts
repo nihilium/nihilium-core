@@ -28,6 +28,7 @@ import  * as zkJub from "@zk-kit/baby-jubjub";
 import { blake2b } from "@noble/hashes/blake2b";
 import { ExtPointType } from "@noble/curves/abstract/edwards";
 import { poseidon16, poseidon8 } from "poseidon-lite";
+export * as poseidonTools from "poseidon-lite";
 import CryptoJS from "crypto-js";
 
 export { babyJub, SNARK_FIELD_SIZE };
@@ -314,6 +315,25 @@ export function HEEncryptFromPoint(message:bigint, pubKey: ExtPointType, nonces:
     }
 }
 
+
+export function SimpelElgamalEncrypt(message: bigint, pubKey: PubKey, bitSize: number = 16): {ephemeral_key: string, encrypted_message: string} {
+    if(message.toString(2).length <= bitSize) {
+        throw new Error("Message is too large to encrypt");
+    }
+    var nonce = generateRandom248BitNumber();
+    var encrypted = encrypt(pubKey, encode(babyJub.BASE, message), nonce)
+    var encrypted_message = encrypted.encrypted_message.toHex()
+    var ephemeral_key = encrypted.ephemeral_key.toHex()
+    return {ephemeral_key: ephemeral_key, encrypted_message: encrypted_message}
+}
+
+export function SimpelElgamalDecrypt(encrypted_message: string, ephemeral_key: string, privKey: PrivKey): bigint {
+    var encrypted_message_point = babyJub.fromHex(encrypted_message)
+    var ephemeral_key_point = babyJub.fromHex(ephemeral_key)
+    var decrypted = decrypt(privKey, ephemeral_key_point, encrypted_message_point)
+    return decode(babyJub.BASE, decrypted, 16)
+}
+
 export function HEEncrypt(message: bigint, pubKey: bigint[], nonces: bigint[] = [], exportNonces:boolean = false) {
     return HEEncryptFromPoint(message, coordinatesToExtPointBigint(pubKey[0], pubKey[1]), nonces, exportNonces);
 }
@@ -393,7 +413,10 @@ export function HEDecryptSync(privKey: bigint, cypherTexts: bigint[], ephemeralK
     
     return combineChunksWithCarry(decrypted_p);
 }
-
+export const hashExtPoints = (extPoints: ExtPointType[]): bigint => {
+    var extPointsArray = extPoints.map(point => toBigIntArray(point)).flat();
+    return poseidon16(extPointsArray);
+}
 export const hashCypherText = (message:bigint[], ephemeralKey:bigint[], 
     relatedPublicKey:bigint[], preimage_hash:any, random_value: bigint, unseal_condition_root_hash: any, metadata_root_commit: any) => {
     
@@ -532,10 +555,11 @@ function xor(a: Uint8Array, b: Uint8Array): Uint8Array {
 }
 
 // Encrypt and return hex-encoded ciphertext + ephemeral public key
-function encryptECCBabyJub(message: bigint, recipientPubKey: PubKey) {
+//Both nonce and emperalKey must be set correctly, otherwise the encryption will not be correct.
+function encryptECCBabyJub(message: bigint, recipientPubKey: PubKey, nonce: bigint | undefined = undefined, emperalKey: ExtPointType | undefined = undefined) {
     const msgBytes = bigInt2Buffer(message);
-    const r = generateRandom248BitNumber(); // ephemeral priv
-    const R = babyJub.BASE.multiply(r); // ephemeral pub key
+    const r = nonce ?? generateRandom248BitNumber(); // ephemeral priv
+    const R = emperalKey ?? babyJub.BASE.multiply(r); // ephemeral pub key
 
     const S = recipientPubKey.multiply(r); // shared secret
     const sharedBytes = concatBytes(toBytesLE(S.x), toBytesLE(S.y));
@@ -723,6 +747,24 @@ export function decrypt(
     return decrypted_message;
 }
 
+export function HEAdd(empheralKey1: ExtPointType, empheralKey2: ExtPointType, encryptedMessage1: ExtPointType, encryptedMessage2: ExtPointType): {ephemeralKey: ExtPointType, encryptedMessage: ExtPointType} {
+    const ephemeralKey = empheralKey1.add(empheralKey2);
+    const encryptedMessage = encryptedMessage1.add(encryptedMessage2);
+    return { ephemeralKey, encryptedMessage };
+}
+
+export function HEAddAll(empheralKeys1: ExtPointType[], empheralKeys2: ExtPointType[], encryptedMessages1: ExtPointType[], encryptedMessages2: ExtPointType[]): {ephemeralKeys: ExtPointType[], encryptedMessages: ExtPointType[]} {
+    var ephemeralKeys: ExtPointType[] = [];
+    var encryptedMessages: ExtPointType[] = [];
+    for (let i = 0; i < empheralKeys1.length; i++) {
+        const ephemeralKey = empheralKeys1[i].add(empheralKeys2[i]);
+        const encryptedMessage = encryptedMessages1[i].add(encryptedMessages2[i]);
+        ephemeralKeys.push(ephemeralKey);
+        encryptedMessages.push(encryptedMessage);
+    }
+    return {  ephemeralKeys, encryptedMessages };
+}
+
 function babyJubAdd(a: bigint, b: bigint): bigint {
     return (a + b) % SNARK_FIELD_SIZE;
 }
@@ -770,6 +812,7 @@ export {
     bigInt2Buffer,
     hexString2Buffer,
     buffer2HexString,
+    toBytesLE,
     getSignalByName,
     stringifyBigInts,
     unstringifyBigInts,

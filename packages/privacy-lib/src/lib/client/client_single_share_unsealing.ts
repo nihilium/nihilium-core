@@ -221,6 +221,8 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
             address: this.seal.public_package.address,
             circuit_id: this.seal.public_package.circuit_id,
             proof: this.seal.private_package.proof,
+            empheral_keys: this.seal.private_package.empheral_keys,
+            cyphertexts: this.seal.private_package.cyphertexts,
             //public_signals: this.seal.private_package.public_signals,
             public_key: [this.processor.public_he_encryption_key[0].toString(), this.processor.public_he_encryption_key[1].toString()],
             signature_S: "0",

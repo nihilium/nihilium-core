@@ -1,9 +1,11 @@
 import { ethers, Signer } from "ethers";
 import { IDataStream } from "../data_stream/types";
-import { ACTION_CHAIN_PROOF_FORK, ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT_FROM_USER, ACTION_STATIC_INPUT, ACTION_VALIDATE_DATA_ROOT, ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT } from "./ChainedProof";
+import { ACTION_CHAIN_PROOF_FORK, ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT_FROM_USER,
+     ACTION_STATIC_INPUT, ACTION_VALIDATE_DATA_ROOT, 
+     ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT } from "./ChainedProof";
 import { ACTION_PREPARE_NEXT_PROOF } from "./ChainedProof";
-import { ProvingState } from "./ChainedProof";
-import { ChainedProof } from "./ChainedProof";
+import { ProvingStateV2 as ProvingState } from "./ChainedProofV2";
+import { ChainedProofV2 as ChainedProof } from "./ChainedProofV2";
 import { ProcessorEndpoint } from "../../types/protocol/common";
 import { cryptoTools } from "@nihilium/zkp-circuits";
 
@@ -124,12 +126,12 @@ export abstract class CompiledChainedProofCollection {
                 proof_counter++;
             }
             if(action.action === ACTION_CHAIN_PROOF_VERIFY) {
-                proof_state = await this.chainedProof.solidity_dryrun_chain_proof_verify(proof_state, dryrun)
+                proof_state = await this.chainedProof.solidity_dryrun_chain_proof_verify(proof_state, BigInt(action.params.mask), true)
             }
             if(action.action === ACTION_PASS_SIGNAL) {
                 proof_state = await this.chainedProof.solidity_dryrun_chain_pass_signal(proof_state, 
                     action.params.public_input_indexes, 
-                    action.params.output_proof_index, 
+                    //action.params.output_proof_index, 
                     action.params.output_signal_indexes, dryrun)
             }
             if(action.action === ACTION_STATIC_INPUT) {
@@ -141,7 +143,7 @@ export abstract class CompiledChainedProofCollection {
                 proof_state = await this.chainedProof.solidity_dryrun_validate_data_root(
                     proof_state,                                         
                     action.params.address, 
-                    action.params.output_proof_index, 
+                    //action.params.output_proof_index, 
                     action.params.output_signal_index, )
             }
             console.log('Solidity dryrun',action.action, proof_state.current_hash)
@@ -236,6 +238,15 @@ export type UnsealProofActionValidateDataRoot = UnsealProofAction & {
 }
 
 
+export type UnsealProofActionValidateDataRootV2 = UnsealProofAction & {
+    action: typeof ACTION_VALIDATE_DATA_ROOT;
+    params: {
+        address: string;        
+        output_signal_index: number;
+    }
+}
+
+
 export type UnsealProofActionValidateDataRootFromUserInput = UnsealProofAction & {
     action: typeof ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT;
     params: {
@@ -250,11 +261,26 @@ export type UnsealProofActionChainProofVerify = UnsealProofAction & {
         
     }
 }
+export type UnsealProofActionChainProofVerifyV2 = UnsealProofAction & {
+    action: typeof ACTION_CHAIN_PROOF_VERIFY;
+    params: {
+        mask: string;//hex string
+    }
+}
 export type UnsealProofActionPassSignal = UnsealProofAction & {
     action: typeof ACTION_PASS_SIGNAL;
     params: {
         public_input_indexes: number[];
         output_proof_indexes: number[];
+        output_signal_indexes: number[];
+    }
+}
+
+
+export type UnsealProofActionPassSignalV2 = UnsealProofAction & {
+    action: typeof ACTION_PASS_SIGNAL;
+    params: {
+        public_input_indexes: number[];        
         output_signal_indexes: number[];
     }
 }

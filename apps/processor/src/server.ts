@@ -55,7 +55,7 @@ async function main() {
     const privateKey = (argv.privateKey || process.env.PRIVATE_KEY) as string;
     const privateKeyHE = (argv.privateKeyHE || process.env.PRIVATE_KEY_HE) as string;
     const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;  
-    const contractAddress = deployedProtocolContracts[chainId]["ChainedProof"]?.address as string;
+    const contractAddress = deployedProtocolContracts[chainId]["ChainedProofV2"]?.address as string;
     const openingProofAddress = deployedProtocolContracts[chainId]["opening_proof"]?.address as string;
     // const rpcUrl = (argv.rpcUrl || process.env.RPC_URL) as string;
     // const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;

@@ -1,138 +1,194 @@
-# Privacy Accounts
 
-A privacy-preserving computation system built with zero-knowledge proofs using Circom and Noir circuits. This monorepo contains packages for ZKP circuits, privacy libraries, client SDKs, and server applications.
+
+# DISCLAIMER
+This repo is a product of almost 7 years of trial and error and thus has artifacts of such endeavour.
+- some namings are still odd due to a history of concept changes
+- some tests are not working or hold old code reference
+- not every package works outright
+- Noir code is of an older iteration of the protocol, but still largely aligned, no longer used.
+
+
+However, it does show the code that produces the results from the paper. 
+If you want a walkthrough, contact us, we are actively looking for capable people willing to solve a big problem.
+
+
+# Manual relevant locations
+
+The core circuit can be found in: /packages/zkp-circuits/circom-circuits/circuits/nihilium_core.circom
+
+The combinational threshold encryption can be found here: /packages/zkp-circuits/src/utils/dte.ts
+
+Starting point for full circle test is: /packages/privacy-lib/test/full.test.ts
+
+Note to the above: there is still a lot of mentions of shamir, this was origanlly used and to be implemented in the client-sdk. As the combinational threshold encryption became integeral to the core protocol this is now moved into the privacy. Leaving the client SDK quite empty.
+
+Below the AI summary:
+
+# Nihilium Core
+
+A privacy-preserving computation system built with zero-knowledge proofs. Data is encrypted using homomorphic encryption on the Baby Jubjub curve, stored in on-chain Merkle trees, and unlocked only when configurable unseal conditions are satisfied — all verified via ZKP circuits written in Noir and Circom.
 
 ## Repository Structure
 
-This is an **NPM workspaces monorepo** with the following main components:
+This is an **NPM workspaces monorepo** (`privacy-accounts`) with four packages and three applications.
 
-### 📦 Packages
+### Packages
 
-#### **`packages/zkp-circuits`** - [@nihilium/zkp-circuits]
-Zero-knowledge proof circuits implementation with dual circuit support:
+#### `packages/zkp-circuits` — `@nihilium/zkp-circuits`
 
-- **Noir Circuits**: Modern ZKP circuits using the Noir language
-  - `encrypt_proof` - Homomorphic encryption proofs  
-  - `generic_tree_proof` - Generic Merkle tree membership proofs
-  - `top_level_merkle_proof` - Top-level tree proofs with timestamp validation
-  - `sub_tree_merkle_proof` - Sub-tree membership proofs
-  - `validated_sig_he_add` - Signature validation with homomorphic addition
-  - `generic_adjacent_tree_proof` - Adjacent tree proofs
+Zero-knowledge proof circuits with TypeScript wrappers.
 
-- **Circom Circuits**: Legacy circuits for specific operations
-  - `encrypt.circom` - Elliptic curve based homomorphic encryption
-  - `validated_sig_he_add.circom` - Opening proofs with signature validation
+**Noir circuits** (compiled with Nargo, verified via Barretenberg):
 
-- **Features**:
-  - TypeScript wrappers for all circuits
-  - Automated Solidity verifier generation
-  - 19-bit lookup table for efficient discrete logarithm solving (~45MB)
-  - Support for both browser and Node.js environments
+| Circuit | Purpose |
+|---|---|
+| `encrypt_proof` | Homomorphic encryption proof |
+| `generic_tree_proof` | Generic Merkle tree membership |
+| `top_level_merkle_proof` | Top-level tree proof with timestamp validation |
+| `sub_tree_merkle_proof` | Sub-tree membership proof |
+| `validated_sig_he_add` | Signature validation with homomorphic addition |
+| `generic_adjacent_tree_proof` | Adjacent tree proof |
+| `data_stream_roots_proof` | Data stream roots verification |
+| `mimc_test` | MiMC hash test circuit |
 
-#### **`packages/privacy-lib`** - [@nihilium/privacy-lib]
-Core privacy library providing all protocol functionality:
+**Circom circuits** (compiled with Circomkit, Groth16):
 
-- **Data Streams**: EVMDataStreamNonZK for blockchain data management
-- **Persistence**: File-based and custom persistence layers  
-- **Processors**: Server-side processing logic
-- **Contract Wrappers**: Smart contract interaction utilities
-- **Crypto Tools**: Encryption, decryption, and proof generation
-- **Client Operations**: Sealing/unsealing processes
+| Circuit | Purpose |
+|---|---|
+| `opening_proof` (`encrypt.circom` + `validated_sig_he_add.circom`) | Elliptic-curve homomorphic encryption opening proof |
+| `hash_tie` (`HashTie.circom`) | Hash binding proof |
 
-Supports both browser and Node.js environments without handling communication layers.
+The build pipeline generates Solidity verifier contracts (placed in `packages/privacy-lib/contracts/`) and TypeScript bindings. Circuit artifacts for Circom proofs are pinned to IPFS for browser usage.
 
-The main test to run all functionality without any additional software is `packages/privacy-lib/test/full.test.ts`
+Also exports `cryptoTools` (Baby Jubjub utilities, key formatting, random number generation) and a `precompute` helper for lookup-table based discrete-log solving.
 
-#### **`packages/client-sdk`** - [@nihilium/client-sdk] 
-Browser-focused SDK that wraps the privacy library:
+#### `packages/dlog-solver-rs` — `@nihilium/dlog-solver-rs`
 
-- Lightweight wrapper around `@nihilium/privacy-lib`
-- Optimized for browser usage
-- Handles endpoint selection and client-side operations
-- Built with Vite for modern bundling
+High-performance discrete logarithm solver for the Baby Jubjub curve, implemented in **Rust** and exposed to Node.js via **NAPI-RS**.
 
-TODO: this should be published to NPM
+- Uses precomputed lookup tables (e.g. `x19xlookupTable.json`) for baby-step giant-step solving
+- Curve parameters: a=168700, d=168696 (twisted Edwards, BN254 base field)
+- Required by the privacy-lib for decrypting homomorphically encrypted values
 
-### 🚀 Applications
+#### `packages/privacy-lib` — `@nihilium/privacy-lib`
 
-#### **`apps/datastream-server`**
-[Is not managed by just Nihilium, in the future co-deployed with processors]
-HTTP server for managing encrypted data streams:
+Core protocol library covering data streams, processors, and client interactions. Built with Hardhat (Solidity 0.8.27, Cancun EVM) and TypeScript.
 
-- **Purpose**: Provides REST API for data stream operations
-- **Key Features**:
-  - POST `/postData` - Submit encrypted data arrays
-  - GET `/proof/:value` - Retrieve Merkle proofs for values
-  - GET `/isProvable/:value` - Check if value can be proven
-  - GET `/globalTreeIndex` - Get current tree state
-  - GET `/latestGlobalLeafProof` - Get latest leaf proof (used for time proofs)
+**Smart Contracts** (in `contracts/`):
 
-- **Configuration**: Via environment variables or CLI arguments
-  - Private key for wallet operations
-  - Contract address for the data stream
-  - RPC URL for blockchain connection
-  - Chain ID and port configuration
+| Contract | Purpose |
+|---|---|
+| `EmpheralMerkleTreeKeccak` | On-chain balanced Merkle tree with timestamped leaf insertion |
+| `ChainedProofV2` | Generic chained proof verification engine |
+| `NihiliumRecoveryRegister` | Recovery key registration |
+| `Interfaces` (`IVerifier`, `IDataStream`) | Shared interfaces for verifiers and data streams |
+| `proofs/*` (19 contracts) | Individual proof verifiers: `opening_proof`, `hash_tie`, `MerkleTreeProof`, `TopLevelMerkleProof`, `KeccakTreeEntry`, `SmallerThan`, `GreaterOrEqualThen`, `TimeDelayProof`, `ManualChoice`, `VerifyECDSA`, `VerifyEDDSA`, `AdditionProof`, `ValueInjection`, `Poseidon2`, `Between`, `KeccakPreImage`, `encrypt_proof`, `TestVerifyAlwaysTrue` |
 
-#### **`apps/processor`**
-Processing server for seal/unseal operations:
+**Source modules** (in `src/lib/`):
 
-- **Purpose**: Handles privacy-preserving data processing requests
-- **Key Features**:
-  - POST `/api/seal` - Process sealing requests  
-  - POST `/api/unseal` - Process unsealing requests
-  - GET `/api/public-keys` - Retrieve processor public keys
-  - Homomorphic encryption operations
-  - Unseal condition verification verification
+- **`data_stream/`** — `EVMDataStreamNonZK` (server-side stream management), `DataStreamClient` (HTTP client for querying proofs), `EVMDataStreamWatcher`
+- **`persistence/`** — `DataStreamFilePersistence` for file-based Merkle tree state
+- **`processor/`** — Server-side `Processor` class handling seal/unseal requests with homomorphic encryption
+- **`contract_wrappers/`** — `ChainedProofWrapperV2`, `EmpheralMerkleTreeWrapper`, `LocalVMExecutor` (in-memory Hardhat EVM for testing)
+- **`client/`** — `ClientSingleShareSealingProcess`, `ClientSingleShareUnsealingProcess`
+- **`unseal_conditions/`** — Composable unseal condition system:
+  - **Proofs** (13): opening, Merkle, top-level tree, keccak tree entry, smaller-than, greater-or-equal, time delay, manual choice, EDDSA verify, ECDSA verify, addition, value injection, Poseidon2
+  - **Modules** (16): before/after time, inclusion proof, exclusion claim, hash preimage, hash tie, manual choice, time delay, verify ECDSA/EDDSA, value injection, adjacent data selection, ZKEmail, and more
+  - **Collections** — `UnsealConditionCollection` and `UnsealConditionTemplate` for composing modules into chained proof instructions
+  - **Templates** — Pre-built templates (e.g. `reveal_only_template`)
 
-- **Configuration**: Requires private keys for both standard and HE operations
+**Network support**: Anvil (31337), Ganache (1337), Avalanche Fuji testnet (43113), and custom chains. Deployed contract addresses are tracked in `scripts/deployed-contracts-*.json`.
 
-#### **`apps/test-ui`**
-React-based testing interface:
+Supports both browser and Node.js environments. The main integration test is `packages/privacy-lib/test/full.test.ts`.
 
-- **Purpose**: Frontend for testing and demonstrating the privacy system
-- **Tech Stack**: React 18, Material-UI, TypeScript
-- **Integration**: Uses `@nihilium/client-sdk` for privacy operations
+#### `packages/client-sdk` — `@nihilium/client-sdk`
 
-### 🐳 Docker Support
+Browser-focused SDK wrapping `@nihilium/privacy-lib`:
 
-The `docker/` directory contains:
+- Re-exports the full privacy-lib API
+- Adds endpoint selection (`getDatastreams`, `getProcessors`, `getProcessorEndpoint`)
+- Provides high-level helpers: `getDefaultSealingProcess`, `getDefaultUnsealingProcess`, `preload_circuits`
+- Built with Vite for browser bundling
 
-- **Multi-service deployment** with docker-compose
-- **Separate Dockerfiles** for datastream and processor services  
-- **Environment configuration** templates
-- **Volume management** for persistent data
+### Applications
+
+#### `apps/datastream-server`
+
+Express HTTP server managing an encrypted data stream backed by `EVMDataStreamNonZK`.
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/postData` | POST | Submit an array of encrypted data hex strings |
+| `/proof/:value` | GET | Retrieve global + local Merkle proofs for a value |
+| `/isProvable/:value` | GET | Check if a value exists in the tree |
+| `/globalTreeIndex` | GET | Current global tree index |
+| `/latestGlobalLeafProof` | GET | Latest global leaf proof (used for time proofs) |
+| `/address` | GET | Data stream contract address |
+| `/identity` | GET | Server identity (address, chain ID, public keys) |
+| `/health` | GET | Health check |
+
+Configured via CLI flags (`--private-key`, `--contract-address`, `--rpc-url`, `--chain-id`, `--port`) or environment variables. Default port: **3006**.
+
+#### `apps/processor`
+
+Express HTTP server performing seal/unseal operations via the `Processor` class.
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/get_public_keys` | GET | Processor's signing and HE public keys |
+| `/identity` | GET | Processor identity (chained proof address, chain ID, keys) |
+| `/request_seal` | POST | Process a sealing request |
+| `/request_unseal` | POST | Process an unsealing request |
+| `/status` | GET | API status check |
+| `/health` | GET | Health check |
+
+Configured via CLI flags (`--private-key-signing`, `--private-key-private-he`, `--rpc-url`, `--chain-id`, `--port`) or environment variables. Default port: **3005**.
+
+#### `apps/test-ui`
+
+React 18 testing interface built with Material-UI and `@nihilium/client-sdk`. Used for demonstrating and testing the end-to-end privacy flow in the browser.
+
+### Docker
+
+The `docker/` directory provides Docker Compose configurations for both services:
+
+- `Dockerfile.datastream` / `docker-compose.datastream.yml` — builds and runs the datastream server with persistent volume for stream data
+- `Dockerfile.processor` / `docker-compose.processor.yml` — builds and runs the processor server
+- Both include health checks and configurable environment variables
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-- Docker (optional)
+- **Node.js** 18+
+- **Rust** (stable) — for building `dlog-solver-rs`
+- **Nargo** — for compiling Noir circuits (optional, pre-compiled artifacts included)
+- **Barretenberg (`bb`)** — for generating Noir Solidity verifiers (optional)
+- **Docker** (optional) — for containerised deployment
 
 ### Installation
 
 ```bash
-# Install all dependencies
+# Install all workspace dependencies
 npm install
 
-# Build only libraries
-# Is a must before running the apps
+# Build the Rust dlog-solver (requires Rust toolchain)
+cd packages/dlog-solver-rs && npm run build && cd ../..
+
+# Build all libraries (zkp-circuits → privacy-lib → client-sdk)
 npm run build-lib
-
-
 ```
 
-### Development
+### Running Tests
 
 ```bash
-# Run all services in development mode
-npm run dev
+# Run the main integration test (requires a local Hardhat/Anvil node)
+cd packages/privacy-lib
+npm run start-anvil          # in a separate terminal
+npm run deploy-static-anvil  # deploy contracts
+npm run test-circuits        # run full.test.ts
 
-# Build and watch for changes
-npm run build:watch
-
-# Run tests across all packages
+# Run unit tests across all workspaces
 npm run test
 ```
 
@@ -145,17 +201,17 @@ npm run dev -- \
   --private-key="YOUR_PRIVATE_KEY" \
   --contract-address="CONTRACT_ADDRESS" \
   --rpc-url="RPC_URL" \
-  --chain-id=1337
+  --chain-id=31337
 ```
 
-#### Processor Server  
+#### Processor Server
 ```bash
 cd apps/processor
 npm run dev -- \
-  --private-key="YOUR_PRIVATE_KEY" \
-  --private-key-he="YOUR_HE_PRIVATE_KEY" \
-  --contract-address="CONTRACT_ADDRESS" \
-  --rpc-url="RPC_URL"
+  --private-key-signing="YOUR_SIGNING_KEY" \
+  --private-key-private-he="YOUR_HE_PRIVATE_KEY" \
+  --rpc-url="RPC_URL" \
+  --chain-id=31337
 ```
 
 #### Test UI
@@ -166,31 +222,35 @@ npm start
 
 ## Architecture
 
-The system implements a privacy-preserving protocol with the following flow:
+```
+┌─────────────┐    seal/unseal     ┌─────────────┐    on-chain verify    ┌──────────────────┐
+│  Client SDK │◄──────────────────►│  Processor   │◄────────────────────►│  Smart Contracts │
+│  (browser)  │                    │  (Express)   │                      │  (EVM)           │
+└──────┬──────┘                    └──────────────┘                      │                  │
+       │                                                                 │  ChainedProofV2  │
+       │  proofs                   ┌──────────────┐    post/query        │  EmpheralMerkle  │
+       └──────────────────────────►│  Datastream   │◄──────────────────►│  Proof Verifiers │
+                                   │  Server       │                     └──────────────────┘
+                                   └──────────────┘
+```
 
-1. **Clients** use the SDK to encrypt and seal data
-2. **Datastream servers** manage encrypted data and provide proofs  
-3. **Processors** perform homomorphic operations on encrypted data
-4. **ZKP circuits** ensure computation correctness without revealing data
-5. **Smart contracts** verify proofs and manage on-chain state
+1. **Clients** use the SDK to create unseal condition templates, encrypt data via homomorphic encryption, and initiate seal/unseal flows
+2. **Datastream servers** manage encrypted data in on-chain Merkle trees and serve membership proofs over HTTP
+3. **Processors** hold HE private keys, perform homomorphic operations, verify chained proofs, and execute seal/unseal logic
+4. **ZKP circuits** (Noir & Circom) prove encryption correctness, tree membership, and various unseal conditions without revealing plaintext
+5. **Smart contracts** verify proofs on-chain via `ChainedProofV2` and individual proof verifier contracts
 
-## Key Features
+## Key Technologies
 
-- **Privacy-First**: All sensitive data remains encrypted throughout processing
-- **Zero-Knowledge**: Proofs verify computation correctness without revealing inputs
-- **Homomorphic Encryption**: Enables computation on encrypted data
-- **Merkle Trees**: Efficient data integrity and membership proofs
-- **Modular Design**: Each component can be deployed and scaled independently
-- **Cross-Platform**: Supports both browser and server environments
-
-## Contributing
-
-This repository uses NPM workspaces for monorepo management. When making changes:
-
-1. Use `npm run build-lib` for quick library builds during development
-2. Run `npm run test` to ensure all packages pass tests across workspaces
-3. Use conventional commit messages for automatic versioning
+- **Noir** (Barretenberg backend) — primary ZKP circuit language
+- **Circom** (Groth16/snarkjs) — legacy circuits for opening proofs and hash ties
+- **Baby Jubjub** — elliptic curve for homomorphic encryption (twisted Edwards, BN254 base field)
+- **Hardhat** — Solidity compilation, testing, and deployment
+- **ethers.js v6** — blockchain interaction
+- **Express** — HTTP servers for datastream and processor
+- **NAPI-RS** — Rust ↔ Node.js bridge for performance-critical crypto
+- **Vite** — browser builds for zkp-circuits, privacy-lib, and client-sdk
 
 ## License
 
-[Add your license information here]
+Apache 2.0 — see [LICENSE](LICENSE) for details.

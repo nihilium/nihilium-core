@@ -130,9 +130,7 @@ export class EVMDataStreamNonZK implements IDataStream {
                 await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
                 console.log("Recovered from last unseen", lastInsertEvent)
             }
-                //await this.persistence.storeGlobalRootTreeLeaf(event.newMerkleRoot.toString())
-                //TODO implement this
-                // this.globalTree.insert(event.newValueRoot.toString(16))
+              
             } catch (error) {
                 console.error("Error getting last insert event", error)
                 force = true
@@ -146,15 +144,12 @@ export class EVMDataStreamNonZK implements IDataStream {
            
             for(const event of events) {
                 await this.persistence.storeGlobalValueTreeLeaf(toPaddedHex(event.value), event.timestamp)
-                //await this.persistence.storeGlobalRootTreeLeaf(event.newMerkleRoot.toString())
-                //TODO implement this
-            // this.globalTree.insert(event.newValueRoot.toString(16))
+               
+               
             }
-            //this.globalRootTree = await this.persistence.getGlobalRootTree()
-            //this.globalValueTree = await this.persistence.getGlobalValueTree()
+            
         }
-        //The tree was updated but the process got shutdown whilst updating our global tree
-       
+        
         
         this.globalValueTree = await this.persistence.getGlobalValueTree()
     }
@@ -203,11 +198,8 @@ export class EVMDataStreamNonZK implements IDataStream {
             && this.merkleTree.elements.length > 1
             && this.on_chain_publishing_state.processing_local_tree == -1)
         ) {
-            console.log("Closing local tree")
+            console.log("Closing local tree, elements length", this.merkleTree.elements.length)
             this.merkleTree =  await createKeccakMerkelTree(this.depth, [])
-            
-          
-            
             
             this.on_chain_publishing_state.local_trees_to_process.push(this.getGlobalTreeIndex())
             this.lastKnownTimestamp = Date.now()
@@ -249,8 +241,7 @@ export class EVMDataStreamNonZK implements IDataStream {
                 this.on_chain_publishing_state.processing_local_tree = -1
                 this.on_chain_publishing_state.local_trees_to_process.shift()
                 await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
-                //We just add a random value to avoid generating similar roots
-                //await this.postData([toPaddedHex(generateRandom248BitNumber())])
+               
             }
         } catch (error) {
             console.error("Error processing global tree insert", error)

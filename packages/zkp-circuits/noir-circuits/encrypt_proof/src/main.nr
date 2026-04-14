@@ -2,6 +2,7 @@
 
 
 use noir_edwards::ScalarField;
+
 use noir_edwards::bjj::{BabyJubJub};
 use lib::encrypt::{Encode, Encypt};
 use lib::constants::{powers_of_two, BASE_POINT, IDENTITY_POINT};

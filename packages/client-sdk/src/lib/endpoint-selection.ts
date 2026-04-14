@@ -3,8 +3,8 @@ import { SelectableDataStream, SelectableProcessor } from "./types";
 import { API_PATHS } from "../api-endpoints";
 import * as nhsdk from "@nihilium/privacy-lib";
 import axios from "axios";
-//const apiEndpoint = "https://api.nihilium.io";
-var apiEndpoint = "http://localhost:8080";
+var apiEndpoint = "https://api.nihilium.io";
+//var apiEndpoint = "http://localhost:8080";
 export function setApiEndpoint(endpoint: string) {
     apiEndpoint = endpoint;
 }

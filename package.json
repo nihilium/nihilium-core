@@ -23,6 +23,7 @@
     "test": "npm run test --workspaces",
     "clean": "npm run clean --workspaces",
     "dev": "npm run dev --workspaces --if-present",
+    "publish-lib": "npm run build-lib && cd packages/client-sdk && npm run publish --access public",
     "build:watch": "npm run build:watch --workspaces --if-present"
   },
   "devDependencies": {

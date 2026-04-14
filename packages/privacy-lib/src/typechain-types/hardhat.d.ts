@@ -34,6 +34,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.HashFunction__factory>;
     getContractFactory(
+      name: "ChainedProofV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ChainedProofV2__factory>;
+    getContractFactory(
+      name: "HashFunctionV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.HashFunctionV2__factory>;
+    getContractFactory(
       name: "EmpheralMerkleTreeKeccak",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak__factory>;
@@ -49,6 +57,10 @@ declare module "hardhat/types/runtime" {
       name: "NihiliumRecoveryRegister",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.NihiliumRecoveryRegister__factory>;
+    getContractFactory(
+      name: "AdditionProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AdditionProof__factory>;
     getContractFactory(
       name: "Between",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -70,25 +82,41 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GreaterOrEqualThen__factory>;
     getContractFactory(
+      name: "Hash_tie",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Hash_tie__factory>;
+    getContractFactory(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
+    getContractFactory(
+      name: "KeccakPreImage",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.KeccakPreImage__factory>;
     getContractFactory(
       name: "KeccakTreeEntry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.KeccakTreeEntry__factory>;
     getContractFactory(
+      name: "ManualChoice",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ManualChoice__factory>;
+    getContractFactory(
+      name: "MerkleTreeProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MerkleTreeProof__factory>;
+    getContractFactory(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Opening_proof__factory>;
     getContractFactory(
+      name: "Poseidon2Verifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Poseidon2Verifier__factory>;
+    getContractFactory(
       name: "SmallerThan",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SmallerThan__factory>;
-    getContractFactory(
-      name: "SubTreeMerkleProof",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SubTreeMerkleProof__factory>;
     getContractFactory(
       name: "TestVerifyAlwaysTrue",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -101,6 +129,14 @@ declare module "hardhat/types/runtime" {
       name: "TopLevelMerkleProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TopLevelMerkleProof__factory>;
+    getContractFactory(
+      name: "ValueInjection",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ValueInjection__factory>;
+    getContractFactory(
+      name: "VerifyECDSA",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.VerifyECDSA__factory>;
     getContractFactory(
       name: "VerifyEDDSA",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -132,6 +168,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.HashFunction>;
     getContractAt(
+      name: "ChainedProofV2",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ChainedProofV2>;
+    getContractAt(
+      name: "HashFunctionV2",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.HashFunctionV2>;
+    getContractAt(
       name: "EmpheralMerkleTreeKeccak",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -151,6 +197,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.NihiliumRecoveryRegister>;
+    getContractAt(
+      name: "AdditionProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AdditionProof>;
     getContractAt(
       name: "Between",
       address: string | ethers.Addressable,
@@ -177,30 +228,50 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.GreaterOrEqualThen>;
     getContractAt(
+      name: "Hash_tie",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Hash_tie>;
+    getContractAt(
       name: "IVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IVerifier>;
+    getContractAt(
+      name: "KeccakPreImage",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.KeccakPreImage>;
     getContractAt(
       name: "KeccakTreeEntry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.KeccakTreeEntry>;
     getContractAt(
+      name: "ManualChoice",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ManualChoice>;
+    getContractAt(
+      name: "MerkleTreeProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MerkleTreeProof>;
+    getContractAt(
       name: "Opening_proof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Opening_proof>;
     getContractAt(
+      name: "Poseidon2Verifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Poseidon2Verifier>;
+    getContractAt(
       name: "SmallerThan",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.SmallerThan>;
-    getContractAt(
-      name: "SubTreeMerkleProof",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SubTreeMerkleProof>;
     getContractAt(
       name: "TestVerifyAlwaysTrue",
       address: string | ethers.Addressable,
@@ -216,6 +287,16 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.TopLevelMerkleProof>;
+    getContractAt(
+      name: "ValueInjection",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ValueInjection>;
+    getContractAt(
+      name: "VerifyECDSA",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.VerifyECDSA>;
     getContractAt(
       name: "VerifyEDDSA",
       address: string | ethers.Addressable,
@@ -243,6 +324,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.HashFunction>;
     deployContract(
+      name: "ChainedProofV2",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ChainedProofV2>;
+    deployContract(
+      name: "HashFunctionV2",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.HashFunctionV2>;
+    deployContract(
       name: "EmpheralMerkleTreeKeccak",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak>;
@@ -258,6 +347,10 @@ declare module "hardhat/types/runtime" {
       name: "NihiliumRecoveryRegister",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
+    deployContract(
+      name: "AdditionProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AdditionProof>;
     deployContract(
       name: "Between",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -279,25 +372,41 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GreaterOrEqualThen>;
     deployContract(
+      name: "Hash_tie",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Hash_tie>;
+    deployContract(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
+    deployContract(
+      name: "KeccakPreImage",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.KeccakPreImage>;
     deployContract(
       name: "KeccakTreeEntry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KeccakTreeEntry>;
     deployContract(
+      name: "ManualChoice",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ManualChoice>;
+    deployContract(
+      name: "MerkleTreeProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MerkleTreeProof>;
+    deployContract(
       name: "Opening_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
     deployContract(
+      name: "Poseidon2Verifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Poseidon2Verifier>;
+    deployContract(
       name: "SmallerThan",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SmallerThan>;
-    deployContract(
-      name: "SubTreeMerkleProof",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SubTreeMerkleProof>;
     deployContract(
       name: "TestVerifyAlwaysTrue",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -310,6 +419,14 @@ declare module "hardhat/types/runtime" {
       name: "TopLevelMerkleProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
+    deployContract(
+      name: "ValueInjection",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ValueInjection>;
+    deployContract(
+      name: "VerifyECDSA",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.VerifyECDSA>;
     deployContract(
       name: "VerifyEDDSA",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -341,6 +458,16 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.HashFunction>;
     deployContract(
+      name: "ChainedProofV2",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ChainedProofV2>;
+    deployContract(
+      name: "HashFunctionV2",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.HashFunctionV2>;
+    deployContract(
       name: "EmpheralMerkleTreeKeccak",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -360,6 +487,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.NihiliumRecoveryRegister>;
+    deployContract(
+      name: "AdditionProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AdditionProof>;
     deployContract(
       name: "Between",
       args: any[],
@@ -386,30 +518,50 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GreaterOrEqualThen>;
     deployContract(
+      name: "Hash_tie",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Hash_tie>;
+    deployContract(
       name: "IVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
+    deployContract(
+      name: "KeccakPreImage",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.KeccakPreImage>;
     deployContract(
       name: "KeccakTreeEntry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KeccakTreeEntry>;
     deployContract(
+      name: "ManualChoice",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ManualChoice>;
+    deployContract(
+      name: "MerkleTreeProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MerkleTreeProof>;
+    deployContract(
       name: "Opening_proof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Opening_proof>;
     deployContract(
+      name: "Poseidon2Verifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Poseidon2Verifier>;
+    deployContract(
       name: "SmallerThan",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SmallerThan>;
-    deployContract(
-      name: "SubTreeMerkleProof",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SubTreeMerkleProof>;
     deployContract(
       name: "TestVerifyAlwaysTrue",
       args: any[],
@@ -425,6 +577,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TopLevelMerkleProof>;
+    deployContract(
+      name: "ValueInjection",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ValueInjection>;
+    deployContract(
+      name: "VerifyECDSA",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.VerifyECDSA>;
     deployContract(
       name: "VerifyEDDSA",
       args: any[],

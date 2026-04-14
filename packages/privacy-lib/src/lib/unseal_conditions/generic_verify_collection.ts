@@ -1,4 +1,5 @@
-import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, ACTION_VALIDATE_DATA_ROOT, ChainedProof, ProvingState } from "./ChainedProof";
+import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, 
+    ACTION_VALIDATE_DATA_ROOT, ChainedProofV2 as ChainedProof, ProvingStateV2 as ProvingState } from "./ChainedProofV2";
 import { UnsealProofAction, CompiledChainedProofCollection } from "./types";
 import { IDataStream } from "../data_stream/types";
 import { ethers, Signer } from "ethers";

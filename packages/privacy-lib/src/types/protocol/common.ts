@@ -243,6 +243,8 @@ export type SingleUnsealRequest = {
     proof: HexString,
     public_signals: HexString[][],
     proofs:HexString[],
+    empheral_keys: HexString[],
+    cyphertexts: HexString[],
     data_stream_address: HexString, //TODO make this an array of possible addresses
     unseal_proof_actions: UnsealProofAction[],
     unseal_root_proof: ProofPath

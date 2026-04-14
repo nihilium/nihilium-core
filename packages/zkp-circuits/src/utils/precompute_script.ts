@@ -1,16 +1,16 @@
 import { babyJub } from "./types";
 const fs = require("fs");
-const ProgressBar = require("cli-progress");
+// /const ProgressBar = require("cli-progress");
 
-const bar = new ProgressBar.SingleBar({
-    format:
-        "Progress |" +
-        "{bar}" +
-        "| {percentage}% || {value}/{total} Chunks || Remaining time: {eta_formatted}",
-    barCompleteChar: "\u2588",
-    barIncompleteChar: "\u2591",
-    hideCursor: true,
-});
+// const bar = new ProgressBar.SingleBar({
+//     format:
+//         "Progress |" +
+//         "{bar}" +
+//         "| {percentage}% || {value}/{total} Chunks || Remaining time: {eta_formatted}",
+//     barCompleteChar: "\u2588",
+//     barIncompleteChar: "\u2591",
+//     hideCursor: true,
+// });
 
 /**
  * Build a lookup table to break discrete log for 32-bit scalars for decoding
@@ -32,22 +32,26 @@ export function precompute(precomputeSize: number, directoryName: string = "look
         fs.mkdirSync(directoryName);
         console.log(`Directory "${directoryName}" created.`);
     }
+    // if precompute already exists, return the path
+    if (fs.existsSync(path)) {
+        console.log(`Lookup table already exists at ${path}`);
+        return path;
+    }
     const range = 32 - precomputeSize;
     const upperBound = BigInt(2) ** BigInt(precomputeSize);
 
     let lookupTable: { [key: string]: string } = {};
     let key: string;
 
-    bar.start(Number(upperBound), 0);
+   // bar.start(Number(upperBound), 0);
 
     for (let xhi = BigInt(0); xhi < upperBound; xhi++) {
         key = babyJub.BASE.multiplyUnsafe(xhi * BigInt(2) ** BigInt(range))
             .toAffine()
             .x.toString();
         lookupTable[key] = xhi.toString(16);
-        bar.update(Number(xhi) + 1);
+        console.log(`Progress: ${Math.floor(((Number(xhi) + 1) / Number(upperBound)) * 100)}%`);
     }
-    bar.stop();
     var path = path.join(directoryName, `x${precomputeSize}xlookupTable.json`);
     fs.writeFileSync(path, JSON.stringify(lookupTable));
     return path;

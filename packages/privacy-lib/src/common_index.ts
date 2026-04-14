@@ -30,7 +30,7 @@ export {ChainedProofWrapper} from './lib/contract_wrappers/ChainedProofWrapper';
 
 //Proof, Module and collection constructions
 export {ProofLibraryType, StandardProofLibrary, standardProofs} from './lib/unseal_conditions/proofs';
-export {ModuleLibraryType, StandardModuleLibrary, standardModules} from './lib/unseal_conditions/modules';
+export {ModuleLibraryType, StandardModuleLibrary} from './lib/unseal_conditions/modules';
 import * as ProofTypes from './lib/unseal_conditions/proofs/types';
 export { ProofTypes };
 import * as ModuleTypes from './lib/unseal_conditions/modules/types';
@@ -49,9 +49,12 @@ export { CollectionTemplateTypes };
 //   EmpheralMerkleTree: EmpheralMerkleTreeWrapper,
 //   ChainedProofWrapper: ChainedProofWrapper
 // } 
+export * as standardModules from './lib/unseal_conditions/modules';
 
 import { StandardModuleLibrary } from './lib/unseal_conditions/modules';
 import { StandardProofLibrary } from './lib/unseal_conditions/proofs';
+
+
 //instances of the libraries
 export var proofLibrary = new StandardProofLibrary();
 export var moduleLibrary = new StandardModuleLibrary();

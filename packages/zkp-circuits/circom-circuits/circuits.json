@@ -1,8 +1,20 @@
 {
     "opening_proof": {
+      "file": "nihilium_core",
+      "protocol": "groth16",
+      "template": "NihiliumCore",
+      "params": [31, 8]
+     
+    },
+    "opening_proof_old": {
       "file": "validated_sig_he_add",
       "protocol": "groth16",
       "template": "ValidatedSigHEAdd"
      
+    },
+    "hash_tie": {
+      "file": "HashTie",
+      "protocol": "groth16",
+      "template": "HashTie"
     }
 }

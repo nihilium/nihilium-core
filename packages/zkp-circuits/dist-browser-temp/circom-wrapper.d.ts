@@ -53,7 +53,7 @@ export declare class WrappedCircomCircuit implements CircuitWrapper<any> {
      *   zkeyPath: 'https://ipfs.io/ipfs/QmYyy...' (IPFS URL)
      *   vkeyPath: 'https://ipfs.io/ipfs/QmZzz...' (IPFS URL)
      */
-    init(): Promise<void>;
+    init(forceFetch?: boolean): Promise<void>;
     /**
      * Generate a zero-knowledge proof for the given inputs.
      * Returns the proof object and public signals.

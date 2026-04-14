@@ -167,7 +167,7 @@ export class WrappedCircomCircuit implements CircuitWrapper<any> {
    *   zkeyPath: 'https://ipfs.io/ipfs/QmYyy...' (IPFS URL)
    *   vkeyPath: 'https://ipfs.io/ipfs/QmZzz...' (IPFS URL)
    */
-  async init(): Promise<void> {
+  async init(forceFetch: boolean = false): Promise<void> {
     // Check if paths are IPFS URLs
     const isIPFSUrl = (url: string) => url.includes('/ipfs/');
     
@@ -222,6 +222,11 @@ export class WrappedCircomCircuit implements CircuitWrapper<any> {
       this.snarkjs = await import('snarkjs');
       // Some distros expose default export; normalize
       if (this.snarkjs?.default?.groth16 && !this.snarkjs.groth16) this.snarkjs = this.snarkjs.default;
+    }
+    if (forceFetch) {
+      fetch(this.resolvedWasmPath)
+      fetch(this.resolvedZkeyPath)
+      
     }
   }
 

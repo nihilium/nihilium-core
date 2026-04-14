@@ -3,6 +3,7 @@ declare const unstringifyBigInts: (obj: object) => any;
 import { PrivKey, PubKey, Keypair, babyJub } from "./types";
 import { BabyJubAffinePoint, BabyJubExtPoint, SNARK_FIELD_SIZE } from "./types";
 import { ExtPointType } from "@noble/curves/abstract/edwards";
+export * as poseidonTools from "poseidon-lite";
 export { babyJub, SNARK_FIELD_SIZE };
 export type { BabyJubAffinePoint, BabyJubExtPoint, PrivKey, PubKey, Keypair };
 export declare function createNobleBlakeHash(data: Buffer): Buffer<ArrayBuffer>;
@@ -78,6 +79,11 @@ export declare function HEEncryptFromPoint(message: bigint, pubKey: ExtPointType
     encrypted_messages: ExtPointType[];
     nonces: bigint[];
 };
+export declare function SimpelElgamalEncrypt(message: bigint, pubKey: PubKey, bitSize?: number): {
+    ephemeral_key: string;
+    encrypted_message: string;
+};
+export declare function SimpelElgamalDecrypt(encrypted_message: string, ephemeral_key: string, privKey: PrivKey): bigint;
 export declare function HEEncrypt(message: bigint, pubKey: bigint[], nonces?: bigint[], exportNonces?: boolean): {
     ephemeral_keys: ExtPointType[];
     encrypted_messages: ExtPointType[];
@@ -86,6 +92,7 @@ export declare function HEEncrypt(message: bigint, pubKey: bigint[], nonces?: bi
 export declare function HEDecryptExternalSolver(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[], solve: (base_x: bigint, base_y: bigint, encoded_x: bigint, encoded_y: bigint) => bigint): Promise<bigint>;
 export declare function HEDecrypt(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[]): Promise<bigint>;
 export declare function HEDecryptSync(privKey: bigint, cypherTexts: bigint[], ephemeralKeys: bigint[]): bigint;
+export declare const hashExtPoints: (extPoints: ExtPointType[]) => bigint;
 export declare const hashCypherText: (message: bigint[], ephemeralKey: bigint[], relatedPublicKey: bigint[], preimage_hash: any, random_value: bigint, unseal_condition_root_hash: any, metadata_root_commit: any) => bigint;
 declare function pruneTo64Bits(originalValue: bigint): bigint;
 declare function pruneTo32Bits(bigInt253Bit: bigint): bigint;
@@ -125,7 +132,8 @@ declare function encryptAESBigInt(value: bigint, key: bigint): string;
  * @returns The decrypted BigInt value
  */
 declare function decryptAESBigInt(encryptedHex: string, key: bigint): bigint;
-declare function encryptECCBabyJub(message: bigint, recipientPubKey: PubKey): {
+declare function toBytesLE(bn: bigint, length?: number): Uint8Array;
+declare function encryptECCBabyJub(message: bigint, recipientPubKey: PubKey, nonce?: bigint | undefined, emperalKey?: ExtPointType | undefined): {
     ciphertextHex: string;
     R: {
         x: string;
@@ -181,8 +189,16 @@ export declare function encrypt(pubKey: PubKey, encodedMessage: BabyJubExtPoint,
  * @param ciphertext The ciphertext to decrypt
  */
 export declare function decrypt(privKey: PrivKey, ephemeral_key: BabyJubExtPoint, encrypted_message: BabyJubExtPoint): BabyJubExtPoint;
+export declare function HEAdd(empheralKey1: ExtPointType, empheralKey2: ExtPointType, encryptedMessage1: ExtPointType, encryptedMessage2: ExtPointType): {
+    ephemeralKey: ExtPointType;
+    encryptedMessage: ExtPointType;
+};
+export declare function HEAddAll(empheralKeys1: ExtPointType[], empheralKeys2: ExtPointType[], encryptedMessages1: ExtPointType[], encryptedMessages2: ExtPointType[]): {
+    ephemeralKeys: ExtPointType[];
+    encryptedMessages: ExtPointType[];
+};
 export declare function encrypt_s(message: BabyJubExtPoint, public_key: PubKey, nonce?: bigint): {
     ephemeral_key: ExtPointType;
     encrypted_message: ExtPointType;
 };
-export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };
+export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, toBytesLE, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };

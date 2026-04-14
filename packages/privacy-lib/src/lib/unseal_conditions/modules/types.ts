@@ -1,10 +1,12 @@
+import { toPaddedHex } from "../../utils";
 import { ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT, ACTION_STATIC_INPUT_FROM_USER } from "../ChainedProof";
+import { AddressMap } from "../collections/types";
 import { ProofLibraryType } from "../proofs";
 import { UnsealConditionProof } from "../proofs/types";
 import { UnsealProofAction } from "../types";
 
 
-export type IOType = "Timestamp" | "BigInt" | "Number" | "String" | "HexString" | "Randomness" | "Other" | IOType[];
+export type IOType = "Timestamp" | "BigInt" | "Number" | "String" | "HexString" | "Randomness" | "Other" | "Boolean" | IOType[];
 export type IO = {
     type_order: IOType[];
     user_input: boolean;
@@ -128,7 +130,7 @@ export class SignalEdge {
         if (this.mapping[0] === undefined || this.mapping[1] === undefined) {
             return false;
         }
-        if (this.input_type === "signal_pass") {
+        if (this.input_type === ModuleEdgeInput.signal_pass) {
             if (this.from === undefined) {
                 console.log("From is undefined");
                 return false;
@@ -143,7 +145,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "static_input") {
+        if (this.input_type === ModuleEdgeInput.static_input) {
             if (this.from !== undefined) {
                 console.log("From is not undefined");
                 return false;
@@ -154,7 +156,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "user_input") {
+        if (this.input_type === ModuleEdgeInput.user_input) {
             if (this.from !== undefined) {
                 console.log("From is not undefined");
                 return false;
@@ -165,7 +167,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "external_input") {
+        if (this.input_type === ModuleEdgeInput.external_input) {
             if (this.from !== undefined) {
                 console.log("From is not undefined");
                 return false;
@@ -176,18 +178,7 @@ export class SignalEdge {
             }
             return true;
         }
-        if (this.input_type === "link") {
-            // Link edges require a from node to define ordering
-            if (this.from === undefined) {
-                console.log("From is undefined for link edge");
-                return false;
-            }
-            if (this.to === undefined) {
-                console.log("To is undefined for link edge");
-                return false;
-            }
-            return true;
-        }
+        
         return false;
     }
 
@@ -306,9 +297,11 @@ export abstract class UnsealConditionModule {
     public short_description: string = "";
     public description: string = "";
     protected inputs: IOMap = {};
-    protected canModuleFork: boolean = false;
+    protected forkingProof: string | undefined = undefined;
+    protected dataStreamOutputFields: string[] = [];
     protected outputs: ModuleOutputMap = {};
     protected proofLibrary: ProofLibraryType;
+    
     protected proofs: { [key: string]: WrappedProof } = {};
     protected proofList: string[] = []
     protected edges: { [key: string]: SignalEdge } = {};
@@ -318,6 +311,10 @@ export abstract class UnsealConditionModule {
 
         this.proofLibrary = proofLibrary;
     }
+
+    getProofByIndex(proof_index: number): WrappedProof {
+        return this.proofs[this.proofList[proof_index]];
+    }
     getUserInputs(): IOMap {
 
         return this.inputs;
@@ -326,7 +323,7 @@ export abstract class UnsealConditionModule {
         return this.outputs;
     }
     canFork(): boolean {
-        return this.canModuleFork;
+        return this.forkingProof !== undefined;
     }
 
     addProof(proof: UnsealConditionProof, easyId: boolean = true): string {
@@ -351,7 +348,7 @@ export abstract class UnsealConditionModule {
         //    console.log("Proof id already exists, adding counter", proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString());
          //   return proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString();
         //}
-        console.log("Proof id created", proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString());
+       // console.log("Proof id created", proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString());
         return proof.data.name + (easyId ? "" : "_" + proof.data.version) + "_" + proofCounter.toString();
 
     }
@@ -362,14 +359,23 @@ export abstract class UnsealConditionModule {
         return true;
     }
 
-    getPassedSignalForProof(input_key: string, previous_signals: any[][]): any {
-
-    }
+   
 
     getInputEdgesForProof(proof_id: string): SignalEdge[] {
         return Object.values(this.edges).filter(edge => edge.to.id === proof_id);
     }
 
+    obtain_outputs(public_signals: any[][]): { [key: string]: any } {
+        var toReturn: { [key: string]: any } = {};
+        
+        for (var output_key of Object.keys(this.outputs)) {
+            var output = this.outputs[output_key];
+            var proof = this.proofs[output.proof_key];
+            toReturn[output_key] = public_signals[this.proofList.indexOf(this.outputs[output_key].proof_key)][
+                proof.proof.getSignalIndex(output.signal_key)[0]];
+        }
+        return toReturn;
+    }
 
     /**
      * Produces the proofs for the module
@@ -402,12 +408,12 @@ export abstract class UnsealConditionModule {
         return input_mapping;
     }
 
-    compile(external_node_id: string, address_map: { [key: string]: string }, input_mapping: {
+    compile(external_node_id: string, address_map: AddressMap, input_mapping: {
         [key: string]: {
             output_proof_index: number;
             output_signal_indexes: number[];
         }
-    }, current_proof_depth: number): CompiledModule {
+    }, current_proof_depth: number, fork: boolean = false): CompiledModule {
         //Check if all inputs are mapped
         for (var input of Object.keys(this.inputs)) {
             if (this.inputs[input].user_input === false) {
@@ -430,6 +436,9 @@ export abstract class UnsealConditionModule {
 
             var node = this.proofs[node_id];
             var compiled_node = node.proof.compile(address_map);
+            if(fork && this.forkingProof === node_id) {
+                compiled_node.prepare_action.params.verifier_must_be_true = false;
+            }
 
             if (compiled_node.prepare_action !== undefined) {
                 return_actions.push(compiled_node.prepare_action);
@@ -462,7 +471,7 @@ export abstract class UnsealConditionModule {
                         action: ACTION_STATIC_INPUT,
                         params: {
                             public_input_index: public_input_index,
-                            value: input_edge.mapping[1],
+                            value: toPaddedHex(BigInt(input_edge.mapping[0]), 32),
                         }
                     });
                 }
@@ -528,6 +537,8 @@ export abstract class UnsealConditionModule {
             outputs: output_map,
         };
     }
+
+    
 }
 
 
