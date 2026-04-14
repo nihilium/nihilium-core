@@ -108,7 +108,7 @@ export class ZKEmailModule extends UnsealConditionModule {
 
     async produce_proofs(proof_hex: string, public_inputs: any[]): Promise<ModuleProof> {
         var return_proofs = [proof_hex];
-        var return_public_inputs = [public_inputs];
+        var return_public_inputs = [public_inputs.map(input => toPaddedHex(BigInt(input)))];
         
         return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: this.obtain_outputs(return_public_inputs)}
 
