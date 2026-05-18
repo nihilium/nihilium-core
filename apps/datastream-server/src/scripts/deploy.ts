@@ -4,7 +4,7 @@ import { hideBin } from "yargs/helpers";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import { NETWORK_IDS, deployedProtocolContracts } from "@nihilium/privacy-lib";
+import { NETWORK_IDS, deployedProtocolContracts } from "@nihilium/core";
 
 dotenv.config();
 

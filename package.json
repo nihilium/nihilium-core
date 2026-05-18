@@ -5,7 +5,7 @@
   "workspaces": [
     "./packages/dlog-solver-rs",
     "./packages/zkp-circuits",    
-    "./packages/privacy-lib",
+    "./packages/core",
     "./packages/client-sdk",
     
     "./apps/datastream-server",
@@ -19,7 +19,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "build-circuits": "cd packages/zkp-circuits && npm run build",
-    "build-lib": "cd packages/zkp-circuits && npm run build && cd ../privacy-lib && npm run build && cd ../client-sdk && npm run build",
+    "build-lib": "cd packages/zkp-circuits && npm run build && cd ../core && npm run build && cd ../client-sdk && npm run build",
     "test": "npm run test --workspaces",
     "clean": "npm run clean --workspaces",
     "dev": "npm run dev --workspaces --if-present",

@@ -136,7 +136,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 circom/circuits/test/*
-/privacy-lib/circuits/*
+/core/circuits/*
 *.r1cs
 *.sym
 *.zkey
@@ -145,9 +145,9 @@ circom/circuits/test/*
 node_modules/*
 
 apps/datastream-server/.env-ganache
-packages/privacy-lib/anvil-state.json
-packages/privacy-lib/scripts/deployed-contracts-bytecode-31337.json
-packages/privacy-lib/scripts/deployed-contracts-bytecode-43113.json
+packages/core/anvil-state.json
+packages/core/scripts/deployed-contracts-bytecode-31337.json
+packages/core/scripts/deployed-contracts-bytecode-43113.json
 x19xlookupTable.json
 apps/processor/.env.anvil
 apps/processor/.env.avax

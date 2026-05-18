@@ -1,14 +1,14 @@
 import express from 'express';
 import cors from 'cors';
-import {  NETWORK_IDS, deployedProtocolContracts, DataStream, Persistence } from '@nihilium/privacy-lib';
+import {  NETWORK_IDS, deployedProtocolContracts, DataStream, Persistence } from '@nihilium/core';
 //import { Processor, deployedProtocolContracts, NETWORK_IDS, DataStream, Persistence } from '../../../packages/privacy-lib/src/index';
-// import { EVMDataStreamNonZK} from '@nihilium/privacy-lib/src/lib/data_stream/EVMDataStreamNonZK';
-// import { DataStreamFilePersistence } from '@nihilium/privacy-lib/src/lib/persistence/DataStreamFilePersistence';
+// import { EVMDataStreamNonZK} from '@nihilium/core/src/lib/data_stream/EVMDataStreamNonZK';
+// import { DataStreamFilePersistence } from '@nihilium/core/src/lib/persistence/DataStreamFilePersistence';
 import { ethers, Signer, Network } from 'ethers';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import 'dotenv/config'; 
-import { utils } from '@nihilium/privacy-lib';
+import { utils } from '@nihilium/core';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,7 +16,7 @@ dotenv.config();
 // "avax-testnet": {
 //         "url": "https://api.avax-test.network/ext/bc/C/rpc",
 //         "chainId": 43113
-//     }
+//     }    
 
 async function main() {
     const argv = await yargs(hideBin(process.argv))

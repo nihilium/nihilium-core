@@ -1,7 +1,7 @@
 import { SelectableDataStream, SelectableProcessor } from "./types";
 
 import { API_PATHS } from "../api-endpoints";
-import * as nhsdk from "@nihilium/privacy-lib";
+import * as nhsdk from "@nihilium/core";
 import axios from "axios";
 var apiEndpoint = "https://api.nihilium.io";
 //var apiEndpoint = "http://localhost:8080";

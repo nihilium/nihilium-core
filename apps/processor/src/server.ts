@@ -2,10 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { router as apiRouter } from './routes/api';
-import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/privacy-lib';
+import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/core';
 //Only for debugging purposes
 //import { Processor, deployedProtocolContracts, NETWORK_IDS } from '../../../packages/privacy-lib/src/index';
-//import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/privacy-lib/src/index';
+//import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/core/src/index';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { ethers, Network } from 'ethers';

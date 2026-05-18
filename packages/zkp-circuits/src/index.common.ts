@@ -17,14 +17,14 @@ import hashTieIPFS from './ipfsrefs/hash_tie.json';
 
 // Create IPFS configuration for opening_proof circuit
 const openingProofIPFSConfig: IPFSConfig = {
-  gateway: 'https://ipfs.io',
+  gateway: 'https://amethyst-hollow-lungfish-86.mypinata.cloud',
   circuitName: openingProofIPFS.circuitName,
   files: openingProofIPFS.files
 };
 
 // Create IPFS configuration for hash_tie circuit
 const hashTieIPFSConfig: IPFSConfig = {
-  gateway: 'https://ipfs.io',
+  gateway: 'https://amethyst-hollow-lungfish-86.mypinata.cloud',
   circuitName: hashTieIPFS.circuitName,
   files: hashTieIPFS.files
 };

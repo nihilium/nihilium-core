@@ -1,10 +1,10 @@
 // Example: re-export browser entry from privacy-lib
-import * as nhsdk from '@nihilium/privacy-lib'; 
-export * from '@nihilium/privacy-lib';
+import * as nhsdk from '@nihilium/core'; 
+export * from '@nihilium/core';
 import axios from "axios";
 import { SelectableDataStream, SelectableProcessor,  } from "./lib/types";
 import { getDatastreams, getProcessors, getProcessorEndpoint } from './lib/endpoint-selection';
-import { DataStream } from '@nihilium/privacy-lib';
+import { DataStream } from '@nihilium/core';
 import { circomHashTie, circomOpeningProof } from '@nihilium/zkp-circuits';
 export type SingleSealStoragePackage = nhsdk.protocolTypes.SingleSealStoragePackage;
 export { getFullDatastreams, getFullProcessors } from './lib/endpoint-selection';

@@ -10,7 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "paths": {
-      "@nihilium/privacy-lib/src/*": ["../../packages/privacy-lib/src/*"]
+      "@nihilium/core/src/*": ["../../packages/privacy-lib/src/*"]
     }
   },
   "include": ["src/**/*", "src/types/**/*"],

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Processor } from '@nihilium/privacy-lib';
-import { SingleSealRequest, SingleUnsealRequest } from '@nihilium/privacy-lib/dist/types/protocol/common';
+import { Processor } from '@nihilium/core';
+import { SingleSealRequest, SingleUnsealRequest } from '@nihilium/core/dist/types/protocol/common';
 /**
  * Process data received from the client
  * @param req Express request object

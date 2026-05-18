@@ -10,6 +10,7 @@
 //     return createHash("blake2b512");
 // }
 import * as ff from "ffjavascript";
+import { argon2d } from '@noble/hashes/argon2';
 //const ff = require("ffjavascript");
 const stringifyBigInts = ff.utils.stringifyBigInts;
 const unstringifyBigInts = ff.utils.unstringifyBigInts;
@@ -32,14 +33,15 @@ const CHUNK_MASK = (1n << CHUNK_SIZE) - 1n; // Mask for 32 bits: 0xFFFFFFFF
 export function createNobleBlakeHash(data) {
     return Buffer.from(blake2b(data, { dkLen: 32 }).slice(0, 32));
 }
-/**
- * Generate a random number of 125 bits.
- * @returns {BigInt} - A random 125-bit number.
- */
 export function generateRandom248BitNumber() {
     const randomBytesBuffer = portableRandomBytes(31); // 31 bytes = 248 bits
     // randomBytesBuffer[0] &= 0x1F; // Mask the first 3 bits to ensure the number is 125 bits
     return BigInt('0x' + randomBytesBuffer.toString('hex').padStart(62, '0'));
+}
+export function generateRandom240BitNumber() {
+    const randomBytesBuffer = portableRandomBytes(30); // 30 bytes = 240 bits
+    // randomBytesBuffer[0] &= 0x1F; // Mask the first 3 bits to ensure the number is 125 bits
+    return BigInt('0x' + randomBytesBuffer.toString('hex').padStart(60, '0'));
 }
 export function shrinkToBits(number, bits) {
     return number & ((1n << BigInt(bits)) - 1n);
@@ -209,6 +211,16 @@ export const bufferToBigInt = (buf) => BigInt('0x' + Buffer.from(buf).toString('
 export function coordinatesToExtPointBigint(x, y) {
     const affine_point = { x: x, y: y };
     return babyJub.fromAffine(affine_point);
+}
+var defaultOptions = { memory: 64 * 1024, iterations: 3, parallelism: 4 };
+export function portableArgon2(data, options = defaultOptions) {
+    const params = {
+        t: options.iterations, // iterations (time cost)
+        m: options.memory, // memory cost in KiB (~64 MiB)
+        p: options.parallelism, // parallelism
+        maxmem: 2 ** 28 - 1, // safety limit (~256 MB)
+    };
+    return Buffer.from(argon2d(data, Buffer.from(data), params).slice(0, data.length));
 }
 /**
  * Returns a Uint8Array of cryptographically secure random bytes.
@@ -441,6 +453,9 @@ function decryptAESBigInt(encryptedHex, key) {
 function toBytesLE(bn, length = 32) {
     const hex = bn.toString(16).padStart(length * 2, '0');
     return Uint8Array.from(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+}
+export function fromBytesLE(bytes) {
+    return bufferToBigInt(bytes);
 }
 // XOR helper
 function xor(a, b) {

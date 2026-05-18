@@ -7,11 +7,8 @@ export * as poseidonTools from "poseidon-lite";
 export { babyJub, SNARK_FIELD_SIZE };
 export type { BabyJubAffinePoint, BabyJubExtPoint, PrivKey, PubKey, Keypair };
 export declare function createNobleBlakeHash(data: Buffer): Buffer<ArrayBuffer>;
-/**
- * Generate a random number of 125 bits.
- * @returns {BigInt} - A random 125-bit number.
- */
 export declare function generateRandom248BitNumber(): bigint;
+export declare function generateRandom240BitNumber(): bigint;
 export declare function shrinkToBits(number: bigint, bits: number): bigint;
 /**
  * Split a very large number into chunks of 32 bits each.
@@ -64,6 +61,11 @@ export declare function combineTwoPublicKeysPlain(pubKey1: bigint[], pubKey2: bi
 declare function coordinatesToExtPoint(x: string, y: string): BabyJubExtPoint;
 export declare const bufferToBigInt: (buf: Buffer | Uint8Array) => bigint;
 export declare function coordinatesToExtPointBigint(x: bigint, y: bigint): BabyJubExtPoint;
+export declare function portableArgon2(data: Buffer, options?: {
+    memory: number;
+    iterations: number;
+    parallelism: number;
+}): Buffer;
 /**
  * Returns a Uint8Array of cryptographically secure random bytes.
  * This function works in both browser and Node.js environments.
@@ -133,6 +135,7 @@ declare function encryptAESBigInt(value: bigint, key: bigint): string;
  */
 declare function decryptAESBigInt(encryptedHex: string, key: bigint): bigint;
 declare function toBytesLE(bn: bigint, length?: number): Uint8Array;
+export declare function fromBytesLE(bytes: Uint8Array): bigint;
 declare function encryptECCBabyJub(message: bigint, recipientPubKey: PubKey, nonce?: bigint | undefined, emperalKey?: ExtPointType | undefined): {
     ciphertextHex: string;
     R: {

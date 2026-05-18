@@ -1,0 +1,27 @@
+{
+  "name": "New Collection",
+  "description": "Created with visual editor",
+  "starting_node": "UnsealOpeningModule_0",
+  "nodes": [
+    {
+      "node_id": "UnsealOpeningModule_0",
+      "module_name": "UnsealOpeningModule",
+      "public_inputs": []
+    }
+  ],
+  "edges": [],
+  "data_streams": [],
+  "forks": {
+    "root": [
+      "UnsealOpeningModule_0"
+    ]
+  },
+  "fork_list": [
+    "root"
+  ],
+  "node_to_fork_map": {
+    "UnsealOpeningModule_0": "root"
+  },
+  "index_counter": 4,
+  "comments": {}
+}

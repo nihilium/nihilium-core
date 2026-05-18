@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "outDir": "./test-dist",
+    "rootDir": "..",
+    "strict": false,
+    "types": ["node", "chai", "chai-as-promised"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+   
+    "skipLibCheck": true,
+  },
+  "ts-node": {
+    "transpileOnly": true
+  },
+  "exclude": ["node_modules", "./full.test.ts"],
+  "include": ["chained_proofs.test.ts", "full.test.ts", "../src/**/*"]
+}
