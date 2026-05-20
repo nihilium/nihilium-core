@@ -143,6 +143,12 @@ circom/circuits/test/*
 *.wtns
 *.wasm
 node_modules/*
+**/forge-std/*
+**/artifacts/*
+**/broadcast/*
+**/out/*
+**/cache_forge/*
+**/packages/registry/typechain-types/*
 
 apps/datastream-server/.env-ganache
 packages/core/anvil-state.json

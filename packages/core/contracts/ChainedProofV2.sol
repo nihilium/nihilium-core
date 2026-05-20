@@ -51,6 +51,11 @@ contract ChainedProofV2 {
 // After preparing we can set static values and pass earlier outputs to the next proof.
 // We then call chain_proof_verify
     function dryrun_prepare_next_proof(ProvingStateV2 calldata state, address _verifier, bool _verifierMustBeTrue, bytes32[] calldata _publicInputs, bytes calldata _proof) public pure returns (bytes32) {
+        ProvingStateV2 memory new_state = _dryrun_prepare_next_proof(state, _verifier, _verifierMustBeTrue, _publicInputs, _proof);
+        return _hashState(new_state);
+    }
+
+    function _dryrun_prepare_next_proof(ProvingStateV2 calldata state, address _verifier, bool _verifierMustBeTrue, bytes32[] calldata _publicInputs,     bytes calldata _proof) internal pure returns (ProvingStateV2 memory) {
         ProvingStateV2 memory new_state = state;
         // This would be the first call with empty state
         if(state.current_hash == bytes32(0)) {
@@ -61,7 +66,7 @@ contract ChainedProofV2 {
         new_state.prepared_proof = _proof;
         new_state.proof_verifier = _verifier;
         new_state.verifier_must_be_true = _verifierMustBeTrue;
-        return _hashState(new_state);
+        return new_state;
     }
 
 // V2: validate_data_root uses a flat output_signal_index (no output_proof_index)
