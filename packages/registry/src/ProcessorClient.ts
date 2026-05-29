@@ -20,13 +20,19 @@ import {
   ContractTransactionResponse,
 } from "ethers";
 import {
-  privateToPublic,
   buildProcessorKeyChallenge,
   generateSchnorrProof,
   keyId as computeKeyId,
   isOnCurve,
   isIdentity,
 } from "./babyjubjub";
+import {
+  deriveHEPublicKey,
+  deriveHEKeyScalar,
+  deriveSigningPublicKey,
+  deriveSigningKeyScalar,
+  normalizeSigningKeyMaterial,
+} from "@nihilium/zkp-circuits";
 import { StakeManager } from "./StakeManager";
 import { processorRegistryAbi } from "./abis";
 import type {
@@ -118,13 +124,22 @@ export class ProcessorClient {
    * Idempotent — skips silently if the derived public key already has a
    * registered owner on-chain.
    *
-   * @param hexPrivateKey  0x-prefixed 32-byte BJJ private key scalar
+   * Key derivation is type-specific:
+   *   "HE"      → blake2b + prune + shr3 (matches genPubKey / ElGamal)
+   *   "Signing" → EdDSA (@zk-kit/eddsa-poseidon); challenge binds keyMaterial as uint256(hex)
+   *
+   * @param hexPrivateKey  0x-prefixed 32-byte BJJ private key hex string
    * @param keyType        "HE" or "Signing"
    */
   async addKey(hexPrivateKey: string, keyType: KeyType): Promise<void> {
     this._requireRegistered();
 
-    const [keyX, keyY] = privateToPublic(hexPrivateKey);
+    // Derive public key and scalar using the correct path for each key type.
+    const [keyX, keyY]: [bigint, bigint] =
+      keyType === "HE"
+        ? deriveHEPublicKey(hexPrivateKey)
+        : await deriveSigningPublicKey(hexPrivateKey);
+
     if (!isOnCurve(keyX, keyY)) {
       throw new Error(`ProcessorClient: derived public key is not on curve (${keyType})`);
     }
@@ -138,14 +153,23 @@ export class ProcessorClient {
     if (existing[3] !== ZeroAddress) return; // already registered
 
     const keyTypeUint = keyType === "HE" ? 0 : 1;
+    const keyMaterial =
+      keyType === "Signing" ? normalizeSigningKeyMaterial(hexPrivateKey) : 0n;
     const challenge = buildProcessorKeyChallenge(
       this._address, keyX, keyY, keyTypeUint as 0 | 1,
-      this.config.contractAddress, this._chainId
+      this.config.contractAddress, this._chainId,
+      keyMaterial
     );
-    const { Rx, Ry, s } = generateSchnorrProof(hexPrivateKey, challenge);
+
+    const scalar =
+      keyType === "HE"
+        ? deriveHEKeyScalar(hexPrivateKey)
+        : await deriveSigningKeyScalar(hexPrivateKey);
+
+    const { Rx, Ry, s } = generateSchnorrProof(scalar, challenge);
 
     const tx: ContractTransactionResponse = await this.contract.addKey(
-      keyX, keyY, keyTypeUint, Rx, Ry, s
+      keyX, keyY, keyTypeUint, Rx, Ry, s, keyMaterial
     ) as ContractTransactionResponse;
     await tx.wait();
   }
@@ -255,9 +279,18 @@ export class ProcessorClient {
   /**
    * Derive the public key coordinates for a given private key without touching
    * the network — useful for pre-computing key IDs or sanity checks.
+   *
+   * @param hexPrivateKey  0x-prefixed 32-byte BJJ private key hex string
+   * @param keyType        "HE" or "Signing" — determines the derivation path
    */
-  derivePublicKey(hexPrivateKey: string): { x: bigint; y: bigint; keyId: string } {
-    const [x, y] = privateToPublic(hexPrivateKey);
+  async derivePublicKey(
+    hexPrivateKey: string,
+    keyType: KeyType
+  ): Promise<{ x: bigint; y: bigint; keyId: string }> {
+    const [x, y]: [bigint, bigint] =
+      keyType === "HE"
+        ? deriveHEPublicKey(hexPrivateKey)
+        : await deriveSigningPublicKey(hexPrivateKey);
     return { x, y, keyId: computeKeyId(x, y) };
   }
 

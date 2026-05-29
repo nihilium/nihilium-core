@@ -9,5 +9,6 @@ import type * as interfacesSol from "./Interfaces.sol";
 export type { interfacesSol };
 import type * as proofs from "./proofs";
 export type { proofs };
+export type { EmpheralDualMerkleTreeKeccak } from "./EmpheralDualMerkleTreeKeccak";
 export type { EmpheralMerkleTreeKeccak } from "./EmpheralMerkleTreeKeccak";
 export type { NihiliumRecoveryRegister } from "./NihiliumRecoveryRegister";

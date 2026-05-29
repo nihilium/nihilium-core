@@ -24,13 +24,16 @@ import {
   ContractTransactionResponse,
 } from "ethers";
 import {
-  privateToPublic,
   buildDatastreamKeyChallenge,
   generateSchnorrProof,
   keyId as computeKeyId,
   isOnCurve,
   isIdentity,
 } from "./babyjubjub";
+import {
+  deriveSigningPublicKey,
+  deriveSigningKeyScalar,
+} from "@nihilium/zkp-circuits";
 import { StakeManager } from "./StakeManager";
 import { datastreamRegistryAbi } from "./abis";
 import type { ProcessorMetadata, PendingRemoval, StakeManagerConfig } from "./types";
@@ -178,12 +181,15 @@ export class DatastreamClient {
    * Add a single Baby Jubjub signing key.
    * Idempotent — no-op if the key already has a registered owner on-chain.
    *
-   * @param hexPrivateKey  0x-prefixed 32-byte BJJ private key scalar
+   * Derivation: sha512(sk_bytes) + prune + shr3 + BASE8 — matches
+   * @zk-kit/eddsa-poseidon and the EdDSA ZK circuits.
+   *
+   * @param hexPrivateKey  0x-prefixed 32-byte BJJ private key hex string
    */
   async addKey(hexPrivateKey: string): Promise<void> {
     this._requireRegistered();
 
-    const [keyX, keyY] = privateToPublic(hexPrivateKey);
+    const [keyX, keyY] = await deriveSigningPublicKey(hexPrivateKey);
     if (!isOnCurve(keyX, keyY)) {
       throw new Error("DatastreamClient: derived public key is not on curve");
     }
@@ -199,7 +205,8 @@ export class DatastreamClient {
       this._address, keyX, keyY,
       this.config.contractAddress, this._chainId
     );
-    const { Rx, Ry, s } = generateSchnorrProof(hexPrivateKey, challenge);
+    const scalar = await deriveSigningKeyScalar(hexPrivateKey);
+    const { Rx, Ry, s } = generateSchnorrProof(scalar, challenge);
 
     const tx: ContractTransactionResponse = await this.contract.addKey(
       keyX, keyY, Rx, Ry, s
@@ -295,8 +302,14 @@ export class DatastreamClient {
     return (await this.getOnChainInfo()).keys.filter((k) => k.isActive);
   }
 
-  derivePublicKey(hexPrivateKey: string): { x: bigint; y: bigint; keyId: string } {
-    const [x, y] = privateToPublic(hexPrivateKey);
+  /**
+   * Derive the signing public key coordinates without touching the network.
+   * Uses the sha512 + prune + shr3 path (matching @zk-kit/eddsa-poseidon).
+   */
+  async derivePublicKey(
+    hexPrivateKey: string
+  ): Promise<{ x: bigint; y: bigint; keyId: string }> {
+    const [x, y] = await deriveSigningPublicKey(hexPrivateKey);
     return { x, y, keyId: computeKeyId(x, y) };
   }
 

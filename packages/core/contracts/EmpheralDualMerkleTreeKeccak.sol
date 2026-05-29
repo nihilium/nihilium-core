@@ -200,7 +200,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
 
      
       
-      emit TreeUpdate(currentIndex, insertValue, block.timestamp, newValueLeafHash);
+      emit TreeUpdate(currentIndex, insertValue, block.timestamp, newValueLeafHash, newDualLeafHash);
       
       return currentIndex;
   }

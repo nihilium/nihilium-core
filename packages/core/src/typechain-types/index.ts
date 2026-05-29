@@ -20,6 +20,8 @@ export type { ChainedProofV2 } from "./contracts/ChainedProofV2.sol/ChainedProof
 export { ChainedProofV2__factory } from "./factories/contracts/ChainedProofV2.sol/ChainedProofV2__factory";
 export type { HashFunctionV2 } from "./contracts/ChainedProofV2.sol/HashFunctionV2";
 export { HashFunctionV2__factory } from "./factories/contracts/ChainedProofV2.sol/HashFunctionV2__factory";
+export type { EmpheralDualMerkleTreeKeccak } from "./contracts/EmpheralDualMerkleTreeKeccak";
+export { EmpheralDualMerkleTreeKeccak__factory } from "./factories/contracts/EmpheralDualMerkleTreeKeccak__factory";
 export type { EmpheralMerkleTreeKeccak } from "./contracts/EmpheralMerkleTreeKeccak";
 export { EmpheralMerkleTreeKeccak__factory } from "./factories/contracts/EmpheralMerkleTreeKeccak__factory";
 export type { IDataStream } from "./contracts/Interfaces.sol/IDataStream";

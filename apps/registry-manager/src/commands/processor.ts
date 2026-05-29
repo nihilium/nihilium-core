@@ -23,6 +23,7 @@ import * as lib from "../lib/processor";
 import {
   printProcessorStatus,
   printKeyTable,
+  printDerivedProcessorKey,
   printStakeTable,
   printSpinner,
   printSuccess,
@@ -158,6 +159,30 @@ const keysDeactivateCmd = {
   },
 };
 
+const keysDeriveCmd = {
+  command:  "derive",
+  describe: "Derive public key coordinates and keyIds from configured env private keys",
+  handler: async () => {
+    const cfg = getProcessorConfig();
+    const stop = printSpinner("Deriving public key…");
+    try {
+      const derivedKeys = await lib.deriveConfiguredProcessorPublicKeys(cfg);
+      stop();
+      if (derivedKeys.length === 0) {
+        printInfo("No processor keys found in env. Set PROCESSOR_HE_PRIVATE_KEYS and/or PROCESSOR_SIGNING_PRIVATE_KEYS.");
+        return;
+      }
+      for (const d of derivedKeys) {
+        printDerivedProcessorKey({ keyType: d.keyType, x: d.x, y: d.y, keyId: d.keyId });
+      }
+    } catch (e) {
+      stop();
+      printError(String(e));
+      process.exit(1);
+    }
+  },
+};
+
 const keysCmd = {
   command:  "keys <action>",
   describe: "Manage registered keys",
@@ -165,7 +190,8 @@ const keysCmd = {
     y
       .command(keysListCmd)
       .command(keysDeactivateCmd)
-      .demandCommand(1, "Specify an action: list | deactivate")
+      .command(keysDeriveCmd)
+      .demandCommand(1, "Specify an action: list | deactivate | derive")
       .strict(),
   handler: () => undefined,
 };

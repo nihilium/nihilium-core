@@ -42,6 +42,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.HashFunctionV2__factory>;
     getContractFactory(
+      name: "EmpheralDualMerkleTreeKeccak",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EmpheralDualMerkleTreeKeccak__factory>;
+    getContractFactory(
       name: "EmpheralMerkleTreeKeccak",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak__factory>;
@@ -178,6 +182,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.HashFunctionV2>;
     getContractAt(
+      name: "EmpheralDualMerkleTreeKeccak",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EmpheralDualMerkleTreeKeccak>;
+    getContractAt(
       name: "EmpheralMerkleTreeKeccak",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -332,6 +341,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.HashFunctionV2>;
     deployContract(
+      name: "EmpheralDualMerkleTreeKeccak",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EmpheralDualMerkleTreeKeccak>;
+    deployContract(
       name: "EmpheralMerkleTreeKeccak",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.EmpheralMerkleTreeKeccak>;
@@ -467,6 +480,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.HashFunctionV2>;
+    deployContract(
+      name: "EmpheralDualMerkleTreeKeccak",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EmpheralDualMerkleTreeKeccak>;
     deployContract(
       name: "EmpheralMerkleTreeKeccak",
       args: any[],

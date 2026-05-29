@@ -78,6 +78,11 @@ processor keys deactivate <keyId>
     Permanently deactivate a key (prompts for confirmation).
     keyId is the 0x-prefixed bytes32 keccak256(keyX, keyY).
 
+processor keys derive
+    Derive public key coordinates for all keys in PROCESSOR_HE_PRIVATE_KEYS
+    and PROCESSOR_SIGNING_PRIVATE_KEYS without sending a tx.
+    Prints x and y in decimal form, and keyId in 0x-prefixed hex.
+
 processor stake list
     Show active stake and any pending removals for ETH and
     all committee-approved ERC-20 tokens.

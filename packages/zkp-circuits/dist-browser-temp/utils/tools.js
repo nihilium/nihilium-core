@@ -22,6 +22,7 @@ import { decode, encode } from "./decode";
 import { bytesToHex, concatBytes, hexToBytes } from "@noble/hashes/utils";
 import { sha256 } from "@noble/hashes/sha2";
 import * as zkJub from "@zk-kit/baby-jubjub";
+import { subOrder as BJJ_SUBGROUP_ORDER } from "@zk-kit/baby-jubjub";
 import { blake2b } from "@noble/hashes/blake2b";
 import { poseidon16, poseidon8 } from "poseidon-lite";
 export * as poseidonTools from "poseidon-lite";
@@ -646,3 +647,84 @@ function rerandomize(pubKey, ephemeral_key, encrypted_message, randomVal) {
     return { randomized_ephemeralKey, randomized_encryptedMessage };
 }
 export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, toBytesLE, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };
+// ---------------------------------------------------------------------------
+// Canonical key-derivation helpers for the Nihilium registry
+//
+// HE keys and signing keys use deliberately different derivation functions:
+//
+//   HE      — blake2b(sk_bytes) → prune → shr(3) → s' · BASE8
+//             Matches genPubKey / formatPrivKeyForBabyJub used in ElGamal.
+//
+//   Signing — sha512(sk_bytes)[0..32] → prune → shr(3) → s' · BASE8
+//             Matches @zk-kit/eddsa-poseidon used by the Processor and EdDSA circuits.
+//             Registry addKey challenge binds keyMaterial = uint256(hex secret) so leading
+//             zero nybbles in hex are not distinguished in the challenge preimage.
+//
+// Both helpers accept a 0x-prefixed hex string (matching env-var format).
+// The returned scalar is the value that should be used as the private key in
+// Schnorr proof-of-knowledge generation: pk = scalar · BASE8.
+// ---------------------------------------------------------------------------
+/** Canonical uint256 secret material (0x00abc and 0xabc are the same integer). */
+export function normalizeSigningKeyMaterial(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return BigInt(normalised) % BJJ_SUBGROUP_ORDER;
+}
+/**
+ * Raw secret bytes for EdDSA (@zk-kit/eddsa-poseidon) from canonical integer hex.
+ * Leading zero nybbles in the env string are not preserved as extra bytes.
+ */
+export function hexToSkBuffer(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return Buffer.from(BigInt(normalised).toString(16), "hex");
+}
+/**
+ * Derive the scalar used inside the HE (ElGamal) key derivation.
+ * This is `formatPrivKeyForBabyJub(BigInt(hexKey))` and matches the scalar
+ * used in `genPubKey` / `HEDecrypt` / `encrypt`.
+ *
+ * @param hexKey  0x-prefixed 32-byte private key hex string
+ */
+export function deriveHEKeyScalar(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return BigInt(normalised);
+}
+/**
+ * Derive the HE public key `[x, y]` from a raw private key hex string.
+ * Equivalent to `genPubKey(BigInt(hexKey))` but accepts a hex string and
+ * returns affine coordinates rather than an ExtPointType.
+ *
+ * @param hexKey  0x-prefixed 32-byte private key hex string
+ */
+export function deriveHEPublicKey(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return toBigIntArray(genPubKey(BigInt(normalised)));
+}
+// Lazy import cache so we don't pay the dynamic-import cost on every call
+let _zkeddsa = null;
+async function getZkEddsa() {
+    if (!_zkeddsa) {
+        _zkeddsa = await import("@zk-kit/eddsa-poseidon");
+    }
+    return _zkeddsa;
+}
+/**
+ * Derive the scalar used inside the EdDSA signing key derivation (Schnorr PoK).
+ * Matches `@zk-kit/eddsa-poseidon.deriveSecretScalar`.
+ *
+ * @param hexKey  0x-prefixed private key hex string
+ */
+export async function deriveSigningKeyScalar(hexKey) {
+    const zkeddsa = await getZkEddsa();
+    return zkeddsa.deriveSecretScalar(hexToSkBuffer(hexKey));
+}
+/**
+ * Derive the EdDSA signing public key `[x, y]` from a raw private key hex string.
+ * Matches `@zk-kit/eddsa-poseidon.derivePublicKey` used by the Processor and circuits.
+ *
+ * @param hexKey  0x-prefixed private key hex string
+ */
+export async function deriveSigningPublicKey(hexKey) {
+    const zkeddsa = await getZkEddsa();
+    const pk = zkeddsa.derivePublicKey(hexToSkBuffer(hexKey));
+    return pk;
+}

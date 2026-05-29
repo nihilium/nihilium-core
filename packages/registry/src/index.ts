@@ -47,17 +47,18 @@ export { StakeManager }     from "./StakeManager";
 // Contract ABIs (from Forge build artifacts)
 export { processorRegistryAbi, datastreamRegistryAbi, conditionVerifierRegistryAbi } from "./abis";
 
-// BJJ utilities — for proof generation and key derivation
+// BJJ utilities — Solidity-encoding layer (challenge builders, keyId, Schnorr PoK)
+// Key derivation lives in @nihilium/zkp-circuits:
+//   deriveHEPublicKey / deriveHEKeyScalar        — HE keys (blake2b path)
+//   deriveSigningPublicKey / deriveSigningKeyScalar — Signing keys (sha512 path)
 export {
   babyJub,
-  privateToPublic,
   generateSchnorrProof,
   buildProcessorKeyChallenge,
   buildDatastreamKeyChallenge,
   keyId,
   isOnCurve,
   isIdentity,
-  parsePrivateKey,
   FIELD_MODULUS,
   ORDER,
   BASE8_X,

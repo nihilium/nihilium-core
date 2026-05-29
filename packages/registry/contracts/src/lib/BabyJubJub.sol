@@ -253,6 +253,28 @@ library BabyJubJub {
     }
 
     // -------------------------------------------------------------------------
+    // Signing key material (canonical uint256, no leading-zero byte semantics)
+    // -------------------------------------------------------------------------
+
+    /// @dev Reduce secret material to a valid BASE8 subgroup scalar.
+    ///      `keyMaterial` is the integer value of the env secret (0x-prefixed hex
+    ///      interpreted as uint256).  Leading zero nybbles in the hex encoding are
+    ///      not distinguished: 0x00abc and 0xabc yield the same material.
+    function normalizeSigningScalar(uint256 keyMaterial) internal pure returns (uint256) {
+        return keyMaterial % ORDER;
+    }
+
+    /// @dev Signing public key from canonical secret material: pk = sk · BASE8
+    ///      where sk = normalizeSigningScalar(keyMaterial).
+    function deriveSigningPublicKey(uint256 keyMaterial)
+        internal
+        view
+        returns (uint256 x, uint256 y)
+    {
+        return scalarMul(normalizeSigningScalar(keyMaterial), BASE8_X, BASE8_Y);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 

@@ -130,7 +130,11 @@ export class Processor {
    */
   async initialize(): Promise<void> {
     this.zkeddsa = await import("@zk-kit/eddsa-poseidon");
-    this.signing_PublicKey = this.zkeddsa.derivePublicKey(Buffer.from(BigInt(this.signingPrivateKey).toString(16), 'hex'))
+    //cryptoTools.hexToSkBuffer(this.signingPrivateKey)
+    this.signing_PublicKey = (await cryptoTools.deriveSigningPublicKey(
+      "0x" + this.signingPrivateKey.toString(16)
+    )) as [bigint, bigint];
+    //this.signing_PublicKey = this.zkeddsa.derivePublicKey(Buffer.from(BigInt(this.signingPrivateKey).toString(16), 'hex'))
     //await encryptProofCircuit.init()
     //await validatedSigHeAddCircuit.init()
   

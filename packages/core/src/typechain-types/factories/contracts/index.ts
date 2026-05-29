@@ -5,5 +5,6 @@ export * as chainedProofSol from "./ChainedProof.sol";
 export * as chainedProofV2Sol from "./ChainedProofV2.sol";
 export * as interfacesSol from "./Interfaces.sol";
 export * as proofs from "./proofs";
+export { EmpheralDualMerkleTreeKeccak__factory } from "./EmpheralDualMerkleTreeKeccak__factory";
 export { EmpheralMerkleTreeKeccak__factory } from "./EmpheralMerkleTreeKeccak__factory";
 export { NihiliumRecoveryRegister__factory } from "./NihiliumRecoveryRegister__factory";

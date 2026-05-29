@@ -74,6 +74,32 @@ export async function deactivateKey(cfg: ProcessorConfig, keyId: string): Promis
   await (await client(cfg)).deactivateKey(keyId);
 }
 
+export async function deriveProcessorPublicKey(
+  cfg: ProcessorConfig,
+  privateKey: string,
+  keyType: "HE" | "Signing"
+): Promise<{ x: bigint; y: bigint; keyId: string }> {
+  return new ProcessorClient(cfg).derivePublicKey(privateKey, keyType);
+}
+
+export async function deriveConfiguredProcessorPublicKeys(
+  cfg: ProcessorConfig
+): Promise<Array<{ keyType: "HE" | "Signing"; privateKey: string; x: bigint; y: bigint; keyId: string }>> {
+  const c = new ProcessorClient(cfg);
+  const out: Array<{ keyType: "HE" | "Signing"; privateKey: string; x: bigint; y: bigint; keyId: string }> = [];
+
+  for (const privateKey of cfg.hePrivateKeys) {
+    const derived = await c.derivePublicKey(privateKey, "HE");
+    out.push({ keyType: "HE", privateKey, ...derived });
+  }
+  for (const privateKey of cfg.signingPrivateKeys) {
+    const derived = await c.derivePublicKey(privateKey, "Signing");
+    out.push({ keyType: "Signing", privateKey, ...derived });
+  }
+
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Stake management
 // ---------------------------------------------------------------------------

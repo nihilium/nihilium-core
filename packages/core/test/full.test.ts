@@ -188,14 +188,14 @@ describe("Processor-Client intereaction", () => {
       var he_encryption:cryptoTools.Keypair = cryptoTools.genKeypair()
       var signing_key:cryptoTools.Keypair = cryptoTools.genKeypair()
      // var bugger = cryptoTools.bigInt2Buffer(signing_key.privKey)
-      var addsPubKey = zkeddsa.derivePublicKey(cryptoTools.bigInt2Buffer(signing_key.privKey))
+      var addsPubKey = await cryptoTools.deriveSigningPublicKey("0x" + signing_key.privKey.toString(16))
       // var bigint_addsPubKey = [cryptoTools.bufferToBigInt(addsPubKey[0]), cryptoTools.bufferToBigInt(addsPubKey[1])]
       // var aaa = toBigIntArray(signing_key.pubKey)
       // var bbb = cryptoTools.toBigIntArray(cryptoTools.prv2pub(cryptoTools.bigInt2Buffer(signing_key.privKey)))
       // var ccc = cryptoTools.privateScalarToPubKey(signing_key.privKey)
       processor = new Processor(
-        signing_key.privKey.toString(), 
-        he_encryption.privKey.toString(),        
+        "0x" + signing_key.privKey.toString(16), 
+        "0x" + he_encryption.privKey.toString(16),        
         deployedProtocolContracts[NETWORK_IDS.CUSTOM]["ChainedProofV2"].address ,
         deployedProtocolContracts[NETWORK_IDS.CUSTOM]["opening_proof"].address ,        
         signers[0]

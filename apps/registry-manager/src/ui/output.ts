@@ -211,3 +211,80 @@ export function printError(msg: string): void {
 export function printInfo(msg: string): void {
   console.log(chalk.blue("ℹ") + "  " + msg);
 }
+
+export function printDerivedProcessorKey(data: {
+  keyType: "HE" | "Signing";
+  x: bigint;
+  y: bigint;
+  keyId: string;
+}): void {
+  console.log();
+  console.log(chalk.bold("Derived Processor Key"));
+  console.log(chalk.dim("Type:   ") + data.keyType);
+  console.log(chalk.dim("x (dec): ") + data.x.toString(10));
+  console.log(chalk.dim("y (dec): ") + data.y.toString(10));
+  console.log(chalk.dim("keyId:  ") + data.keyId);
+}
+
+export interface RegistryStakeListRow {
+  kind: "Processor" | "Datastream";
+  address: string;
+  name: string;
+  active: boolean;
+  gracePeriodBlocks: bigint;
+  pendingGracePeriodBlocks: bigint;
+  token: string;
+  activeStake: bigint;
+  pendingRemovalAmount: bigint;
+  withdrawableAtBlock: bigint;
+}
+
+export function printRegistryStakeList(rows: RegistryStakeListRow[]): void {
+  if (rows.length === 0) {
+    console.log(chalk.dim("No processors or datastreams found."));
+    return;
+  }
+
+  const t = new Table({
+    head: [
+      chalk.cyan("Type"),
+      chalk.cyan("Address"),
+      chalk.cyan("Name"),
+      chalk.cyan("State"),
+      chalk.cyan("Grace"),
+      chalk.cyan("Pending Grace"),
+      chalk.cyan("Token"),
+      chalk.cyan("Active Stake"),
+      chalk.cyan("Pending Removal"),
+      chalk.cyan("Withdrawable @"),
+    ],
+    style: { head: [], border: [] },
+  });
+
+  for (const r of rows) {
+    const state = r.active ? chalk.green("active") : chalk.red("inactive");
+    const token = r.token === ZeroAddress ? "ETH" : shortHex(r.token, 6);
+    const activeStake = formatToken(r.activeStake, r.token);
+    const pending = r.pendingRemovalAmount > 0n
+      ? formatToken(r.pendingRemovalAmount, r.token)
+      : chalk.dim("—");
+    const withdrawable = r.withdrawableAtBlock > 0n
+      ? r.withdrawableAtBlock.toString()
+      : chalk.dim("—");
+
+    t.push([
+      r.kind,
+      shortHex(r.address, 8),
+      r.name || chalk.dim("—"),
+      state,
+      r.gracePeriodBlocks.toString(),
+      r.pendingGracePeriodBlocks > 0n ? r.pendingGracePeriodBlocks.toString() : chalk.dim("—"),
+      token,
+      activeStake,
+      pending,
+      withdrawable,
+    ]);
+  }
+
+  console.log(t.toString());
+}

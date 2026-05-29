@@ -205,3 +205,40 @@ export declare function encrypt_s(message: BabyJubExtPoint, public_key: PubKey, 
     encrypted_message: ExtPointType;
 };
 export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, toBytesLE, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };
+/** Canonical uint256 secret material (0x00abc and 0xabc are the same integer). */
+export declare function normalizeSigningKeyMaterial(hexKey: string): bigint;
+/**
+ * Raw secret bytes for EdDSA (@zk-kit/eddsa-poseidon) from canonical integer hex.
+ * Leading zero nybbles in the env string are not preserved as extra bytes.
+ */
+export declare function hexToSkBuffer(hexKey: string): Buffer;
+/**
+ * Derive the scalar used inside the HE (ElGamal) key derivation.
+ * This is `formatPrivKeyForBabyJub(BigInt(hexKey))` and matches the scalar
+ * used in `genPubKey` / `HEDecrypt` / `encrypt`.
+ *
+ * @param hexKey  0x-prefixed 32-byte private key hex string
+ */
+export declare function deriveHEKeyScalar(hexKey: string): bigint;
+/**
+ * Derive the HE public key `[x, y]` from a raw private key hex string.
+ * Equivalent to `genPubKey(BigInt(hexKey))` but accepts a hex string and
+ * returns affine coordinates rather than an ExtPointType.
+ *
+ * @param hexKey  0x-prefixed 32-byte private key hex string
+ */
+export declare function deriveHEPublicKey(hexKey: string): [bigint, bigint];
+/**
+ * Derive the scalar used inside the EdDSA signing key derivation (Schnorr PoK).
+ * Matches `@zk-kit/eddsa-poseidon.deriveSecretScalar`.
+ *
+ * @param hexKey  0x-prefixed private key hex string
+ */
+export declare function deriveSigningKeyScalar(hexKey: string): Promise<bigint>;
+/**
+ * Derive the EdDSA signing public key `[x, y]` from a raw private key hex string.
+ * Matches `@zk-kit/eddsa-poseidon.derivePublicKey` used by the Processor and circuits.
+ *
+ * @param hexKey  0x-prefixed private key hex string
+ */
+export declare function deriveSigningPublicKey(hexKey: string): Promise<[bigint, bigint]>;

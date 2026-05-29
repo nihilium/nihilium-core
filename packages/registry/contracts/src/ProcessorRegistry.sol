@@ -318,15 +318,26 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
     /// @notice Add a Baby Jubjub key pair to the caller's processor record.
     ///
     ///         Schnorr proof-of-knowledge — challenge:
-    ///           keccak256(msg.sender, keyX, keyY, uint256(keyType),
-    ///                     address(this), block.chainid) % BJJ_ORDER
+    ///           HE keys:
+    ///             keccak256(msg.sender, keyX, keyY, uint256(keyType),
+    ///                       address(this), block.chainid) % BJJ_ORDER
+    ///             Pass `keyMaterial = 0`.
+    ///
+    ///           Signing keys:
+    ///             keccak256(msg.sender, keyX, keyY, uint256(keyType), keyMaterial,
+    ///                       address(this), block.chainid) % BJJ_ORDER
+    ///             `keyMaterial` is the uint256 value of the env secret hex string
+    ///             (leading zero bytes in hex are not distinguished from the integer).
+    ///             Off-chain, keyX/keyY and the PoK scalar use the EdDSA derivation;
+    ///             only the Schnorr challenge binds keyMaterial.
     function addKey(
         uint256 keyX,
         uint256 keyY,
         KeyType keyType,
         uint256 proofRx,
         uint256 proofRy,
-        uint256 proofS
+        uint256 proofS,
+        uint256 keyMaterial
     ) external onlyActiveProcessor(msg.sender) {
         require(BabyJubJub.isOnCurve(keyX, keyY),   "ProcessorRegistry: key not on curve");
         require(!BabyJubJub.isIdentity(keyX, keyY), "ProcessorRegistry: key is identity");
@@ -334,14 +345,26 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         bytes32 keyId = keccak256(abi.encodePacked(keyX, keyY));
         require(!keyRegistered[keyId], "ProcessorRegistry: key already registered");
 
-        uint256 challenge = BabyJubJub.hashToScalar(
-            keccak256(abi.encodePacked(
+        if (keyType == KeyType.HE) {
+            require(keyMaterial == 0, "ProcessorRegistry: HE keys must pass keyMaterial=0");
+        }
+
+        bytes32 challengeDigest = keyType == KeyType.Signing
+            ? keccak256(abi.encodePacked(
+                msg.sender, keyX, keyY,
+                uint256(keyType),
+                keyMaterial,
+                address(this),
+                block.chainid
+            ))
+            : keccak256(abi.encodePacked(
                 msg.sender, keyX, keyY,
                 uint256(keyType),
                 address(this),
                 block.chainid
-            ))
-        );
+            ));
+
+        uint256 challenge = BabyJubJub.hashToScalar(challengeDigest);
         require(
             BabyJubJub.verifySchnorr(keyX, keyY, proofRx, proofRy, proofS, challenge),
             "ProcessorRegistry: invalid key PoK"
@@ -537,6 +560,17 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
 
     function getProcessorKeys(address processor) external view returns (bytes32[] memory) {
         return processorKeys[processor];
+    }
+
+    /// @notice Preview Signing public-key coordinates from env secret material.
+    ///         `secretMaterial` is the uint256 value of the 0x-prefixed hex secret;
+    ///         leading zero nybbles in hex are not distinguished from the integer.
+    function previewSigningPublicKey(uint256 secretMaterial)
+        external
+        view
+        returns (uint256 x, uint256 y)
+    {
+        return BabyJubJub.deriveSigningPublicKey(secretMaterial);
     }
 
     /// @notice All approved ERC-20 stake tokens.
