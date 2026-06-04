@@ -67,6 +67,32 @@ export async function confirmStakeFinalize(token: string, amount: bigint): Promi
 /**
  * Ask the user to confirm deactivating a key.
  */
+export async function confirmMetadataUpdate(fields: {
+  name: string;
+  description: string;
+  url: string;
+  tor: string;
+}): Promise<boolean> {
+  const lines = [
+    fields.name && `name: ${fields.name}`,
+    fields.description && `description: ${fields.description}`,
+    fields.url && `url: ${fields.url}`,
+    fields.tor && `tor: ${fields.tor}`,
+  ].filter(Boolean);
+
+  const { ok } = await inquirer.prompt<{ ok: boolean }>([
+    {
+      type: "confirm",
+      name: "ok",
+      message:
+        `Update on-chain metadata?\n` +
+        chalk.dim(lines.join("\n") || "(all fields empty)"),
+      default: false,
+    },
+  ]);
+  return ok;
+}
+
 export async function confirmDeactivateKey(keyId: string): Promise<boolean> {
   const { ok } = await inquirer.prompt<{ ok: boolean }>([
     {

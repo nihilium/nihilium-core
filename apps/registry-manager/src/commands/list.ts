@@ -94,33 +94,31 @@ async function loadProcessorRows(
 ): Promise<RegistryStakeListRow[]> {
   const processors = [configuredProcessorAddress.toLowerCase()];
 
-  const tokens = [ZeroAddress, ...await contract.getAllowedTokens() as string[]];
+  const tokens = [ZeroAddress];
   const rows: RegistryStakeListRow[] = [];
 
   for (const processor of processors) {
     const info = await contract.getProcessorInfo(processor) as ProcessorInfoTuple;
-    const [gracePeriodBlocks, pendingGracePeriodBlocks, , active, metadata] = info;
+    const [gracePeriodSeconds, pendingGracePeriodSeconds, , active, metadata] = info;
     if (!includeInactive && !active) continue;
 
     for (const token of tokens) {
       const activeStake = await contract.stakes(processor, token) as bigint;
       const pending = await contract.pendingRemovals(processor, token) as PendingRemovalTuple;
       const pendingAmount = pending[0];
-      const withdrawableAtBlock = pending[1] === 0n
-        ? 0n
-        : await contract.removalAvailableAtBlock(processor, token) as bigint;
+      const withdrawableAt = pending[1] === 0n ? 0n : pending[1] + gracePeriodSeconds;
 
       rows.push({
         kind: "Processor",
         address: processor,
         name: metadata[0],
         active,
-        gracePeriodBlocks,
-        pendingGracePeriodBlocks,
+        gracePeriodSeconds,
+        pendingGracePeriodSeconds,
         token,
         activeStake,
         pendingRemovalAmount: pendingAmount,
-        withdrawableAtBlock,
+        withdrawableAt,
       });
     }
   }
@@ -141,28 +139,26 @@ async function loadDatastreamRows(contract: Contract, includeInactive: boolean):
 
   for (const operator of operators) {
     const info = await contract.getDatastreamInfo(operator) as DatastreamInfoTuple;
-    const [, gracePeriodBlocks, pendingGracePeriodBlocks, , active, metadata] = info;
+    const [, gracePeriodSeconds, pendingGracePeriodSeconds, , active, metadata] = info;
     if (!includeInactive && !active) continue;
 
     for (const token of tokens) {
       const activeStake = await contract.stakes(operator, token) as bigint;
       const pending = await contract.pendingRemovals(operator, token) as PendingRemovalTuple;
       const pendingAmount = pending[0];
-      const withdrawableAtBlock = pending[1] === 0n
-        ? 0n
-        : await contract.removalAvailableAtBlock(operator, token) as bigint;
+      const withdrawableAt = pending[1] === 0n ? 0n : pending[1] + gracePeriodSeconds;
 
       rows.push({
         kind: "Datastream",
         address: operator,
         name: metadata[0],
         active,
-        gracePeriodBlocks,
-        pendingGracePeriodBlocks,
+        gracePeriodSeconds,
+        pendingGracePeriodSeconds,
         token,
         activeStake,
         pendingRemovalAmount: pendingAmount,
-        withdrawableAtBlock,
+        withdrawableAt,
       });
     }
   }

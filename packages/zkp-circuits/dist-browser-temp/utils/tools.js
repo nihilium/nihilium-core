@@ -686,7 +686,7 @@ export function hexToSkBuffer(hexKey) {
  */
 export function deriveHEKeyScalar(hexKey) {
     const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
-    return BigInt(normalised);
+    return formatPrivKeyForBabyJub(BigInt(normalised));
 }
 /**
  * Derive the HE public key `[x, y]` from a raw private key hex string.

@@ -7,7 +7,12 @@
 
 import { DatastreamClient } from "@nihilium/registry";
 import type { PendingRemoval } from "@nihilium/registry";
-import type { DatastreamConfig, DatastreamOnChainInfo, DatastreamKeyRecord } from "@nihilium/registry";
+import type {
+  DatastreamConfig,
+  DatastreamMetadata,
+  DatastreamOnChainInfo,
+  DatastreamKeyRecord,
+} from "@nihilium/registry";
 import { ZeroAddress } from "ethers";
 
 // ---------------------------------------------------------------------------
@@ -43,6 +48,14 @@ export async function registerDatastream(cfg: DatastreamConfig): Promise<void> {
   const c = await client(cfg);
   await c.register();
   await c.addAllKeys();
+}
+
+export async function updateDatastreamMetadata(
+  cfg: DatastreamConfig,
+  metadata: DatastreamMetadata
+): Promise<void> {
+  const c = await client(cfg);
+  await c.updateMetadata(metadata);
 }
 
 // ---------------------------------------------------------------------------

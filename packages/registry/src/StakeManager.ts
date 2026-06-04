@@ -94,7 +94,7 @@ export class StakeManager {
     if (pending !== null) {
       throw new Error(
         `StakeManager: removal already pending for this token` +
-        ` (amount: ${pending.amount}, withdrawable at block ${pending.withdrawableAtBlock})`
+        ` (amount: ${pending.amount}, withdrawable at ${pending.withdrawableAt})`
       );
     }
     return this._call("signalStakeRemoval", t, amount);
@@ -110,11 +110,11 @@ export class StakeManager {
     if (pending === null) {
       throw new Error("StakeManager: no pending removal for this token");
     }
-    const currentBlock = BigInt(await this.provider.getBlockNumber());
-    if (currentBlock < pending.withdrawableAtBlock) {
-      const remaining = pending.withdrawableAtBlock - currentBlock;
+    if (!(await this._isGracePeriodElapsed(pending))) {
+      const remaining = await this._gracePeriodRemaining(pending);
+      const unit = pending.withdrawableAt > 1_000_000_000n ? "second(s)" : "block(s)";
       throw new Error(
-        `StakeManager: grace period not elapsed — ${remaining} block(s) remaining`
+        `StakeManager: grace period not elapsed — ${remaining} ${unit} remaining`
       );
     }
     return this._call("finalizeStakeRemoval", t);
@@ -133,29 +133,30 @@ export class StakeManager {
   async getPendingRemoval(token: string): Promise<PendingRemoval | null> {
     const t = this._canonical(token);
     const address = await this.signer.getAddress();
-    const [amount, signaledAtBlock]: [bigint, bigint] =
+    const [amount, signaledAt]: [bigint, bigint] =
       await this.contract.pendingRemovals(address, t) as [bigint, bigint];
-    if (signaledAtBlock === 0n) return null;
+    if (signaledAt === 0n) return null;
 
-    const withdrawableAtBlock: bigint =
-      await this.contract.removalAvailableAtBlock(address, t) as bigint;
-    return { token: t, amount, signaledAtBlock, withdrawableAtBlock };
+    const withdrawableAt = await this._withdrawableAt(address, t, signaledAt);
+    return { token: t, amount, signaledAt, withdrawableAt };
   }
 
-  /** Block number after which `finalizeStakeRemoval` will succeed. Returns 0n if none pending. */
-  async removalAvailableAtBlock(token: string): Promise<bigint> {
-    return this.contract.removalAvailableAtBlock(
-      await this.signer.getAddress(),
-      this._canonical(token)
-    ) as Promise<bigint>;
+  /** When withdrawal is allowed (unix seconds or block number, depending on contract version). */
+  async removalAvailableAt(token: string): Promise<bigint> {
+    const address = await this.signer.getAddress();
+    const t = this._canonical(token);
+    const [, signaledAt]: [bigint, bigint] =
+      await this.contract.pendingRemovals(address, t) as [bigint, bigint];
+    if (signaledAt === 0n) return 0n;
+    return this._withdrawableAt(address, t, signaledAt);
   }
 
-  /** All committee-approved ERC-20 stake tokens (ETH not listed, always valid). */
+  /** ERC-20 stake tokens on the allowlist (DatastreamRegistry only; ETH not listed). */
   async getAllowedTokens(): Promise<string[]> {
     return this.contract.getAllowedTokens() as Promise<string[]>;
   }
 
-  /** Whether the given ERC-20 is approved for staking (ETH always returns true). */
+  /** Whether the ERC-20 is on the allowlist (DatastreamRegistry only; ETH always true). */
   async isTokenAllowed(token: string): Promise<boolean> {
     if (this._canonical(token) === ZeroAddress) return true;
     return this.contract.allowedStakeTokens(token) as Promise<boolean>;
@@ -167,6 +168,58 @@ export class StakeManager {
 
   private _canonical(token: string): string {
     return token === "0x0" ? ZeroAddress : token;
+  }
+
+  /** True when `withdrawableAt` is a unix timestamp (seconds), not a block number. */
+  private _usesTimestampGrace(withdrawableAt: bigint): boolean {
+    return withdrawableAt > 1_000_000_000n;
+  }
+
+  private async _gracePeriodFor(operator: string): Promise<bigint> {
+    try {
+      const info = await this.contract.processors(operator) as [bigint, ...unknown[]];
+      return info[0];
+    } catch {
+      const info = await this.contract.datastreams(operator) as [string, bigint, ...unknown[]];
+      return info[1];
+    }
+  }
+
+  private async _withdrawableAt(
+    operator: string,
+    token: string,
+    signaledAt: bigint
+  ): Promise<bigint> {
+    try {
+      const at = await this.contract.removalAvailableAt.staticCall(operator, token) as bigint;
+      if (at !== 0n) return at;
+    } catch { /* new view missing on older deployments */ }
+
+    try {
+      const at = await this.contract.removalAvailableAtBlock.staticCall(operator, token) as bigint;
+      if (at !== 0n) return at;
+    } catch { /* compute below */ }
+
+    const grace = await this._gracePeriodFor(operator);
+    return signaledAt + grace;
+  }
+
+  private async _isGracePeriodElapsed(pending: PendingRemoval): Promise<boolean> {
+    if (this._usesTimestampGrace(pending.withdrawableAt)) {
+      const now = BigInt(Math.floor(Date.now() / 1000));
+      return now >= pending.withdrawableAt;
+    }
+    const block = BigInt(await this.provider.getBlockNumber());
+    return block >= pending.withdrawableAt;
+  }
+
+  private async _gracePeriodRemaining(pending: PendingRemoval): Promise<bigint> {
+    if (this._usesTimestampGrace(pending.withdrawableAt)) {
+      const now = BigInt(Math.floor(Date.now() / 1000));
+      return pending.withdrawableAt > now ? pending.withdrawableAt - now : 0n;
+    }
+    const block = BigInt(await this.provider.getBlockNumber());
+    return pending.withdrawableAt > block ? pending.withdrawableAt - block : 0n;
   }
 
   private _call(fn: string, ...args: unknown[]): Promise<ContractTransactionResponse> {

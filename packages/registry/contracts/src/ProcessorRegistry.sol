@@ -12,18 +12,15 @@ import "./Interfaces.sol";
 ///
 ///         Registration and staking are intentionally separate:
 ///           1. `register()` — creates the processor record with metadata.
-///           2. `addStake(token, amount)` — deposit ETH or any committee-approved
-///              ERC-20 as stake.  Multiple tokens may be staked simultaneously.
+///           2. `addStake(token, amount)` — deposit ETH or any ERC-20 as stake.
+///              Multiple tokens may be staked simultaneously.
 ///           3. `signalStakeRemoval(token, amount)` — begin the grace-period
 ///              countdown for a specific token amount.
 ///           4. `finalizeStakeRemoval(token)` — withdraw after the grace period.
 ///
 ///         Stake tokens
 ///         ────────────
-///         ETH (address(0)) is always accepted.  Additional ERC-20 tokens may
-///         be added by the committee (the list can only grow, never shrink).
-///         Stablecoins are deliberately excluded per §8.6 — only assets whose
-///         transfer logic cannot be frozen by a third party should be added.
+///         ETH (address(0)) or any ERC-20 token address may be used.
 ///
 ///         Slashing
 ///         ────────
@@ -67,8 +64,8 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
 
     /// @dev Per-processor state (no stake stored here — see `stakes` mapping).
     struct ProcessorInfo {
-        uint256 gracePeriodBlocks;
-        uint256 pendingGracePeriodBlocks;
+        uint256 gracePeriodSeconds;
+        uint256 pendingGracePeriodSeconds;
         uint256 pendingGracePeriodRequestedAt;
         bool    active;
         ProcessorMetadata metadata;
@@ -77,7 +74,7 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
     /// @dev A pending stake-removal request for one token.
     struct PendingRemoval {
         uint256 amount;
-        uint256 signaledAtBlock; // 0 = no pending removal
+        uint256 signaledAt; // block.timestamp when signalled; 0 = none pending
     }
 
     // -------------------------------------------------------------------------
@@ -94,22 +91,18 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
     /// @dev pendingRemovals[processor][token].
     mapping(address => mapping(address => PendingRemoval))   public pendingRemovals;
 
-    /// @dev ERC-20 tokens approved for staking.  ETH (address(0)) is always
-    ///      accepted and is NOT stored in this mapping.
-    mapping(address => bool)  public allowedStakeTokens;
-    address[]                 public allowedTokenList;
-
     address public committee;
     /// @dev Receives all slashed stake.  Defaults to committee at construction;
     ///      independently settable by the committee.
     address public rewardRecipient;
+    /// @dev The address that can slash keys and processors. Should be a contract
     address public slashingAuthority;
 
     // -------------------------------------------------------------------------
     // Events
     // -------------------------------------------------------------------------
 
-    event ProcessorRegistered(address indexed processor, uint256 gracePeriodBlocks);
+    event ProcessorRegistered(address indexed processor, uint256 gracePeriodSeconds);
 
     event StakeAdded(
         address indexed processor,
@@ -121,7 +114,7 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         address indexed processor,
         address indexed token,
         uint256 amount,
-        uint256 withdrawableAfterBlock
+        uint256 withdrawableAfterTimestamp
     );
     event StakeRemovalFinalized(
         address indexed processor,
@@ -146,10 +139,10 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
 
     event GracePeriodUpdateQueued(
         address indexed processor,
-        uint256 newGracePeriodBlocks,
-        uint256 effectiveAfterBlock
+        uint256 newGracePeriodSeconds,
+        uint256 effectiveAfterTimestamp
     );
-    event GracePeriodUpdated(address indexed processor, uint256 newGracePeriodBlocks);
+    event GracePeriodUpdated(address indexed processor, uint256 newGracePeriodSeconds);
 
     event Slashed(
         address indexed processor,
@@ -159,7 +152,6 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         address rewardRecipient
     );
 
-    event TokenAllowed(address indexed token);
     event CommitteeTransferred(address indexed oldCommittee, address indexed newCommittee);
     event RewardRecipientUpdated(address indexed oldRecipient, address indexed newRecipient);
     event SlashingAuthorityUpdated(address indexed oldAuthority, address indexed newAuthority);
@@ -204,18 +196,18 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
     /// @notice Register as a processor.  No stake is required at this step.
     ///         Use `addStake` to deposit stake after registration.
     function register(
-        uint256 gracePeriodBlocks,
+        uint256 gracePeriodSeconds,
         string calldata name,
         string calldata description,
         string calldata url,
         string calldata tor
     ) external {
         require(!processors[msg.sender].active, "ProcessorRegistry: already registered");
-        require(gracePeriodBlocks > 0,          "ProcessorRegistry: grace period must be > 0");
+        require(gracePeriodSeconds > 0,          "ProcessorRegistry: grace period must be > 0");
 
         processors[msg.sender] = ProcessorInfo({
-            gracePeriodBlocks:             gracePeriodBlocks,
-            pendingGracePeriodBlocks:      0,
+            gracePeriodSeconds:             gracePeriodSeconds,
+            pendingGracePeriodSeconds:      0,
             pendingGracePeriodRequestedAt: 0,
             active:                        true,
             metadata: ProcessorMetadata({
@@ -226,16 +218,19 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
             })
         });
 
-        emit ProcessorRegistered(msg.sender, gracePeriodBlocks);
+        emit ProcessorRegistered(msg.sender, gracePeriodSeconds);
     }
 
     // -------------------------------------------------------------------------
     // Stake management
     // -------------------------------------------------------------------------
 
-    /// @notice Deposit stake in ETH or an approved ERC-20 token.
+    /// @notice Deposit stake in ETH or an ERC-20 token.
     ///         For ETH: pass `token = address(0)` and send `amount` as msg.value.
     ///         For ERC-20: approve this contract first, then call with `token` and `amount`.
+    /// Since this protocol is permissionless, any ERC-20 token can be used as stake
+    /// However!!!! Since stablecoins have blacklists, you should not use them as stake.
+    /// The default API will ignore blacklistable tokens as stake.
     function addStake(address token, uint256 amount)
         external
         payable
@@ -247,8 +242,7 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         if (token == address(0)) {
             require(msg.value == amount, "ProcessorRegistry: ETH amount mismatch");
         } else {
-            require(allowedStakeTokens[token], "ProcessorRegistry: token not allowed");
-            require(msg.value == 0,            "ProcessorRegistry: ETH sent with token stake");
+            require(msg.value == 0, "ProcessorRegistry: ETH sent with token stake");
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
 
@@ -258,7 +252,7 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
 
     /// @notice Signal intent to remove `amount` of `token` stake.
     ///         The amount is reserved (deducted from active stake) immediately;
-    ///         withdrawal becomes possible after `gracePeriodBlocks` blocks.
+    ///         withdrawal becomes possible after `gracePeriodSeconds` elapse.
     ///         Only one pending removal per token is allowed at a time.
     function signalStakeRemoval(address token, uint256 amount)
         external
@@ -270,23 +264,23 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
             "ProcessorRegistry: insufficient stake"
         );
         require(
-            pendingRemovals[msg.sender][token].signaledAtBlock == 0,
+            pendingRemovals[msg.sender][token].signaledAt == 0,
             "ProcessorRegistry: removal already pending for this token"
         );
 
         // Reserve the amount immediately.
         stakes[msg.sender][token] -= amount;
         pendingRemovals[msg.sender][token] = PendingRemoval({
-            amount:          amount,
-            signaledAtBlock: block.number
+            amount:     amount,
+            signaledAt: block.timestamp
         });
 
-        uint256 gracePeriod = processors[msg.sender].gracePeriodBlocks;
+        uint256 gracePeriod = processors[msg.sender].gracePeriodSeconds;
         emit StakeRemovalSignalled(
             msg.sender,
             token,
             amount,
-            block.number + gracePeriod
+            block.timestamp + gracePeriod
         );
     }
 
@@ -297,15 +291,15 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         onlyActiveProcessor(msg.sender)
     {
         PendingRemoval storage pr = pendingRemovals[msg.sender][token];
-        require(pr.signaledAtBlock != 0, "ProcessorRegistry: no pending removal");
+        require(pr.signaledAt != 0, "ProcessorRegistry: no pending removal");
         require(
-            block.number >= pr.signaledAtBlock + processors[msg.sender].gracePeriodBlocks,
+            block.timestamp >= pr.signaledAt + processors[msg.sender].gracePeriodSeconds,
             "ProcessorRegistry: grace period not elapsed"
         );
 
         uint256 amount = pr.amount;
-        pr.amount          = 0;
-        pr.signaledAtBlock = 0;
+        pr.amount     = 0;
+        pr.signaledAt = 0;
 
         emit StakeRemovalFinalized(msg.sender, token, amount);
         _transfer(token, msg.sender, amount);
@@ -415,36 +409,36 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
     // -------------------------------------------------------------------------
 
     /// @notice Queue a grace period change.  Takes effect only after the current
-    ///         period has elapsed from the request block (§8.4).
-    function setGracePeriod(uint256 newGracePeriodBlocks)
+    ///         period has elapsed from the request timestamp (§8.4).
+    function setGracePeriod(uint256 newGracePeriodSeconds)
         external
         onlyActiveProcessor(msg.sender)
     {
-        require(newGracePeriodBlocks > 0, "ProcessorRegistry: must be > 0");
+        require(newGracePeriodSeconds > 0, "ProcessorRegistry: must be > 0");
         ProcessorInfo storage p = processors[msg.sender];
 
-        p.pendingGracePeriodBlocks      = newGracePeriodBlocks;
-        p.pendingGracePeriodRequestedAt = block.number;
+        p.pendingGracePeriodSeconds      = newGracePeriodSeconds;
+        p.pendingGracePeriodRequestedAt = block.timestamp;
 
         emit GracePeriodUpdateQueued(
             msg.sender,
-            newGracePeriodBlocks,
-            block.number + p.gracePeriodBlocks
+            newGracePeriodSeconds,
+            block.timestamp + p.gracePeriodSeconds
         );
     }
 
     /// @notice Materialise a queued grace period change once eligible.
     function applyPendingGracePeriod() external onlyActiveProcessor(msg.sender) {
         ProcessorInfo storage p = processors[msg.sender];
-        require(p.pendingGracePeriodBlocks != 0, "ProcessorRegistry: no pending update");
+        require(p.pendingGracePeriodSeconds != 0, "ProcessorRegistry: no pending update");
         require(
-            block.number >= p.pendingGracePeriodRequestedAt + p.gracePeriodBlocks,
+            block.timestamp >= p.pendingGracePeriodRequestedAt + p.gracePeriodSeconds,
             "ProcessorRegistry: current grace period not yet elapsed"
         );
 
-        uint256 newGrace = p.pendingGracePeriodBlocks;
-        p.gracePeriodBlocks             = newGrace;
-        p.pendingGracePeriodBlocks      = 0;
+        uint256 newGrace = p.pendingGracePeriodSeconds;
+        p.gracePeriodSeconds             = newGrace;
+        p.pendingGracePeriodSeconds      = 0;
         p.pendingGracePeriodRequestedAt = 0;
 
         emit GracePeriodUpdated(msg.sender, newGrace);
@@ -492,7 +486,7 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         uint256 pendingAmount = pr.amount;
         if (pendingAmount > 0) {
             pr.amount          = 0;
-            pr.signaledAtBlock = 0;
+            pr.signaledAt = 0;
         }
 
         uint256 total = activeStake + pendingAmount;
@@ -506,17 +500,6 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
     // -------------------------------------------------------------------------
     // Governance
     // -------------------------------------------------------------------------
-
-    /// @notice Add an ERC-20 token to the approved stake-token list.
-    ///         This operation is irreversible — tokens cannot be removed from
-    ///         the list once added (§8.6).
-    function addAllowedToken(address token) external onlyCommittee {
-        require(token != address(0),          "ProcessorRegistry: use ETH directly");
-        require(!allowedStakeTokens[token],   "ProcessorRegistry: token already allowed");
-        allowedStakeTokens[token] = true;
-        allowedTokenList.push(token);
-        emit TokenAllowed(token);
-    }
 
     function transferCommittee(address newCommittee) external onlyCommittee {
         require(newCommittee != address(0), "ProcessorRegistry: zero address");
@@ -573,21 +556,16 @@ contract ProcessorRegistry is ReentrancyGuard, IProcessorRegistry {
         return BabyJubJub.deriveSigningPublicKey(secretMaterial);
     }
 
-    /// @notice All approved ERC-20 stake tokens.
-    function getAllowedTokens() external view returns (address[] memory) {
-        return allowedTokenList;
-    }
-
-    /// @notice Block number after which a pending removal can be finalised.
+    /// @notice Timestamp after which a pending removal can be finalised.
     ///         Returns 0 if no removal is pending for this token.
-    function removalAvailableAtBlock(address processor, address token)
+    function removalAvailableAt(address processor, address token)
         external
         view
         returns (uint256)
     {
         PendingRemoval storage pr = pendingRemovals[processor][token];
-        if (pr.signaledAtBlock == 0) return 0;
-        return pr.signaledAtBlock + processors[processor].gracePeriodBlocks;
+        if (pr.signaledAt == 0) return 0;
+        return pr.signaledAt + processors[processor].gracePeriodSeconds;
     }
 
     // -------------------------------------------------------------------------

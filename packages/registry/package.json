@@ -22,6 +22,9 @@
     "build:ts": "tsc -p tsconfig.lib.json",
     "build:watch": "tsc -p tsconfig.lib.json --watch",
     "test": "jest",
+    "test:forge": "forge test --ffi -vvv",
+    "test:forge:signing": "forge test --ffi --match-contract ProcessorRegistryPoKTest -vvv",
+    "debug:pok": "npx ts-node --project test/tsconfig.json test/helpers/verifyChallenge.ts",
     "clean": "rm -rf out cache_forge dist",
     "deploy-anvil": "DEPLOY_NETWORK=anvil PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 forge script",
     "deploy-avax-testnet": "DEPLOY_NETWORK=avax-testnet forge script",
@@ -40,6 +43,7 @@
   "devDependencies": {
     "@types/node": "^20.17.6",
     "dotenv-cli": "^11.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }

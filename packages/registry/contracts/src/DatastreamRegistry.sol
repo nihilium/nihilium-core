@@ -45,8 +45,8 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
     /// @dev Per-operator state (no stake stored here — see `stakes` mapping).
     struct DatastreamInfo {
         address contractAddress;       // IDataStream implementation
-        uint256 gracePeriodBlocks;
-        uint256 pendingGracePeriodBlocks;
+        uint256 gracePeriodSeconds;
+        uint256 pendingGracePeriodSeconds;
         uint256 pendingGracePeriodRequestedAt;
         bool    active;
         DatastreamMetadata metadata;
@@ -55,7 +55,7 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
     /// @dev A pending stake-removal request for one token.
     struct PendingRemoval {
         uint256 amount;
-        uint256 signaledAtBlock; // 0 = no pending removal
+        uint256 signaledAt; // block.timestamp when signalled; 0 = none pending
     }
 
     // -------------------------------------------------------------------------
@@ -88,7 +88,7 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
     event DatastreamRegistered(
         address indexed operator,
         address indexed contractAddress,
-        uint256 gracePeriodBlocks
+        uint256 gracePeriodSeconds
     );
 
     event StakeAdded(
@@ -101,7 +101,7 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
         address indexed operator,
         address indexed token,
         uint256 amount,
-        uint256 withdrawableAfterBlock
+        uint256 withdrawableAfterTimestamp
     );
     event StakeRemovalFinalized(
         address indexed operator,
@@ -125,10 +125,10 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
 
     event GracePeriodUpdateQueued(
         address indexed operator,
-        uint256 newGracePeriodBlocks,
-        uint256 effectiveAfterBlock
+        uint256 newGracePeriodSeconds,
+        uint256 effectiveAfterTimestamp
     );
-    event GracePeriodUpdated(address indexed operator, uint256 newGracePeriodBlocks);
+    event GracePeriodUpdated(address indexed operator, uint256 newGracePeriodSeconds);
 
     event Slashed(
         address indexed operator,
@@ -183,10 +183,10 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
     /// @notice Register a datastream operator.  No stake is required at registration.
     ///
     /// @param datastreamContract  Deployed IDataStream contract.
-    /// @param gracePeriodBlocks   Minimum blocks between stake removal signal and withdrawal.
+    /// @param gracePeriodSeconds  Minimum seconds between stake removal signal and withdrawal.
     function register(
         address datastreamContract,
-        uint256 gracePeriodBlocks,
+        uint256 gracePeriodSeconds,
         string calldata name,
         string calldata description,
         string calldata url,
@@ -195,7 +195,7 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
         require(!datastreams[msg.sender].active,         "DatastreamRegistry: already registered");
         require(datastreamContract != address(0),        "DatastreamRegistry: zero contract address");
         require(!contractRegistered[datastreamContract], "DatastreamRegistry: contract already registered");
-        require(gracePeriodBlocks > 0,                   "DatastreamRegistry: grace period must be > 0");
+        require(gracePeriodSeconds > 0,                   "DatastreamRegistry: grace period must be > 0");
 
         try IDataStream(datastreamContract).isKnownValueRoot(bytes32(0)) returns (bool) {
             // interface satisfied
@@ -208,8 +208,8 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
 
         datastreams[msg.sender] = DatastreamInfo({
             contractAddress:               datastreamContract,
-            gracePeriodBlocks:             gracePeriodBlocks,
-            pendingGracePeriodBlocks:      0,
+            gracePeriodSeconds:             gracePeriodSeconds,
+            pendingGracePeriodSeconds:      0,
             pendingGracePeriodRequestedAt: 0,
             active:                        true,
             metadata: DatastreamMetadata({
@@ -220,7 +220,7 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
             })
         });
 
-        emit DatastreamRegistered(msg.sender, datastreamContract, gracePeriodBlocks);
+        emit DatastreamRegistered(msg.sender, datastreamContract, gracePeriodSeconds);
     }
 
     // -------------------------------------------------------------------------
@@ -260,22 +260,22 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
             "DatastreamRegistry: insufficient stake"
         );
         require(
-            pendingRemovals[msg.sender][token].signaledAtBlock == 0,
+            pendingRemovals[msg.sender][token].signaledAt == 0,
             "DatastreamRegistry: removal already pending for this token"
         );
 
         stakes[msg.sender][token] -= amount;
         pendingRemovals[msg.sender][token] = PendingRemoval({
-            amount:          amount,
-            signaledAtBlock: block.number
+            amount:     amount,
+            signaledAt: block.timestamp
         });
 
-        uint256 gracePeriod = datastreams[msg.sender].gracePeriodBlocks;
+        uint256 gracePeriod = datastreams[msg.sender].gracePeriodSeconds;
         emit StakeRemovalSignalled(
             msg.sender,
             token,
             amount,
-            block.number + gracePeriod
+            block.timestamp + gracePeriod
         );
     }
 
@@ -286,15 +286,15 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
         onlyActiveOperator(msg.sender)
     {
         PendingRemoval storage pr = pendingRemovals[msg.sender][token];
-        require(pr.signaledAtBlock != 0, "DatastreamRegistry: no pending removal");
+        require(pr.signaledAt != 0, "DatastreamRegistry: no pending removal");
         require(
-            block.number >= pr.signaledAtBlock + datastreams[msg.sender].gracePeriodBlocks,
+            block.timestamp >= pr.signaledAt + datastreams[msg.sender].gracePeriodSeconds,
             "DatastreamRegistry: grace period not elapsed"
         );
 
         uint256 amount = pr.amount;
-        pr.amount          = 0;
-        pr.signaledAtBlock = 0;
+        pr.amount     = 0;
+        pr.signaledAt = 0;
 
         emit StakeRemovalFinalized(msg.sender, token, amount);
         _transfer(token, msg.sender, amount);
@@ -376,34 +376,34 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
     // Grace period changes
     // -------------------------------------------------------------------------
 
-    function setGracePeriod(uint256 newGracePeriodBlocks)
+    function setGracePeriod(uint256 newGracePeriodSeconds)
         external
         onlyActiveOperator(msg.sender)
     {
-        require(newGracePeriodBlocks > 0, "DatastreamRegistry: must be > 0");
+        require(newGracePeriodSeconds > 0, "DatastreamRegistry: must be > 0");
         DatastreamInfo storage d = datastreams[msg.sender];
 
-        d.pendingGracePeriodBlocks      = newGracePeriodBlocks;
-        d.pendingGracePeriodRequestedAt = block.number;
+        d.pendingGracePeriodSeconds      = newGracePeriodSeconds;
+        d.pendingGracePeriodRequestedAt = block.timestamp;
 
         emit GracePeriodUpdateQueued(
             msg.sender,
-            newGracePeriodBlocks,
-            block.number + d.gracePeriodBlocks
+            newGracePeriodSeconds,
+            block.timestamp + d.gracePeriodSeconds
         );
     }
 
     function applyPendingGracePeriod() external onlyActiveOperator(msg.sender) {
         DatastreamInfo storage d = datastreams[msg.sender];
-        require(d.pendingGracePeriodBlocks != 0, "DatastreamRegistry: no pending update");
+        require(d.pendingGracePeriodSeconds != 0, "DatastreamRegistry: no pending update");
         require(
-            block.number >= d.pendingGracePeriodRequestedAt + d.gracePeriodBlocks,
+            block.timestamp >= d.pendingGracePeriodRequestedAt + d.gracePeriodSeconds,
             "DatastreamRegistry: current grace period not yet elapsed"
         );
 
-        uint256 newGrace = d.pendingGracePeriodBlocks;
-        d.gracePeriodBlocks             = newGrace;
-        d.pendingGracePeriodBlocks      = 0;
+        uint256 newGrace = d.pendingGracePeriodSeconds;
+        d.gracePeriodSeconds             = newGrace;
+        d.pendingGracePeriodSeconds      = 0;
         d.pendingGracePeriodRequestedAt = 0;
 
         emit GracePeriodUpdated(msg.sender, newGrace);
@@ -436,7 +436,7 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
         uint256 pendingAmount = pr.amount;
         if (pendingAmount > 0) {
             pr.amount          = 0;
-            pr.signaledAtBlock = 0;
+            pr.signaledAt = 0;
         }
 
         uint256 total = activeStake + pendingAmount;
@@ -512,14 +512,14 @@ contract DatastreamRegistry is ReentrancyGuard, IDatastreamRegistry {
         return allowedTokenList;
     }
 
-    function removalAvailableAtBlock(address operator, address token)
+    function removalAvailableAt(address operator, address token)
         external
         view
         returns (uint256)
     {
         PendingRemoval storage pr = pendingRemovals[operator][token];
-        if (pr.signaledAtBlock == 0) return 0;
-        return pr.signaledAtBlock + datastreams[operator].gracePeriodBlocks;
+        if (pr.signaledAt == 0) return 0;
+        return pr.signaledAt + datastreams[operator].gracePeriodSeconds;
     }
 
     function getAllOperators() external view returns (address[] memory) {

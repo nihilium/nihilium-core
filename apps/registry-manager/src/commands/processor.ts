@@ -8,6 +8,7 @@
  * Commands:
  *   processor status
  *   processor register
+ *   processor metadata update
  *   processor keys list
  *   processor keys deactivate <keyId>
  *   processor stake list
@@ -35,6 +36,7 @@ import {
   confirmStakeSignal,
   confirmStakeFinalize,
   confirmDeactivateKey,
+  confirmMetadataUpdate,
 } from "../ui/confirm";
 
 // ---------------------------------------------------------------------------
@@ -48,9 +50,10 @@ export function builder(yargs: Argv): Argv {
   return yargs
     .command(statusCmd)
     .command(registerCmd)
+    .command(metadataCmd)
     .command(keysCmd)
     .command(stakeCmd)
-    .demandCommand(1, "Specify an action: status | register | keys | stake")
+    .demandCommand(1, "Specify an action: status | register | metadata | keys | stake")
     .strict();
 }
 
@@ -65,14 +68,17 @@ export async function handler(_argv: unknown): Promise<void> {
 
 const statusCmd = {
   command:  "status",
-  describe: "Show registration status, metadata, and all keys",
+  describe: "Show registration status, metadata, keys, and stake",
   handler:  async () => {
     const cfg = getProcessorConfig();
     const stop = printSpinner("Fetching on-chain state…");
     try {
-      const info = await lib.getProcessorStatus(cfg);
+      const [info, stakes] = await Promise.all([
+        lib.getProcessorStatus(cfg),
+        lib.getStakes(cfg),
+      ]);
       stop();
-      printProcessorStatus(info);
+      printProcessorStatus(info, stakes);
     } catch (e) {
       stop();
       printError(String(e));
@@ -101,6 +107,43 @@ const registerCmd = {
       process.exit(1);
     }
   },
+};
+
+// ---------------------------------------------------------------------------
+// processor metadata
+// ---------------------------------------------------------------------------
+
+const metadataUpdateCmd = {
+  command:  "update",
+  describe: "Update on-chain metadata from configured env vars",
+  handler:  async () => {
+    const cfg = getProcessorConfig();
+
+    const ok = await confirmMetadataUpdate(cfg.metadata);
+    if (!ok) { printInfo("Aborted."); return; }
+
+    const stop = printSpinner("Updating metadata…");
+    try {
+      await lib.updateProcessorMetadata(cfg, cfg.metadata);
+      stop();
+      printSuccess("Processor metadata updated.");
+    } catch (e) {
+      stop();
+      printError(String(e));
+      process.exit(1);
+    }
+  },
+};
+
+const metadataCmd = {
+  command:  "metadata <action>",
+  describe: "Update registry metadata",
+  builder:  (y: Argv) =>
+    y
+      .command(metadataUpdateCmd)
+      .demandCommand(1, "Specify an action: update")
+      .strict(),
+  handler: () => undefined,
 };
 
 // ---------------------------------------------------------------------------

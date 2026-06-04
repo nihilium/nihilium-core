@@ -47,11 +47,11 @@ export interface ProcessorConfig {
   metadata: ProcessorMetadata;
 
   /**
-   * Minimum blocks that must elapse between signalling stake removal and
+   * Minimum seconds that must elapse between signalling stake removal and
    * finalising it.  Only used during the initial `register()` call;
    * ignored if the processor is already registered.
    */
-  gracePeriodBlocks: number;
+  gracePeriodSeconds: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,10 +74,10 @@ export interface PendingRemoval {
   token: string;
   /** Amount pending withdrawal (in token's smallest unit). */
   amount: bigint;
-  /** Block at which the removal was signalled. */
-  signaledAtBlock: bigint;
-  /** Block after which `finalizeStakeRemoval` will succeed. */
-  withdrawableAtBlock: bigint;
+  /** Unix timestamp when the removal was signalled. */
+  signaledAt: bigint;
+  /** Unix timestamp after which `finalizeStakeRemoval` will succeed. */
+  withdrawableAt: bigint;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,8 +107,8 @@ export interface KeyRecord {
 export interface ProcessorOnChainInfo {
   address: string;
   isActive: boolean;
-  gracePeriodBlocks: bigint;
-  pendingGracePeriodBlocks: bigint;
+  gracePeriodSeconds: bigint;
+  pendingGracePeriodSeconds: bigint;
   pendingGracePeriodRequestedAt: bigint;
   metadata: ProcessorMetadata;
   keys: KeyRecord[];

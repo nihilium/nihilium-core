@@ -12,6 +12,7 @@
 import { ProcessorClient } from "@nihilium/registry";
 import type {
   ProcessorConfig,
+  ProcessorMetadata,
   ProcessorOnChainInfo,
   KeyRecord,
   PendingRemoval,
@@ -56,6 +57,15 @@ export async function registerProcessor(cfg: ProcessorConfig): Promise<void> {
   const c = await client(cfg);
   await c.register();
   await c.addAllKeys();
+}
+
+/** Push metadata to the registry (must already be registered). */
+export async function updateProcessorMetadata(
+  cfg: ProcessorConfig,
+  metadata: ProcessorMetadata
+): Promise<void> {
+  const c = await client(cfg);
+  await c.updateMetadata(metadata);
 }
 
 // ---------------------------------------------------------------------------
@@ -105,12 +115,12 @@ export async function deriveConfiguredProcessorPublicKeys(
 // ---------------------------------------------------------------------------
 
 /**
- * Return stake rows for ETH and every committee-approved ERC-20 token.
+ * Return stake rows for ETH (processor registry has no token allowlist).
  * Each row shows the active balance and any pending removal.
  */
 export async function getStakes(cfg: ProcessorConfig): Promise<StakeRow[]> {
   const c = await client(cfg);
-  const tokens = [ZeroAddress, ...(await c.stake.getAllowedTokens())];
+  const tokens = [ZeroAddress];
 
   return Promise.all(
     tokens.map(async (token) => ({
@@ -120,10 +130,6 @@ export async function getStakes(cfg: ProcessorConfig): Promise<StakeRow[]> {
       pending: await c.stake.getPendingRemoval(token),
     }))
   );
-}
-
-export async function getAllowedTokens(cfg: ProcessorConfig): Promise<string[]> {
-  return (await client(cfg)).stake.getAllowedTokens();
 }
 
 export async function addStake(

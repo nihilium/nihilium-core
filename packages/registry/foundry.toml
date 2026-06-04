@@ -1,6 +1,13 @@
 [profile.default]
 src     = "contracts/src"
+test    = "test"
 out     = "out"
+ffi     = true
+fs_permissions = [
+  { access = "read-write", path = "./cache_forge" },
+]
+# Avoid flaky FFI file races when tests share cache_forge/ (each test uses a unique filename too).
+threads = 1
 # npm workspaces hoist packages to the workspace root
 libs    = ["/home/olaf/git/nihilium-core/node_modules", "node_modules", "lib"]
 cache   = true

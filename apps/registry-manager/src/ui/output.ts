@@ -27,6 +27,26 @@ function formatToken(amount: bigint, token: string): string {
   return `${amount.toString()} (raw)`;
 }
 
+function formatDuration(seconds: bigint): string {
+  const s = Number(seconds);
+  if (s >= 86400) return `${(s / 86400).toFixed(1)} days`;
+  if (s >= 3600) return `${(s / 3600).toFixed(1)} hours`;
+  if (s >= 60) return `${Math.round(s / 60)} minutes`;
+  return `${s} seconds`;
+}
+
+function formatTimestamp(ts: bigint): string {
+  if (ts === 0n) return "—";
+  return new Date(Number(ts) * 1000).toISOString();
+}
+
+/** Unix seconds on new contracts; block number on legacy block-based grace. */
+function formatWithdrawableAt(value: bigint): string {
+  if (value === 0n) return "—";
+  if (value > 1_000_000_000n) return formatTimestamp(value);
+  return `block ${value.toString()}`;
+}
+
 function keyStatus(isActive: boolean, deactivatedAt: bigint): string {
   if (isActive) return chalk.green("active");
   const ts = new Date(Number(deactivatedAt) * 1000).toISOString();
@@ -37,7 +57,7 @@ function keyStatus(isActive: boolean, deactivatedAt: bigint): string {
 // Processor
 // ---------------------------------------------------------------------------
 
-export function printProcessorStatus(info: ProcessorOnChainInfo): void {
+export function printProcessorStatus(info: ProcessorOnChainInfo, stakes?: StakeRow[]): void {
   const statusBadge = info.isActive ? chalk.bgGreen.black(" ACTIVE ") : chalk.bgRed.white(" INACTIVE ");
 
   console.log();
@@ -49,9 +69,11 @@ export function printProcessorStatus(info: ProcessorOnChainInfo): void {
   console.log(chalk.dim("Tor:           ") + (info.metadata.tor || chalk.dim("—")));
   console.log(
     chalk.dim("Grace period:  ") +
-      `${info.gracePeriodBlocks} blocks` +
-      (info.pendingGracePeriodBlocks > 0n
-        ? chalk.yellow(` (pending: ${info.pendingGracePeriodBlocks} from block ${info.pendingGracePeriodRequestedAt})`)
+      formatDuration(info.gracePeriodSeconds) +
+      (info.pendingGracePeriodSeconds > 0n
+        ? chalk.yellow(
+            ` (pending: ${formatDuration(info.pendingGracePeriodSeconds)} from ${formatTimestamp(info.pendingGracePeriodRequestedAt)})`
+          )
         : "")
   );
 
@@ -61,9 +83,15 @@ export function printProcessorStatus(info: ProcessorOnChainInfo): void {
     console.log();
     printKeyTable(info.keys);
   }
+
+  if (stakes !== undefined) {
+    console.log();
+    console.log(chalk.bold("Stake"));
+    printStakeTable(stakes);
+  }
 }
 
-export function printDatastreamStatus(info: DatastreamOnChainInfo): void {
+export function printDatastreamStatus(info: DatastreamOnChainInfo, stakes?: StakeRow[]): void {
   const statusBadge = info.isActive ? chalk.bgGreen.black(" ACTIVE ") : chalk.bgRed.white(" INACTIVE ");
 
   console.log();
@@ -76,9 +104,11 @@ export function printDatastreamStatus(info: DatastreamOnChainInfo): void {
   console.log(chalk.dim("Tor:              ") + (info.metadata.tor || chalk.dim("—")));
   console.log(
     chalk.dim("Grace period:     ") +
-      `${info.gracePeriodBlocks} blocks` +
-      (info.pendingGracePeriodBlocks > 0n
-        ? chalk.yellow(` (pending: ${info.pendingGracePeriodBlocks} from block ${info.pendingGracePeriodRequestedAt})`)
+      formatDuration(info.gracePeriodSeconds) +
+      (info.pendingGracePeriodSeconds > 0n
+        ? chalk.yellow(
+            ` (pending: ${formatDuration(info.pendingGracePeriodSeconds)} from ${formatTimestamp(info.pendingGracePeriodRequestedAt)})`
+          )
         : "")
   );
 
@@ -87,6 +117,12 @@ export function printDatastreamStatus(info: DatastreamOnChainInfo): void {
   } else {
     console.log();
     printDatastreamKeyTable(info.keys);
+  }
+
+  if (stakes !== undefined) {
+    console.log();
+    console.log(chalk.bold("Stake"));
+    printStakeTable(stakes);
   }
 }
 
@@ -163,7 +199,7 @@ export function printStakeTable(rows: StakeRow[]): void {
       chalk.cyan("Token"),
       chalk.cyan("Active Stake"),
       chalk.cyan("Pending Removal"),
-      chalk.cyan("Withdrawable at Block"),
+      chalk.cyan("Withdrawable at"),
     ],
     style: { head: [], border: [] },
   });
@@ -174,7 +210,7 @@ export function printStakeTable(rows: StakeRow[]): void {
       ? chalk.yellow(formatToken(r.pending.amount, r.token))
       : chalk.dim("—");
     const avail = r.pending
-      ? String(r.pending.withdrawableAtBlock)
+      ? formatWithdrawableAt(r.pending.withdrawableAt)
       : chalk.dim("—");
 
     t.push([r.label, active, pending, avail]);
@@ -231,12 +267,12 @@ export interface RegistryStakeListRow {
   address: string;
   name: string;
   active: boolean;
-  gracePeriodBlocks: bigint;
-  pendingGracePeriodBlocks: bigint;
+  gracePeriodSeconds: bigint;
+  pendingGracePeriodSeconds: bigint;
   token: string;
   activeStake: bigint;
   pendingRemovalAmount: bigint;
-  withdrawableAtBlock: bigint;
+  withdrawableAt: bigint;
 }
 
 export function printRegistryStakeList(rows: RegistryStakeListRow[]): void {
@@ -268,17 +304,15 @@ export function printRegistryStakeList(rows: RegistryStakeListRow[]): void {
     const pending = r.pendingRemovalAmount > 0n
       ? formatToken(r.pendingRemovalAmount, r.token)
       : chalk.dim("—");
-    const withdrawable = r.withdrawableAtBlock > 0n
-      ? r.withdrawableAtBlock.toString()
-      : chalk.dim("—");
+    const withdrawable = formatWithdrawableAt(r.withdrawableAt);
 
     t.push([
       r.kind,
       shortHex(r.address, 8),
       r.name || chalk.dim("—"),
       state,
-      r.gracePeriodBlocks.toString(),
-      r.pendingGracePeriodBlocks > 0n ? r.pendingGracePeriodBlocks.toString() : chalk.dim("—"),
+      formatDuration(r.gracePeriodSeconds),
+      r.pendingGracePeriodSeconds > 0n ? formatDuration(r.pendingGracePeriodSeconds) : chalk.dim("—"),
       token,
       activeStake,
       pending,

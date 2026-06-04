@@ -894,7 +894,7 @@ export function hexToSkBuffer(hexKey: string): Buffer {
  */
 export function deriveHEKeyScalar(hexKey: string): bigint {
     const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
-    return BigInt(normalised);
+    return formatPrivKeyForBabyJub(BigInt(normalised));
 }
 
 /**

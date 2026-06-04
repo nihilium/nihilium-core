@@ -27,7 +27,7 @@ All configuration is via environment variables, loaded from `.env` in the curren
 | `PROCESSOR_DESCRIPTION` | optional | |
 | `PROCESSOR_URL` | optional | Public HTTPS endpoint |
 | `PROCESSOR_TOR` | optional | Tor `.onion` endpoint |
-| `PROCESSOR_GRACE_PERIOD_BLOCKS` | optional | Blocks between signal and withdraw, default `1000` |
+| `PROCESSOR_GRACE_PERIOD_SECONDS` | optional | Seconds between signal and withdraw, default `86400` (1 day) |
 | `DATASTREAM_PRIVATE_KEY` | datastream cmds | |
 | `DATASTREAM_SIGNING_PRIVATE_KEYS` | datastream cmds | Baby Jubjub signing key(s), comma-separated |
 | `DATASTREAM_REGISTRY_ADDRESS` | datastream cmds | Deployed `DatastreamRegistry` contract address |
@@ -36,7 +36,7 @@ All configuration is via environment variables, loaded from `.env` in the curren
 | `DATASTREAM_DESCRIPTION` | optional | |
 | `DATASTREAM_URL` | optional | |
 | `DATASTREAM_TOR` | optional | |
-| `DATASTREAM_GRACE_PERIOD_BLOCKS` | optional | Default `500` |
+| `DATASTREAM_GRACE_PERIOD_SECONDS` | optional | Default `43200` (12 hours) |
 
 `*_REGISTRY_ADDRESS` can be omitted if the chain is listed in `@nihilium/registry`'s built-in address book.
 

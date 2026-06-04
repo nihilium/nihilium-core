@@ -13,7 +13,7 @@
  *     rpcEndpoint:        "https://rpc.example.com",
  *     contractAddress:    "0x1234...",
  *     metadata: { name: "My Processor", description: "", url: "https://...", tor: "" },
- *     gracePeriodBlocks:  1000,
+ *     gracePeriodSeconds:  86400,
  *   });
  *
  *   await client.init();
@@ -32,7 +32,7 @@
  *     contractAddress:    "0x<DatastreamRegistryAddress>",
  *     datastreamContract: "0x<IDataStreamContractAddress>",
  *     metadata: { name: "My Stream", description: "", url: "https://...", tor: "" },
- *     gracePeriodBlocks:  500,
+ *     gracePeriodSeconds:  43200,
  *   });
  *
  *   await ds.init();

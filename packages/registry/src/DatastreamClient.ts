@@ -74,7 +74,7 @@ export interface DatastreamConfig {
    * Minimum blocks between signalling stake removal and finalising it.
    * Used only during the initial `register()` call.
    */
-  gracePeriodBlocks: number;
+  gracePeriodSeconds: number;
 }
 
 export interface DatastreamKeyRecord {
@@ -90,8 +90,8 @@ export interface DatastreamOnChainInfo {
   address:                       string;
   isActive:                      boolean;
   contractAddress:               string;
-  gracePeriodBlocks:             bigint;
-  pendingGracePeriodBlocks:      bigint;
+  gracePeriodSeconds:             bigint;
+  pendingGracePeriodSeconds:      bigint;
   pendingGracePeriodRequestedAt: bigint;
   metadata:                      DatastreamMetadata;
   keys:                          DatastreamKeyRecord[];
@@ -160,10 +160,10 @@ export class DatastreamClient {
       this._registered = true;
       return;
     }
-    const { gracePeriodBlocks, metadata, datastreamContract } = this.config;
+    const { gracePeriodSeconds, metadata, datastreamContract } = this.config;
     const tx: ContractTransactionResponse = await this.contract.register(
       datastreamContract,
-      BigInt(gracePeriodBlocks),
+      BigInt(gracePeriodSeconds),
       metadata.name,
       metadata.description,
       metadata.url,
@@ -271,7 +271,7 @@ export class DatastreamClient {
 
     type InfoTuple = [string, bigint, bigint, bigint, boolean, [string, string, string, string]];
     const info = await this.contract.getDatastreamInfo(this._address) as InfoTuple;
-    const [contractAddress, gracePeriodBlocks, pendingGrace, pendingGraceAt, active, meta] = info;
+    const [contractAddress, gracePeriodSeconds, pendingGrace, pendingGraceAt, active, meta] = info;
 
     const keyIds = await this.contract.getOperatorKeys(this._address) as string[];
     const keys: DatastreamKeyRecord[] = await Promise.all(keyIds.map(async (id) => {
@@ -290,8 +290,8 @@ export class DatastreamClient {
       address:                       this._address,
       isActive:                      active,
       contractAddress,
-      gracePeriodBlocks,
-      pendingGracePeriodBlocks:      pendingGrace,
+      gracePeriodSeconds,
+      pendingGracePeriodSeconds:      pendingGrace,
       pendingGracePeriodRequestedAt: pendingGraceAt,
       metadata: { name: meta[0], description: meta[1], url: meta[2], tor: meta[3] },
       keys,

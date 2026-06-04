@@ -103,9 +103,9 @@ export class ProcessorClient {
       this._registered = true;
       return;
     }
-    const { gracePeriodBlocks, metadata } = this.config;
+    const { gracePeriodSeconds, metadata } = this.config;
     const tx: ContractTransactionResponse = await this.contract.register(
-      BigInt(gracePeriodBlocks),
+      BigInt(gracePeriodSeconds),
       metadata.name,
       metadata.description,
       metadata.url,
@@ -214,11 +214,11 @@ export class ProcessorClient {
   /**
    * Queue a grace period change.  The change does not take effect until
    * `applyPendingGracePeriod()` is called after the current grace period
-   * elapses from the request block.
+   * elapses from the request timestamp.
    */
-  async setGracePeriod(blocks: number): Promise<void> {
+  async setGracePeriod(seconds: number): Promise<void> {
     this._requireRegistered();
-    const tx = await this.contract.setGracePeriod(BigInt(blocks)) as ContractTransactionResponse;
+    const tx = await this.contract.setGracePeriod(BigInt(seconds)) as ContractTransactionResponse;
     await tx.wait();
   }
 
@@ -244,7 +244,7 @@ export class ProcessorClient {
 
     type InfoTuple = [bigint, bigint, bigint, boolean, [string, string, string, string]];
     const info = await this.contract.getProcessorInfo(this._address) as InfoTuple;
-    const [gracePeriodBlocks, pendingGrace, pendingGraceAt, active, meta] = info;
+    const [gracePeriodSeconds, pendingGrace, pendingGraceAt, active, meta] = info;
 
     const keyIds = await this.contract.getProcessorKeys(this._address) as string[];
     const keys: KeyRecord[] = await Promise.all(keyIds.map(async (id) => {
@@ -263,8 +263,8 @@ export class ProcessorClient {
     return {
       address:                       this._address,
       isActive:                      active,
-      gracePeriodBlocks,
-      pendingGracePeriodBlocks:      pendingGrace,
+      gracePeriodSeconds,
+      pendingGracePeriodSeconds:      pendingGrace,
       pendingGracePeriodRequestedAt: pendingGraceAt,
       metadata: { name: meta[0], description: meta[1], url: meta[2], tor: meta[3] },
       keys,

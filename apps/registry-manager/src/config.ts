@@ -72,7 +72,7 @@ export function getProcessorConfig(): ProcessorConfig {
     signingPrivateKeys: splitKeys(opt("PROCESSOR_SIGNING_PRIVATE_KEYS")),
     rpcEndpoint:        getRpcUrl(),
     contractAddress,
-    gracePeriodBlocks:  parseInt(opt("PROCESSOR_GRACE_PERIOD_BLOCKS", "1000"), 10),
+    gracePeriodSeconds: parseInt(opt("PROCESSOR_GRACE_PERIOD_SECONDS", "86400"), 10),
     metadata: {
       name:        opt("PROCESSOR_NAME", "Unnamed Processor"),
       description: opt("PROCESSOR_DESCRIPTION"),
@@ -106,7 +106,7 @@ export function getDatastreamConfig(): DatastreamConfig {
     rpcEndpoint:        getRpcUrl(),
     contractAddress,
     datastreamContract: requireEnv("DATASTREAM_CONTRACT_ADDRESS"),
-    gracePeriodBlocks:  parseInt(opt("DATASTREAM_GRACE_PERIOD_BLOCKS", "500"), 10),
+    gracePeriodSeconds: parseInt(opt("DATASTREAM_GRACE_PERIOD_SECONDS", "43200"), 10),
     metadata: {
       name:        opt("DATASTREAM_NAME", "Unnamed Datastream"),
       description: opt("DATASTREAM_DESCRIPTION"),

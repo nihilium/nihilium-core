@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {EmpheralMerkleTreeKeccak} from "./EmpheralMerkleTreeKeccak.sol";
 import {IVerifier, IDataStream} from "./Interfaces.sol";
 
 interface HashFunctionV2 {
@@ -22,16 +21,16 @@ struct ProvingStateV2 {
     address proof_verifier;
     address initiator;
 }
-
+string constant ACTION_PREPARE_NEXT_PROOF = "prepare_next_proof";
+    string constant ACTION_CHAIN_PROOF_VERIFY = "chain_proof_verify";
+    
+    string constant ACTION_STATIC_INPUT = "static_input";
+    string constant ACTION_PASS_SIGNAL = "pass_signal";   
+    
+    string constant ACTION_VALIDATE_DATA_ROOT = "validate_data_root";
 contract ChainedProofV2 {
     
-    string public constant ACTION_PREPARE_NEXT_PROOF = "prepare_next_proof";
-    string public constant ACTION_CHAIN_PROOF_VERIFY = "chain_proof_verify";
     
-    string public constant ACTION_STATIC_INPUT = "static_input";
-    string public constant ACTION_PASS_SIGNAL = "pass_signal";   
-    
-    string public constant ACTION_VALIDATE_DATA_ROOT = "validate_data_root";
 
     mapping(bytes32 => ProvingStateV2) public provingStates;
     IVerifier public public_proof_verifier;
@@ -55,7 +54,7 @@ contract ChainedProofV2 {
         return _hashState(new_state);
     }
 
-    function _dryrun_prepare_next_proof(ProvingStateV2 calldata state, address _verifier, bool _verifierMustBeTrue, bytes32[] calldata _publicInputs,     bytes calldata _proof) internal pure returns (ProvingStateV2 memory) {
+    function _dryrun_prepare_next_proof(ProvingStateV2 calldata state, address _verifier, bool _verifierMustBeTrue, bytes32[] calldata _publicInputs,     bytes calldata _proof) public pure returns (ProvingStateV2 memory) {
         ProvingStateV2 memory new_state = state;
         // This would be the first call with empty state
         if(state.current_hash == bytes32(0)) {
@@ -73,26 +72,35 @@ contract ChainedProofV2 {
     function dryrun_validate_data_root(ProvingStateV2 calldata state, 
         address datastream,         
         uint256 output_signal_index) external view returns (bytes32) {
-            ProvingStateV2 memory new_state = state;
+            ProvingStateV2 memory new_state = _dryrun_validate_data_root(state, datastream, output_signal_index);
+            return _hashState(new_state);
+    }
+    function _dryrun_validate_data_root(ProvingStateV2 calldata state, address datastream, uint256 output_signal_index) public view returns (ProvingStateV2 memory) {
+         ProvingStateV2 memory new_state = state;
             assert(new_state.proof_verifier != address(0));
             new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, ACTION_VALIDATE_DATA_ROOT, datastream, output_signal_index));
             
             assert(IDataStream(datastream).isKnownValueRoot(new_state.outputs[output_signal_index]));
-                
-            return _hashState(new_state);
-        }
+              
+        return new_state;
+    }
 
   
 
 // Pass static input variables to the next proof.
 // This is used to pass variables like time windows or merkle roots for valid public keys
     function dryrun_chain_static_input(ProvingStateV2 calldata state, bytes32 value, uint256 public_input_index) external pure returns (bytes32) {
+        ProvingStateV2 memory new_state = _dryrun_chain_static_input(state, value, public_input_index);
+        return _hashState(new_state);
+    }
+
+    function _dryrun_chain_static_input(ProvingStateV2 calldata state, bytes32 value, uint256 public_input_index) public pure returns (ProvingStateV2 memory) {
         ProvingStateV2 memory new_state = state;
         assert(new_state.prepared_proof.length > 0);
         new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, ACTION_STATIC_INPUT));
         new_state.prepared_public_inputs[public_input_index] = value;
         new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, public_input_index, value));
-        return _hashState(new_state);
+        return new_state;
     }
 
 
@@ -101,6 +109,11 @@ contract ChainedProofV2 {
     function dryrun_chain_pass_signal(ProvingStateV2 calldata state, 
         uint256[2] calldata public_input_indexes, 
         uint256[2] calldata output_indexes) external pure returns (bytes32) {
+        ProvingStateV2 memory new_state = _dryrun_chain_pass_signal(state, public_input_indexes, output_indexes);
+        return _hashState(new_state);
+    }
+
+    function _dryrun_chain_pass_signal(ProvingStateV2 calldata state, uint256[2] calldata public_input_indexes, uint256[2] calldata output_indexes) public pure returns (ProvingStateV2 memory) {
         ProvingStateV2 memory new_state = state;
         assert(public_input_indexes[1] == output_indexes[1]);
         new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, ACTION_PASS_SIGNAL));
@@ -108,13 +121,17 @@ contract ChainedProofV2 {
             new_state.prepared_public_inputs[public_input_indexes[0] + i] = new_state.outputs[output_indexes[0] + i];
             new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, public_input_indexes[0] + i, output_indexes[0] + i));
         }
-        return _hashState(new_state);
+        return new_state;
     }
-
 // V2: After verifying, append outputs to flat list then apply bitmask pruning.
 // mask is a uint256 bitmask where bit i corresponds to flat list entry i.
 // 1 = keep, 0 = remove.
     function dryrun_chain_proof_verify(ProvingStateV2 calldata state, uint256 mask, bool ignore_proof) external view returns (bytes32) {
+        ProvingStateV2 memory new_state = _dryrun_chain_proof_verify(state, mask, ignore_proof);
+        return _hashState(new_state);
+    }
+
+    function _dryrun_chain_proof_verify(ProvingStateV2 calldata state, uint256 mask, bool ignore_proof) public view returns (ProvingStateV2 memory) {
         ProvingStateV2 memory new_state = state;
         assert(new_state.prepared_public_inputs.length > 0);
         assert(new_state.proof_verifier != address(0));
@@ -152,7 +169,7 @@ contract ChainedProofV2 {
         new_state.prepared_proof = new bytes(0);
         new_state.prepared_public_inputs = new bytes32[](0);
         
-        return _hashState(new_state);
+        return new_state;
     }
 
 // Hash the entire ProvingStateV2 struct using chained keccak256.

@@ -55,11 +55,11 @@ export type ProvingStateV2StructOutput = [
 export interface ChainedProofV2Interface extends Interface {
   getFunction(
     nameOrSignature:
-      | "ACTION_CHAIN_PROOF_VERIFY"
-      | "ACTION_PASS_SIGNAL"
-      | "ACTION_PREPARE_NEXT_PROOF"
-      | "ACTION_STATIC_INPUT"
-      | "ACTION_VALIDATE_DATA_ROOT"
+      | "_dryrun_chain_pass_signal"
+      | "_dryrun_chain_proof_verify"
+      | "_dryrun_chain_static_input"
+      | "_dryrun_prepare_next_proof"
+      | "_dryrun_validate_data_root"
       | "dryrun_chain_pass_signal"
       | "dryrun_chain_proof_verify"
       | "dryrun_chain_static_input"
@@ -73,24 +73,28 @@ export interface ChainedProofV2Interface extends Interface {
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "ACTION_CHAIN_PROOF_VERIFY",
-    values?: undefined
+    functionFragment: "_dryrun_chain_pass_signal",
+    values: [
+      ProvingStateV2Struct,
+      [BigNumberish, BigNumberish],
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
-    functionFragment: "ACTION_PASS_SIGNAL",
-    values?: undefined
+    functionFragment: "_dryrun_chain_proof_verify",
+    values: [ProvingStateV2Struct, BigNumberish, boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "ACTION_PREPARE_NEXT_PROOF",
-    values?: undefined
+    functionFragment: "_dryrun_chain_static_input",
+    values: [ProvingStateV2Struct, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "ACTION_STATIC_INPUT",
-    values?: undefined
+    functionFragment: "_dryrun_prepare_next_proof",
+    values: [ProvingStateV2Struct, AddressLike, boolean, BytesLike[], BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "ACTION_VALIDATE_DATA_ROOT",
-    values?: undefined
+    functionFragment: "_dryrun_validate_data_root",
+    values: [ProvingStateV2Struct, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "dryrun_chain_pass_signal",
@@ -138,23 +142,23 @@ export interface ChainedProofV2Interface extends Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "ACTION_CHAIN_PROOF_VERIFY",
+    functionFragment: "_dryrun_chain_pass_signal",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ACTION_PASS_SIGNAL",
+    functionFragment: "_dryrun_chain_proof_verify",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ACTION_PREPARE_NEXT_PROOF",
+    functionFragment: "_dryrun_chain_static_input",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ACTION_STATIC_INPUT",
+    functionFragment: "_dryrun_prepare_next_proof",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ACTION_VALIDATE_DATA_ROOT",
+    functionFragment: "_dryrun_validate_data_root",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -242,15 +246,53 @@ export interface ChainedProofV2 extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  ACTION_CHAIN_PROOF_VERIFY: TypedContractMethod<[], [string], "view">;
+  _dryrun_chain_pass_signal: TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      public_input_indexes: [BigNumberish, BigNumberish],
+      output_indexes: [BigNumberish, BigNumberish]
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
 
-  ACTION_PASS_SIGNAL: TypedContractMethod<[], [string], "view">;
+  _dryrun_chain_proof_verify: TypedContractMethod<
+    [state: ProvingStateV2Struct, mask: BigNumberish, ignore_proof: boolean],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
 
-  ACTION_PREPARE_NEXT_PROOF: TypedContractMethod<[], [string], "view">;
+  _dryrun_chain_static_input: TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      value: BytesLike,
+      public_input_index: BigNumberish
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
 
-  ACTION_STATIC_INPUT: TypedContractMethod<[], [string], "view">;
+  _dryrun_prepare_next_proof: TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      _verifier: AddressLike,
+      _verifierMustBeTrue: boolean,
+      _publicInputs: BytesLike[],
+      _proof: BytesLike
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
 
-  ACTION_VALIDATE_DATA_ROOT: TypedContractMethod<[], [string], "view">;
+  _dryrun_validate_data_root: TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      datastream: AddressLike,
+      output_signal_index: BigNumberish
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
 
   dryrun_chain_pass_signal: TypedContractMethod<
     [
@@ -336,20 +378,58 @@ export interface ChainedProofV2 extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "ACTION_CHAIN_PROOF_VERIFY"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "_dryrun_chain_pass_signal"
+  ): TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      public_input_indexes: [BigNumberish, BigNumberish],
+      output_indexes: [BigNumberish, BigNumberish]
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
   getFunction(
-    nameOrSignature: "ACTION_PASS_SIGNAL"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "_dryrun_chain_proof_verify"
+  ): TypedContractMethod<
+    [state: ProvingStateV2Struct, mask: BigNumberish, ignore_proof: boolean],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
   getFunction(
-    nameOrSignature: "ACTION_PREPARE_NEXT_PROOF"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "_dryrun_chain_static_input"
+  ): TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      value: BytesLike,
+      public_input_index: BigNumberish
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
   getFunction(
-    nameOrSignature: "ACTION_STATIC_INPUT"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "_dryrun_prepare_next_proof"
+  ): TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      _verifier: AddressLike,
+      _verifierMustBeTrue: boolean,
+      _publicInputs: BytesLike[],
+      _proof: BytesLike
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
   getFunction(
-    nameOrSignature: "ACTION_VALIDATE_DATA_ROOT"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "_dryrun_validate_data_root"
+  ): TypedContractMethod<
+    [
+      state: ProvingStateV2Struct,
+      datastream: AddressLike,
+      output_signal_index: BigNumberish
+    ],
+    [ProvingStateV2StructOutput],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "dryrun_chain_pass_signal"
   ): TypedContractMethod<

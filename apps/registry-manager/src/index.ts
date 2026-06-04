@@ -7,6 +7,7 @@
  * Usage:
  *   registry-manager processor status
  *   registry-manager processor register
+ *   registry-manager processor metadata update
  *   registry-manager processor keys list [--all]
  *   registry-manager processor keys deactivate <keyId>
  *   registry-manager processor keys derive
@@ -17,6 +18,7 @@
  *
  *   registry-manager datastream status
  *   registry-manager datastream register
+ *   registry-manager datastream metadata update
  *   registry-manager datastream keys list [--all]
  *   registry-manager datastream keys deactivate <keyId>
  *   registry-manager datastream stake list

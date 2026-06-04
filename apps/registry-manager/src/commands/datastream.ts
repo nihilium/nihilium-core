@@ -4,6 +4,7 @@
  * Commands:
  *   datastream status
  *   datastream register
+ *   datastream metadata update
  *   datastream keys list
  *   datastream keys deactivate <keyId>
  *   datastream stake list
@@ -30,6 +31,7 @@ import {
   confirmStakeSignal,
   confirmStakeFinalize,
   confirmDeactivateKey,
+  confirmMetadataUpdate,
 } from "../ui/confirm";
 
 // ---------------------------------------------------------------------------
@@ -43,9 +45,10 @@ export function builder(yargs: Argv): Argv {
   return yargs
     .command(statusCmd)
     .command(registerCmd)
+    .command(metadataCmd)
     .command(keysCmd)
     .command(stakeCmd)
-    .demandCommand(1, "Specify an action: status | register | keys | stake")
+    .demandCommand(1, "Specify an action: status | register | metadata | keys | stake")
     .strict();
 }
 
@@ -60,14 +63,17 @@ export async function handler(_argv: unknown): Promise<void> {
 
 const statusCmd = {
   command:  "status",
-  describe: "Show registration status, metadata, contract address, and all keys",
+  describe: "Show registration status, metadata, keys, and stake",
   handler:  async () => {
     const cfg = getDatastreamConfig();
     const stop = printSpinner("Fetching on-chain state…");
     try {
-      const info = await lib.getDatastreamStatus(cfg);
+      const [info, stakes] = await Promise.all([
+        lib.getDatastreamStatus(cfg),
+        lib.getStakes(cfg),
+      ]);
       stop();
-      printDatastreamStatus(info);
+      printDatastreamStatus(info, stakes);
     } catch (e) {
       stop();
       printError(String(e));
@@ -96,6 +102,43 @@ const registerCmd = {
       process.exit(1);
     }
   },
+};
+
+// ---------------------------------------------------------------------------
+// datastream metadata
+// ---------------------------------------------------------------------------
+
+const metadataUpdateCmd = {
+  command:  "update",
+  describe: "Update on-chain metadata from configured env vars",
+  handler:  async () => {
+    const cfg = getDatastreamConfig();
+
+    const ok = await confirmMetadataUpdate(cfg.metadata);
+    if (!ok) { printInfo("Aborted."); return; }
+
+    const stop = printSpinner("Updating metadata…");
+    try {
+      await lib.updateDatastreamMetadata(cfg, cfg.metadata);
+      stop();
+      printSuccess("Datastream metadata updated.");
+    } catch (e) {
+      stop();
+      printError(String(e));
+      process.exit(1);
+    }
+  },
+};
+
+const metadataCmd = {
+  command:  "metadata <action>",
+  describe: "Update registry metadata",
+  builder:  (y: Argv) =>
+    y
+      .command(metadataUpdateCmd)
+      .demandCommand(1, "Specify an action: update")
+      .strict(),
+  handler: () => undefined,
 };
 
 // ---------------------------------------------------------------------------
