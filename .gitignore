@@ -158,3 +158,5 @@ x19xlookupTable.json
 apps/processor/.env.anvil
 apps/processor/.env.avax
 packages/zkp-circuits/lookupTables/x16xlookupTable.json
+apps/datastream-server/.env-live
+apps/datastream-server/.env-anvil

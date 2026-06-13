@@ -23,11 +23,15 @@ import { Signer, ethers } from "ethers";
 import { IDataStreamPersistence } from "../src/lib/persistence/types";
 import { DataStreamFilePersistence } from "../src/lib/persistence/DataStreamFilePersistence";
 import * as zkeddsa from "@zk-kit/eddsa-poseidon";
-import { ChainedProofCollection } from "../src/lib/reveal_methods/collections/types";
-import { RevealOnlyCollection } from "../src/lib/reveal_methods/collections/reveal_only";
+
+import { CompiledModule, DefaultAnchoredOpeningProofModule, StandardModuleLibrary } from "../src/lib/unseal_conditions/modules";
+
 // import { validatedSigHeAddCircuit, encryptProofCircuit } from "nihilium-noir-circuits";
 import axios from "axios";
-import { RevealOnlyCollectionNormalTrees } from "../src/lib/reveal_methods/collections/reveal_only_normal_trees";
+import { UnsealConditionCollection } from "../src/lib/unseal_conditions/collections/UnsealConditionCollection";
+import { createRevealOnlyCollection } from "../src/lib/unseal_conditions/templates/reveal_only_template";
+import { NETWORK_IDS } from "../src/static_contracts";
+import { UnsealConditionTemplate } from "../src/lib/unseal_conditions/collections/UnsealConditionTemplate";
 var mimc7contract = require("../contracts/mimc7.json");
 
 
@@ -54,7 +58,8 @@ describe("Processor-Client intereaction", () => {
     let client_1:ClientSingleShareSealingProcess;
     let valueP:bigint = cryptoTools.generateRandom248BitNumber(); //1329227995784915872903807060280344575n; // 120-bit max
     
-    let chainedProofCollection: ChainedProofCollection;
+    let chainedProofCollection: UnsealConditionCollection;
+    let revealOnlyTemplate: {collection: UnsealConditionCollection, template: UnsealConditionTemplate} = createRevealOnlyCollection(NETWORK_IDS.ANVIL);
 
     let chainedProofAddress: string;
 
@@ -73,7 +78,7 @@ describe("Processor-Client intereaction", () => {
     let persistence: IDataStreamPersistence;
     before(async () => {
       //eddsa = await buildEddsa();
-      const deployedContracts = require("../scripts/deployed-contracts-1337.json");
+      const deployedContracts = require("../scripts/deployed-contracts-31337.json");
       // signers  = (await ethers.getSigners()) as unknown as Signer[];
 
       openingProofAddress = deployedContracts.validated_sig_he_add;
@@ -112,7 +117,7 @@ describe("Processor-Client intereaction", () => {
       const data = response.data;
       const addsPubKey = [data.signing_public_key[0], data.signing_public_key[1]];
       const he_encryption = [data.he_public_key[0], data.he_public_key[1]]
-      const rpc_provider = new ethers.JsonRpcProvider("http://localhost:7545", 1337);
+      const rpc_provider = new ethers.JsonRpcProvider("http://localhost:7545", 31337);
 
       processor_endpoint = {
         url: "http://localhost:3005",
@@ -121,12 +126,10 @@ describe("Processor-Client intereaction", () => {
         public_he_encryption_key: [BigInt(he_encryption[0]), BigInt(he_encryption[1])],
         server_address: "0x0000000000000000000000000000000000000000"
       }
-      chainedProofCollection = new RevealOnlyCollectionNormalTrees(openingProofAddress, 
-        topLevelMerkleProofAddress, subTreeMerkleProofAddress, [data_stream], rpc_provider);
-      client_1 = new ClientSingleShareSealingProcess(processor_endpoint, chainedProofCollection);
-      await client_1.initialize(valueP, valueP);
+      revealOnlyTemplate = createRevealOnlyCollection(NETWORK_IDS.ANVIL);
+      client_1 = new ClientSingleShareSealingProcess(processor_endpoint, [data_stream], revealOnlyTemplate.template);
+      await client_1.initialize(valueP, valueP, {}, {"datastream": data_stream.getAddress()});
 
-        
   })
 
   /*
@@ -146,7 +149,11 @@ describe("Processor-Client intereaction", () => {
     const shamir_secret = client_1.get_shamir_secret();
     
 
-    const unsealing_process = new ClientSingleShareUnsealingProcess(processor_endpoint, chainedProofCollection, single_seal);
+    const unsealing_process = new ClientSingleShareUnsealingProcess(processor_endpoint,
+      revealOnlyTemplate.collection,
+      revealOnlyTemplate.template,
+      {[data_stream.getAddress()]: data_stream},
+      single_seal);
     await unsealing_process.initialize();
     await data_stream.postData([cryptoTools.generateRandom248BitNumber().toString()]);
     await data_stream.postData([cryptoTools.generateRandom248BitNumber().toString()]);
@@ -159,7 +166,8 @@ describe("Processor-Client intereaction", () => {
     }
     console.log("Waiting for provable");
     while(true) {
-      var provable = await unsealing_process.validate_elligble_for_unsealing();
+      await unsealing_process.await_reveal_value_to_be_provable();
+      var provable = true;
       await new Promise(resolve => setTimeout(resolve, 50));
       counter++;
       if(counter % 50){
@@ -170,7 +178,33 @@ describe("Processor-Client intereaction", () => {
       }
       
     }
-    const unseal_response = await unsealing_process.unseal_request_to_processor();
+    
+
+    var proofs: any[] = []
+    var public_inputs: any[][] = []
+    var proof_index = 0;
+    const modules = unsealing_process.getModulesForPath(proof_index);
+    for(var module of modules) {
+      switch(module.compiled_module.module_name) {
+        case "UnsealOpeningModule":
+          var typedModule = module.module as DefaultAnchoredOpeningProofModule;
+          var result = await typedModule.produce_proofs(data_stream, processor_endpoint,
+            single_seal.private_package.proof, single_seal.private_package.public_signals);
+          for(var proof of result.proofs) {
+            proofs.push(proof);
+          }
+          for(var public_input of result.public_inputs) {
+            public_inputs.push(public_input);
+          }
+          break;
+      }
+    }
+    const unseal_response = await unsealing_process.unseal_request_to_processor(proof_index, proofs, public_inputs);
+    //await validatedSigHeAddCircuit.init()
+    // var testtesta = await validatedSigHeAddCircuit.verifyProof(unseal_request.proof)
+    // var testtest = await o.verify(unseal_request.proof.proof, unseal_request.proof.publicInputs);
+    //const unseal_response = await processor.process_unseal_request(unseal_request);
+
     //await validatedSigHeAddCircuit.init()
     // var testtesta = await validatedSigHeAddCircuit.verifyProof(unseal_request.proof)
     // var testtest = await o.verify(unseal_request.proof.proof, unseal_request.proof.publicInputs);

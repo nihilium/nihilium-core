@@ -55,6 +55,7 @@
             "args": [
                 "--timeout",
                 "5000000",
+                "--no-config",
                 "--require",
                 "mocha-suppress-logs",
                 "${workspaceRoot}/packages/core/test/integrated.test.ts",

@@ -1,6 +1,22 @@
 import { Request, Response } from 'express';
 import { Processor } from '@nihilium/core';
 import { SingleSealRequest, SingleUnsealRequest } from '@nihilium/core/dist/types/protocol/common';
+import { buildEvidenceMeta } from '../evidence/helpers';
+import { QuorumNotMetError, EvidenceStoreError } from '../evidence';
+
+function sendEvidenceError(res: Response, error: unknown): void {
+  if (error instanceof QuorumNotMetError) {
+    res.status(503).json(error.toJSON());
+    return;
+  }
+  if (error instanceof EvidenceStoreError) {
+    res.status(503).json({ error: 'evidence_store_error', message: error.message });
+    return;
+  }
+  console.error('Error processing data:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
+
 /**
  * Process data received from the client
  * @param req Express request object
@@ -11,10 +27,8 @@ export const request_public_keys = async (req: Request, res: Response): Promise<
     const processor: Processor = req.app.locals.processor; 
     const public_keys = await processor.get_public_keys();
     
-    // Process the data (example)
     const processedData = public_keys;
     
-    // Return the processed data
     res.status(200).json(processedData);
   } catch (error) {
     console.error('Error processing data:', error);
@@ -36,27 +50,41 @@ export const identity = async (req: Request, res: Response): Promise<void> => {
 export const request_seal = async (req: Request, res: Response): Promise<void> => {
   try {
     console.time("Seal Request")
-    const data:SingleSealRequest = req.body;
-    const processor: Processor = req.app.locals.processor; 
+    const data: SingleSealRequest = req.body;
+    const processor: Processor = req.app.locals.processor;
+    const evidenceStore = req.app.locals.evidenceStore;
     const seal_response = await processor.process_seal_request(data);
+    const meta = await buildEvidenceMeta(processor, data);
+    await evidenceStore.persist({
+      op: 'seal',
+      request: data,
+      response: seal_response,
+      meta,
+    });
     console.timeEnd("Seal Request")
     res.status(200).json(seal_response);
   } catch (error) {
-    console.error('Error processing data:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendEvidenceError(res, error);
   }
 };
 
 export const request_unseal = async (req: Request, res: Response): Promise<void> => {
   try {
     console.time("Unseal Request")
-    const data:SingleUnsealRequest = req.body;
-    const processor: Processor = req.app.locals.processor; 
+    const data: SingleUnsealRequest = req.body;
+    const processor: Processor = req.app.locals.processor;
+    const evidenceStore = req.app.locals.evidenceStore;
     const unseal_response = await processor.process_unseal_request(data);
+    const meta = await buildEvidenceMeta(processor, data);
+    await evidenceStore.persist({
+      op: 'unseal',
+      request: data,
+      response: unseal_response,
+      meta,
+    });
     console.timeEnd("Unseal Request")
     res.status(200).json(unseal_response);
   } catch (error) {
-    console.error('Error processing data:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendEvidenceError(res, error);
   }
 };

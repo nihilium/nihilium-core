@@ -9,6 +9,7 @@ import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/cor
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { ethers, Network } from 'ethers';
+import { createEvidenceStore } from './evidence';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -91,15 +92,29 @@ async function main() {
     openingProofAddress, 
     wallet);
     await app.locals.processor.initialize();
+  app.locals.evidenceStore = await createEvidenceStore();
+  console.log(`Evidence store quorum: ${app.locals.evidenceStore.quorumLabel}`);
   // Routes
   app.use('/', apiRouter);
 
   // Allow larger POST requests by increasing the body size limit
 
 
+  const healthStrict = process.env.EVIDENCE_HEALTH_STRICT === 'true';
+
   // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  app.get('/health', async (req, res) => {
+    const evidence = await app.locals.evidenceStore.checkHealth();
+    const payload = {
+      status: evidence.healthy ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      evidence,
+    };
+    if (healthStrict && !evidence.healthy) {
+      res.status(503).json(payload);
+      return;
+    }
+    res.status(200).json(payload);
   });
 
   // Start server

@@ -14,8 +14,10 @@ RUN apt-get update \
 # Copy the entire monorepo (node_modules and all)
 COPY . .
 
-# Build the processor application
-RUN cd apps/processor && npm run build
+# Install processor-only deps (workspace npm may not hoist @aws-sdk) and build
+RUN cd apps/processor \
+  && npm install @aws-sdk/client-s3@3.758.0 --no-workspaces \
+  && npm run build
 
 # Expose the port (default is 3006 based on server.ts)
 EXPOSE 3006
@@ -27,9 +29,14 @@ WORKDIR /app/apps/processor
 RUN groupadd -g 1001 nodejs \
   && useradd -u 1001 -g nodejs -m -s /bin/bash processor
 
+# Evidence store directories (3/3 local quorum example; use e0..e4 for 3/5)
+RUN mkdir -p /data/e0 /data/e1 /data/e2 /data/e3 /data/e4 \
+  && chmod 700 /data/e0 /data/e1 /data/e2 /data/e3 /data/e4
+
 # Ensure the processor user has write permissions for runtime-generated files
 RUN chown -R processor:nodejs /app/apps/processor \
-  && chown -R processor:nodejs /app/packages/privacy-lib/dist/lib/processor
+  && chown -R processor:nodejs /app/packages/privacy-lib/dist/lib/processor \
+  && chown -R processor:nodejs /data
 
 USER processor
 

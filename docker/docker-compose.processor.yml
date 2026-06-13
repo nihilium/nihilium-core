@@ -10,6 +10,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3006
+      # Evidence quorum (W-of-N acks required before HTTP 200 on seal/unseal)
+      - EVIDENCE_QUORUM=3/3
+      - EVIDENCE_BACKENDS=[{"type":"local","path":"/data/e0","id":"e0"},{"type":"local","path":"/data/e1","id":"e1"},{"type":"local","path":"/data/e2","id":"e2"}]
+      # Optional: EVIDENCE_ENCRYPTION_KEY=64_hex_chars_32_bytes
+      # Optional: EVIDENCE_HEALTH_STRICT=true
       # Add your required environment variables here:
       # - PRIVATE_KEY=your_private_key
       # - PRIVATE_KEY_HE=your_he_private_key
@@ -24,9 +29,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    # Uncomment to add volume for persistent data if needed
-    # volumes:
-    #   - processor_data:/app/data
+    volumes:
+      - processor_evidence:/data
     networks:
       - processor_network
 
@@ -34,6 +38,5 @@ networks:
   processor_network:
     driver: bridge
 
-# Uncomment if you need persistent volumes
-# volumes:
-#   processor_data: 
+volumes:
+  processor_evidence:
