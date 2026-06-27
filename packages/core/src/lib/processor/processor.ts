@@ -114,8 +114,9 @@ export class Processor {
     this.dlogSolver = new DlogSolver(PRECOMPUTE_SIZE, lookupPath);
   }
   
-  get_chain_id(): number {
-    return Number(this.signer.provider!.getNetwork().then(network => network.chainId));
+  async get_chain_id(): Promise<bigint> {
+    const network = await this.signer.provider!.getNetwork();
+    return network.chainId;
   }
 
   get_chained_proof_address(): string {

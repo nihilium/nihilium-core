@@ -78,7 +78,8 @@ describe("Processor-Client intereaction", () => {
     let persistence: IDataStreamPersistence;
     before(async () => {
       //eddsa = await buildEddsa();
-      const deployedContracts = require("../scripts/deployed-contracts-31337.json");
+      //const deployedContracts = require("../scripts/deployed-contracts-31337.json");
+      const deployedContracts = require("../scripts/deployed-contracts-43113.json");
       // signers  = (await ethers.getSigners()) as unknown as Signer[];
 
       openingProofAddress = deployedContracts.validated_sig_he_add;
@@ -110,7 +111,8 @@ describe("Processor-Client intereaction", () => {
       console.log(merkleTreeContractAddress);
       
       //data_stream = new EVMDataStream("test", persistence, merkleTreeContractAddress, signers[0], 10, 20, 10);
-      data_stream = new DataStreamClient("http://localhost:3006");
+      //data_stream = new DataStreamClient("http://localhost:3006");
+      data_stream = new DataStreamClient("https://datastream1.nihilium.io");
       await data_stream.initialize();
       // var bugger = cryptoTools.bigInt2Buffer(signing_key.privKey)
       const response = await axios.get("http://localhost:3005/get_public_keys");

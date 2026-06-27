@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { router as apiRouter } from './routes/api';
 import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/core';
+import { buildPaymentVerifier } from './payment';
 //Only for debugging purposes
 //import { Processor, deployedProtocolContracts, NETWORK_IDS } from '../../../packages/privacy-lib/src/index';
 //import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/core/src/index';
@@ -72,9 +73,11 @@ async function main() {
   }
   console.log(chainId, rpcUrl, contractAddress);
   
-  // Create a custom network for any chain ID
+  // Create a custom network for any chain ID. Mark it as a static network so
+  // ethers trusts the configured chain id instead of performing an eth_chainId
+  // roundtrip (and throwing "network changed") on every getNetwork() call.
   const network = new Network('custom', chainId);
-  const provider = new ethers.JsonRpcProvider(rpcUrl, network);
+  const provider = new ethers.JsonRpcProvider(rpcUrl, network, { staticNetwork: network });
   const wallet = new ethers.Wallet(privateKey, provider);
 
   // Create Express app
@@ -92,6 +95,13 @@ async function main() {
     openingProofAddress, 
     wallet);
     await app.locals.processor.initialize();
+  const paymentVerifier = buildPaymentVerifier(process.env, wallet.address);
+  if (paymentVerifier) {
+    console.log(`Payment verification enabled (${paymentVerifier.name}), processor ID: ${wallet.address}`);
+    app.locals.paymentVerifier = paymentVerifier;
+  } else {
+    console.warn('Payment verification disabled — NIHILIUM_JWKS_URL not set');
+  }
   app.locals.evidenceStore = await createEvidenceStore();
   console.log(`Evidence store quorum: ${app.locals.evidenceStore.quorumLabel}`);
   // Routes
