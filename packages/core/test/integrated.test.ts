@@ -32,6 +32,7 @@ import { UnsealConditionCollection } from "../src/lib/unseal_conditions/collecti
 import { createRevealOnlyCollection } from "../src/lib/unseal_conditions/templates/reveal_only_template";
 import { NETWORK_IDS } from "../src/static_contracts";
 import { UnsealConditionTemplate } from "../src/lib/unseal_conditions/collections/UnsealConditionTemplate";
+import { NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE } from "../src/lib/client/payments";
 var mimc7contract = require("../contracts/mimc7.json");
 
 
@@ -61,18 +62,18 @@ describe("Processor-Client intereaction", () => {
     let chainedProofCollection: UnsealConditionCollection;
     let revealOnlyTemplate: {collection: UnsealConditionCollection, template: UnsealConditionTemplate} = createRevealOnlyCollection(NETWORK_IDS.ANVIL);
 
-    let chainedProofAddress: string;
+    // let chainedProofAddress: string;
 
     
-    let openingProofAddress: string;
+    // let openingProofAddress: string;
 
-    let topLevelMerkleProofAddress: string;
-    let mimcVerifierContractAddress: string;
-    let merkleTreeContractAddress: string;
-    let encryptProofAddress: string;
-    let subTreeMerkleProofAddress: string;
+    // let topLevelMerkleProofAddress: string;
+    // let mimcVerifierContractAddress: string;
+    // let merkleTreeContractAddress: string;
+    // let encryptProofAddress: string;
+    // let subTreeMerkleProofAddress: string;
 
-    let genericAdjacentTreeProofAddress: string;
+    // let genericAdjacentTreeProofAddress: string;
 
     let levels = 20;
     let persistence: IDataStreamPersistence;
@@ -82,54 +83,63 @@ describe("Processor-Client intereaction", () => {
       const deployedContracts = require("../scripts/deployed-contracts-43113.json");
       // signers  = (await ethers.getSigners()) as unknown as Signer[];
 
-      openingProofAddress = deployedContracts.validated_sig_he_add;
-      console.log(openingProofAddress);
+      // openingProofAddress = deployedContracts.validated_sig_he_add;
+      // console.log(openingProofAddress);
 
     
-      encryptProofAddress = deployedContracts.encrypt_proof;
-      console.log(encryptProofAddress);
+      // encryptProofAddress = deployedContracts.encrypt_proof;
+      // console.log(encryptProofAddress);
 
-      genericAdjacentTreeProofAddress = deployedContracts.generic_adjacent_tree_proof;
-      console.log(genericAdjacentTreeProofAddress);
+      // genericAdjacentTreeProofAddress = deployedContracts.generic_adjacent_tree_proof;
+      // console.log(genericAdjacentTreeProofAddress);
 
-      topLevelMerkleProofAddress = deployedContracts.TopLevelMerkleProof;
-      console.log(topLevelMerkleProofAddress);
+      // topLevelMerkleProofAddress = deployedContracts.TopLevelMerkleProof;
+      // console.log(topLevelMerkleProofAddress);
 
-      subTreeMerkleProofAddress = deployedContracts.SubTreeMerkleProof;
-      console.log(subTreeMerkleProofAddress);
+      // subTreeMerkleProofAddress = deployedContracts.SubTreeMerkleProof;
+      // console.log(subTreeMerkleProofAddress);
 
-      mimcVerifierContractAddress = deployedContracts.MiMC7;
-      console.log(mimcVerifierContractAddress);
+      // mimcVerifierContractAddress = deployedContracts.MiMC7;
+      // console.log(mimcVerifierContractAddress);
 
-      merkleTreeContractAddress = deployedContracts.DualMerkleTree;
-      console.log(merkleTreeContractAddress);
+      // merkleTreeContractAddress = deployedContracts.DualMerkleTree;
+      // console.log(merkleTreeContractAddress);
 
-      chainedProofAddress = deployedContracts.ChainedProof;
-      console.log(chainedProofAddress);
+      // chainedProofAddress = deployedContracts.ChainedProof;
+      // console.log(chainedProofAddress);
 
-
-      console.log(merkleTreeContractAddress);
+      var processors = await axios.get("http://localhost:8080/api/get-processors");
+      if(processors.data.length == 0) {
+        throw new Error("No processors found");
+      }
+      //TODO get this from your local setup
+      var API_KEY = "nih_633637bc3db10469c3951832ffe52c9113f3fd71bedc964f76b3a947c7e44bcb"
+      var processor = processors.data[0];
+      // console.log(merkleTreeContractAddress);
       
       //data_stream = new EVMDataStream("test", persistence, merkleTreeContractAddress, signers[0], 10, 20, 10);
       //data_stream = new DataStreamClient("http://localhost:3006");
       data_stream = new DataStreamClient("https://datastream1.nihilium.io");
+      const paymentProvider = new NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE(
+        "http://localhost:8080", API_KEY);
       await data_stream.initialize();
       // var bugger = cryptoTools.bigInt2Buffer(signing_key.privKey)
-      const response = await axios.get("http://localhost:3005/get_public_keys");
+      const response = await axios.get(`${processor.url}/get_public_keys`);
       const data = response.data;
       const addsPubKey = [data.signing_public_key[0], data.signing_public_key[1]];
       const he_encryption = [data.he_public_key[0], data.he_public_key[1]]
-      const rpc_provider = new ethers.JsonRpcProvider("http://localhost:7545", 31337);
+      //const rpc_provider = new ethers.JsonRpcProvider("http://localhost:7545", 31337);
 
       processor_endpoint = {
         url: "http://localhost:3005",
         is_tor: false,
         public_verification_key: [BigInt(addsPubKey[0]), BigInt(addsPubKey[1])],
         public_he_encryption_key: [BigInt(he_encryption[0]), BigInt(he_encryption[1])],
-        server_address: "0x0000000000000000000000000000000000000000"
+        server_address: processor.ethAddress
       }
       revealOnlyTemplate = createRevealOnlyCollection(NETWORK_IDS.ANVIL);
-      client_1 = new ClientSingleShareSealingProcess(processor_endpoint, [data_stream], revealOnlyTemplate.template);
+      client_1 = new ClientSingleShareSealingProcess(processor_endpoint, [data_stream],
+         revealOnlyTemplate.template,{}, paymentProvider);
       await client_1.initialize(valueP, valueP, {}, {"datastream": data_stream.getAddress()});
 
   })

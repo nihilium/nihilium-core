@@ -17,6 +17,7 @@ import { IDataStream } from "../data_stream/types";
 import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
 import { toPaddedHex } from "../utils";
+import { PaymentProvider, hashRequestBody } from "./payments";
 
 
 
@@ -141,20 +142,22 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
     private data_stream_group_preimage: bigint;
     private metadata_root: bigint;
     private keypair: cryptoTools.PrivKey; //This is on the top level so we can store it as part of state
+    private paymentProvider: PaymentProvider | null;
     //private severed_commitment_preimage: bigint;
     //private secretThrowawayPackages: SecretThrowawayPackage[] = [];
     //private revealConditions: RevealConditionRequestPackage[] = [];
 
     constructor(
-        processor: ProcessorEndpoint,        
+        processor: ProcessorEndpoint,
         dataStreams: IDataStream[],
         unsealConditionTemplate: UnsealConditionTemplate,
         proving_hints: any = {},
+        paymentProvider: PaymentProvider | null = null,
         // unsealConditionCollection: UnsealConditionCollection
     ) {
         this.data_streams = dataStreams;
-        this.processor = processor;        
-        this.secret = 0n;        
+        this.processor = processor;
+        this.secret = 0n;
         this.phase = ClientProcessorSealingPhase.NOT_STARTED;
         this.keypair = cryptoTools.genPrivKey();
         this.reveal_value_preimage = 0n;
@@ -163,6 +166,7 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
         //this.severed_commitment_preimage = 0n;
         this.proving_hints = proving_hints;
         this.unsealConditionTemplate = unsealConditionTemplate;
+        this.paymentProvider = paymentProvider;
         //this.unsealConditionCollection = unsealConditionCollection;
                 // this.env_settings = {
                 //     sc_addresses: new Map(),
@@ -201,15 +205,24 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
     }
 
 async request_commitment_to_processor(require_proof: boolean = false): Promise<SingleSealStoragePackage> {
-    var commitment_request = await this.request_commitment(require_proof, false);
+    const commitment_request = await this.request_commitment(require_proof, false);
     const request_url = this.processor.url + PROTOCOL_PROCESSOR_PATHS.REQUEST_SEAL;
-    const response = await axios.post<SingleSealRequestResponse>(
-        request_url, commitment_request)
-    if(response.status != 200) {
+
+    const headers: Record<string, string> = {};
+    if (this.paymentProvider) {
+        const requestId = hashRequestBody(commitment_request);
+        const token = await this.paymentProvider.getProcessorToken(this.processor.server_address, requestId);
+        headers['Authorization'] = `Bearer ${token.token}`;
+    }
+
+    const response = await axios.post<SingleSealRequestResponse>(request_url, commitment_request, { headers, validateStatus: () => true });
+    if (response.status === 401) {
+        throw new Error("Unauthorized: payment token rejected by processor");
+    }
+    if (response.status != 200) {
         throw new Error("Failed to request commitment");
     }
     return await this.process_seal_response(response.data);
-
 }
 
     async request_commitment( require_proof: boolean = false, call_processor: boolean = true): Promise<SingleSealRequest> {

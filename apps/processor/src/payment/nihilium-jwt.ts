@@ -43,7 +43,7 @@ export class NihiliumJwtVerifier implements PaymentVerifier {
       throw new Error(`Invalid token type: expected processor_token, got ${payload['type']}`);
     }
 
-    if (payload.sub !== this.processorId) {
+    if (payload.sub?.toLowerCase() !== this.processorId.toLowerCase()) {
       throw new Error('Token sub does not match this processor');
     }
 

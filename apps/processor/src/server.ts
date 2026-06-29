@@ -17,6 +17,12 @@ const PORT = process.env.PORT || 3000;
 async function main() {
 
   const argv = await yargs(hideBin(process.argv))
+        .option('processor-private-key', {
+            alias: 'ppk',
+            type: 'string',
+            description: 'Private key for the processor wallet',
+            required: !process.env.CHAIN_PRIVATE_KEY,
+        })
         .option('private-key-signing', {
             alias: 'pk',
             type: 'string',
@@ -54,6 +60,7 @@ async function main() {
             required: !process.env.CHAIN_ID,
         }).argv;
 
+    const processorPrivateKey = (argv.processorPrivateKey || process.env.CHAIN_PRIVATE_KEY) as string;
     const privateKey = (argv.privateKey || process.env.PRIVATE_KEY) as string;
     const privateKeyHE = (argv.privateKeyHE || process.env.PRIVATE_KEY_HE) as string;
     const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;  
@@ -78,7 +85,7 @@ async function main() {
   // roundtrip (and throwing "network changed") on every getNetwork() call.
   const network = new Network('custom', chainId);
   const provider = new ethers.JsonRpcProvider(rpcUrl, network, { staticNetwork: network });
-  const wallet = new ethers.Wallet(privateKey, provider);
+  const wallet = new ethers.Wallet(processorPrivateKey, provider);
 
   // Create Express app
 
