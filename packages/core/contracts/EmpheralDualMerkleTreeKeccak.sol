@@ -25,7 +25,7 @@ input so previous proofs can always be verified against older versions of the va
 contract EmpheralDualMerkleTreeKeccak is Ownable {
   event Log(bytes32 value1,bytes32 value2,uint value3);
   //event Log(uint value);
-  event TreeUpdate(uint32 leafIndex, bytes32 leafValue,  uint256 timestamp, bytes32 newValueRoot, bytes32 newDualRoot);
+  event TreeUpdate(uint32 leafIndex, bytes32 leafValue, uint256 timestamp, bytes32 blockHash, bytes32 newValueRoot, bytes32 newDualRoot);
   uint32 public levels = 20;
   
   
@@ -125,7 +125,8 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
       
       //First we calculate the old path. Meanwhile we use the divergence level to calculate the new path.
 
-      bytes32 newValueLeafHash = _efficientHash(insertValue, bytes32(block.timestamp));
+      bytes32 prevBlockHash = blockhash(block.number - 1);
+      bytes32 newValueLeafHash = _efficientHash(_efficientHash(insertValue, bytes32(block.timestamp)), prevBlockHash);
       uint32 newIndex = currentIndex + 1;
       for (uint32 i = 0; i < levels;) {
         
@@ -200,7 +201,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
 
      
       
-      emit TreeUpdate(currentIndex, insertValue, block.timestamp, newValueLeafHash, newDualLeafHash);
+      emit TreeUpdate(currentIndex, insertValue, block.timestamp, prevBlockHash, newValueLeafHash, newDualLeafHash);
       
       return currentIndex;
   }
@@ -220,10 +221,24 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
     do {
       if (bytes32(_root) == merkleRoots[i]) {
         return true;
-      }    
+      }
       i--;
     } while (i != 0);
-    return false;
+    return bytes32(_root) == merkleRoots[0];
+  }
+
+  function isKnownDualRoot(bytes32 _root) public view returns (bool) {
+    if (bytes32(_root) == dualRoots[currentIndex % ROOT_HISTORY_SIZE]) {
+      return true;
+    }
+    uint32 i = ROOT_HISTORY_SIZE - 1;
+    do {
+      if (bytes32(_root) == dualRoots[i]) {
+        return true;
+      }
+      i--;
+    } while (i != 0);
+    return bytes32(_root) == dualRoots[0];
   }
 
   function _efficientHash(bytes32 a, bytes32 b)
@@ -240,8 +255,12 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
 
  
 
-  function getLastMerkleRoot() public view returns (bytes32) {  
+  function getLastMerkleRoot() public view returns (bytes32) {
     return merkleRoots[currentIndex % ROOT_HISTORY_SIZE];
+  }
+
+  function getLastDualRoot() public view returns (bytes32) {
+    return dualRoots[currentIndex % ROOT_HISTORY_SIZE];
   }
 
 

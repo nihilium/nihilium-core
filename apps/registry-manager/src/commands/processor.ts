@@ -18,9 +18,10 @@
  */
 
 import type { Argv } from "yargs";
-import { parseEther, ZeroAddress } from "ethers";
-import { getProcessorConfig } from "../config";
+import { parseEther, ZeroAddress, Wallet } from "ethers";
+import { getProcessorConfig, getNihiliumApiUrl, getNihiliumPortalUrl } from "../config";
 import * as lib from "../lib/processor";
+import { fetchProcessorClaimStatus } from "../lib/nihilium-api";
 import {
   printProcessorStatus,
   printKeyTable,
@@ -30,6 +31,7 @@ import {
   printSuccess,
   printError,
   printInfo,
+  printClaimWarning,
 } from "../ui/output";
 import {
   confirmStakeAdd,
@@ -71,14 +73,19 @@ const statusCmd = {
   describe: "Show registration status, metadata, keys, and stake",
   handler:  async () => {
     const cfg = getProcessorConfig();
+    const address = new Wallet(cfg.ethPrivateKey).address;
     const stop = printSpinner("Fetching on-chain state…");
     try {
-      const [info, stakes] = await Promise.all([
+      const [info, stakes, claimStatus] = await Promise.all([
         lib.getProcessorStatus(cfg),
         lib.getStakes(cfg),
+        fetchProcessorClaimStatus(getNihiliumApiUrl(), address),
       ]);
       stop();
-      printProcessorStatus(info, stakes);
+      printProcessorStatus(info, stakes, claimStatus?.claimed ?? null);
+      if (claimStatus !== null && !claimStatus.claimed) {
+        printClaimWarning(address, getNihiliumPortalUrl());
+      }
     } catch (e) {
       stop();
       printError(String(e));
@@ -96,6 +103,14 @@ const registerCmd = {
   describe: "Register this processor and upload all configured keys (idempotent)",
   handler:  async () => {
     const cfg = getProcessorConfig();
+    const address = new Wallet(cfg.ethPrivateKey).address;
+
+    const claimStatus = await fetchProcessorClaimStatus(getNihiliumApiUrl(), address);
+    if (claimStatus !== null && !claimStatus.claimed) {
+      printClaimWarning(address, getNihiliumPortalUrl());
+      process.exit(1);
+    }
+
     const stop = printSpinner("Registering processor…");
     try {
       await lib.registerProcessor(cfg);

@@ -43,6 +43,14 @@ export function getRpcUrl(): string {
   return requireEnv("RPC_URL");
 }
 
+export function getNihiliumApiUrl(): string {
+  return opt("NIHILIUM_API_URL", "https://nihilium.io");
+}
+
+export function getNihiliumPortalUrl(): string {
+  return opt("NIHILIUM_PORTAL_URL", "https://nihilium.io");
+}
+
 export function getChainId(): number {
   return parseInt(opt("CHAIN_ID", "43113"), 10);
 }

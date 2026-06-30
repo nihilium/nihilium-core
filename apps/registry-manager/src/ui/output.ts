@@ -57,12 +57,17 @@ function keyStatus(isActive: boolean, deactivatedAt: bigint): string {
 // Processor
 // ---------------------------------------------------------------------------
 
-export function printProcessorStatus(info: ProcessorOnChainInfo, stakes?: StakeRow[]): void {
+export function printProcessorStatus(info: ProcessorOnChainInfo, stakes?: StakeRow[], claimed?: boolean | null): void {
   const statusBadge = info.isActive ? chalk.bgGreen.black(" ACTIVE ") : chalk.bgRed.white(" INACTIVE ");
+  const claimedBadge =
+    claimed === true  ? chalk.green("✔ claimed") :
+    claimed === false ? chalk.yellow("✖ not claimed") :
+                        chalk.dim("unknown");
 
   console.log();
   console.log(chalk.bold("Processor") + "  " + statusBadge);
   console.log(chalk.dim("Address:       ") + info.address);
+  console.log(chalk.dim("Portal claim:  ") + claimedBadge);
   console.log(chalk.dim("Name:          ") + (info.metadata.name || chalk.dim("—")));
   console.log(chalk.dim("Description:   ") + (info.metadata.description || chalk.dim("—")));
   console.log(chalk.dim("URL:           ") + (info.metadata.url || chalk.dim("—")));
@@ -246,6 +251,21 @@ export function printError(msg: string): void {
 
 export function printInfo(msg: string): void {
   console.log(chalk.blue("ℹ") + "  " + msg);
+}
+
+export function printClaimWarning(address: string, portalUrl: string): void {
+  const border = chalk.yellow("─".repeat(60));
+  console.log();
+  console.log(border);
+  console.log(chalk.yellow.bold("  ⚠  Processor not yet claimed"));
+  console.log(chalk.dim("  Address: ") + address);
+  console.log();
+  console.log("  This processor has not been claimed in the Nihilium");
+  console.log("  portal. Visit the link below to register and claim it:");
+  console.log();
+  console.log("  " + chalk.cyan.underline(`${portalUrl}/processors/claim?address=${address}`));
+  console.log(border);
+  console.log();
 }
 
 export function printDerivedProcessorKey(data: {
