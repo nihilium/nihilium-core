@@ -17,4 +17,5 @@ export const MerkleTreeProof = new UnsealConditionProof({
         leaf_value: [1, 1],
         index: [2, 1],
     },
+    complexity_score: 250_000,
 });

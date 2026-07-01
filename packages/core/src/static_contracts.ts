@@ -6,6 +6,7 @@ import deployedContracts43113 from "../scripts/deployed-contracts-43113.json";
 import networkConfig from "../scripts/chain_config.json";
 // @ts-ignore
 import deployedContractsAnvil from "../scripts/deployed-contracts-31337.json";
+// @ts-ignore
 import deployedContractsSepolia from "../scripts/deployed-contracts-11155111.json";
 import { AddressMap, BasicAddressMap } from "./lib/unseal_conditions/collections/types";
 

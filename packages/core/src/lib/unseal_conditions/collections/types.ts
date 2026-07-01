@@ -1,5 +1,5 @@
 import { ethers, Signer } from "ethers";
-import { IDataStream } from "../../data_stream/types";
+import { IDualDataStream } from "../../data_stream/types";
 import { CompiledModule, IOMap, ModuleOutputMap, UnsealConditionModule } from "../modules/types";
 import { ProofLibraryType } from "../proofs";
 import { ModuleLibraryType } from "../modules";

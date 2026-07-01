@@ -158,7 +158,7 @@ describe("Processor-Client intereaction", () => {
       // merkleTreeContract = await merkleTree.deploy(signers[0], levels, mimcVerifierContractAddress);
       // merkleTreeContractAddress = await merkleTreeContract.getAddress();
 
-      const merkleTree = await ethers.getContractFactory("EmpheralMerkleTreeKeccak");
+      const merkleTree = await ethers.getContractFactory("EmpheralDualMerkleTreeKeccak");
       merkleTreeContract = await merkleTree.deploy(signers[0], levels);
       merkleTreeContractAddress = await merkleTreeContract.getAddress();
       // deployedProtocolContracts[NETWORK_IDS.CUSTOM]["EmpheralMerkleTreeKeccak"] =   

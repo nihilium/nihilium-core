@@ -49,7 +49,7 @@ contract ChainedProof {
         // ProvingState memory new_state = state;
         // new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, ACTION_VALIDATE_DATA_ROOT));
         // assert();        
-        return IDataStream(_datastream).isKnownValueRoot(_root);
+        return IDataStream(_datastream).isKnownDualRoot(_root);
     }
 //Before doing actions and we need to prepare the proof.
 //After preparing we can set static values and pass earlier outputs to the next proof.
@@ -78,7 +78,7 @@ contract ChainedProof {
             assert(new_state.proof_verifier != address(0));
             new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, ACTION_VALIDATE_DATA_ROOT, datastream, output_proof_index, output_signal_index));
             
-            assert(IDataStream(datastream).isKnownValueRoot(new_state.outputs[output_proof_index][output_signal_index]));
+            assert(IDataStream(datastream).isKnownDualRoot(new_state.outputs[output_proof_index][output_signal_index]));
                 
             
             return new_state;

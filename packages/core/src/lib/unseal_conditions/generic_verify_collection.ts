@@ -1,7 +1,7 @@
 import { ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_PREPARE_NEXT_PROOF, 
     ACTION_VALIDATE_DATA_ROOT, ChainedProofV2 as ChainedProof, ProvingStateV2 as ProvingState } from "./ChainedProofV2";
 import { UnsealProofAction, CompiledChainedProofCollection } from "./types";
-import { IDataStream } from "../data_stream/types";
+import { IDualDataStream } from "../data_stream/types";
 import { ethers, Signer } from "ethers";
 //import { UnsealOpeningProof } from "./proofs/zk_proofs/000_unseal_opening_proof";
 import { ProcessorEndpoint } from "../../types/protocol/common";
@@ -28,7 +28,7 @@ export class GenericVerifyCollection extends CompiledChainedProofCollection {
     protected unseal_proof_actions: UnsealProofAction[] = []
 
     constructor(       
-        datastreams: IDataStream[],
+        datastreams: IDualDataStream[],
         opening_proof_address: string,
         forced_opening_address: string, //Not doing anything yet
         unseal_proof_actions: UnsealProofAction[],
@@ -48,7 +48,7 @@ export class GenericVerifyCollection extends CompiledChainedProofCollection {
         await this.chainedProof.initializeSolidity();
     }
 
-    async produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<any> {
+    async produce_proofs(dataStream: IDualDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<any> {
         
 
         return {proofs: [], public_inputs: []}

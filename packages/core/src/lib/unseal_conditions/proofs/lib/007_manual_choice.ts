@@ -15,4 +15,5 @@ export const ManualChoiceProof = new UnsealConditionProof({
     public_signals: {
         choice: [0, 1],
     },
+    complexity_score: 250_000,
 });

@@ -54,10 +54,6 @@ export class EmpheralDualMerkleTreeWrapper {
     return await this.contract.getLastDualRoot();
   }
 
-  async isKnownValueRoot(root: string): Promise<boolean> {
-    return await this.contract.isKnownValueRoot(root);
-  }
-
   async isKnownDualRoot(root: string): Promise<boolean> {
     return await this.contract.isKnownDualRoot(root);
   }

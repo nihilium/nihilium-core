@@ -119,7 +119,7 @@ describe("Processor-Client intereaction", () => {
       
       //data_stream = new EVMDataStream("test", persistence, merkleTreeContractAddress, signers[0], 10, 20, 10);
       //data_stream = new DataStreamClient("http://localhost:3006");
-      data_stream = new DataStreamClient("https://datastream1.nihilium.io");
+      data_stream = new DataStreamClient("http://localhost:3006");
       const paymentProvider = new NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE(
         "http://localhost:8080", API_KEY);
       await data_stream.initialize();

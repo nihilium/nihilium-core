@@ -16,4 +16,5 @@ export const SmallerThanProof = new UnsealConditionProof({
         timestamp: [0, 1],
         threshold: [1, 1],
     },
+    complexity_score: 250_000,
 });

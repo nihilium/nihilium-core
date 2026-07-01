@@ -14,6 +14,7 @@ import * as utils from './lib/utils';
 //import { Processor } from './lib/processor/processor';
 import * as protocolTypes from './types/protocol/common';
 export {DataStreamClient} from './lib/data_stream/DataStreamClient';
+export type { IDataStream, IDualDataStream, ProofResult, LatestGlobalLeafProofResult, DualProofResult, DualLatestGlobalLeafProofResult } from './lib/data_stream/types';
 //import * as DataStream from './lib/data_stream/EVMDataStreamNonZK';
 //import * as Persistence from './lib/persistence/DataStreamFilePersistence';
 //Network selection

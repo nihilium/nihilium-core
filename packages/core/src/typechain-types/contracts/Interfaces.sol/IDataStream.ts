@@ -20,25 +20,15 @@ import type {
 } from "../../common";
 
 export interface IDataStreamInterface extends Interface {
-  getFunction(
-    nameOrSignature: "isKnownMerkleRoot" | "isKnownValueRoot"
-  ): FunctionFragment;
+  getFunction(nameOrSignature: "isKnownDualRoot"): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "isKnownMerkleRoot",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isKnownValueRoot",
+    functionFragment: "isKnownDualRoot",
     values: [BytesLike]
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "isKnownMerkleRoot",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isKnownValueRoot",
+    functionFragment: "isKnownDualRoot",
     data: BytesLike
   ): Result;
 }
@@ -86,19 +76,14 @@ export interface IDataStream extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  isKnownMerkleRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
-
-  isKnownValueRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+  isKnownDualRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "isKnownMerkleRoot"
-  ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
-  getFunction(
-    nameOrSignature: "isKnownValueRoot"
+    nameOrSignature: "isKnownDualRoot"
   ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
 
   filters: {};

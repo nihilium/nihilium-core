@@ -17,4 +17,5 @@ export const AdditionProof = new UnsealConditionProof({
         value2: [1, 1],
         result: [2, 1],
     },
+    complexity_score: 250_000,
 });

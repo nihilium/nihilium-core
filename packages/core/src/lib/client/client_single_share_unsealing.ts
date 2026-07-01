@@ -2,7 +2,7 @@
 
 import { IClientSingleShareUnsealingProcess, ProcessorEndpoint, ProcessorStatus, PROTOCOL_PROCESSOR_PATHS, SingleSealStoragePackage, SingleUnsealRequest, SingleSealUnsealRequestResponse, UnsealingStatus } from "../../types/protocol/common";
 import { EnvSettings, get_env_settings } from "../../env_settings";
-import { IDataStream } from "../data_stream/types";
+import { IDualDataStream } from "../data_stream/types";
 import axios from "axios";
 import { cryptoTools } from "@nihilium/zkp-circuits";
 // import { ChainedProofCollection } from "../unseal_conditions/types";
@@ -26,7 +26,7 @@ export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnse
     public processor: ProcessorEndpoint;
     public phase: UnsealingStatus;
     private seal: SingleSealStoragePackage;
-    public dataStreams: IDataStream[] = [];
+    public dataStreams: IDualDataStream[] = [];
     public unsealingState: UnsealingState;
     public unsealConditionCollection: UnsealConditionCollection;
     public unsealConditionTemplate: UnsealConditionTemplate;
@@ -36,7 +36,7 @@ export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnse
         processor: ProcessorEndpoint,
         unsealConditionCollection: UnsealConditionCollection,
         unsealConditionTemplate: UnsealConditionTemplate,
-        data_stream_mapping: {[address:string]:IDataStream},
+        data_stream_mapping: {[address:string]:IDualDataStream},
         seal: SingleSealStoragePackage
     ) {
         this.processor = processor;

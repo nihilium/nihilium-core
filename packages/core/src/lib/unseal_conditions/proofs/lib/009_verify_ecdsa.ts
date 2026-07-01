@@ -16,4 +16,5 @@ export const VerifyECDSAProof = new UnsealConditionProof({
         signer_address: [0, 1],
         message_hash: [1, 1],
     },
+    complexity_score: 250_000,
 });

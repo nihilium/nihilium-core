@@ -84,7 +84,8 @@ async function main() {
     const persistence = new Persistence.DataStreamFilePersistence('./server-stream/' + contractAddress, utils.createKeccakMerkelTree);
     
 
-    const dataStream = new DataStream.EVMDataStreamDualMerkleNonZK('server-stream', persistence, contractAddress, wallet, 10, 20, -1, 60 * 10);
+    const dataStream = new DataStream.EVMDataStreamDualMerkleNonZK('server-stream',
+         persistence, contractAddress, wallet, 10, 20, -1, 60 * 10);
     await dataStream.initialize();
 
     const app = express();
@@ -108,12 +109,11 @@ async function main() {
         try {
             const { value } = req.params;
             const result = await dataStream.getProof(value);
-            result[0].pathElements = result[0].pathElements.map(element => element.toString())
-            result[1].pathElements = result[1].pathElements.map(element => element.toString())
-            res.json({ globalProof: result[0], localProof: result[1], timestamp: result[2].toString(), globalIndex: result[3], localIndex: result[4] });
+            result.dualProof.pathElements   = result.dualProof.pathElements.map(e => e.toString());
+            result.globalProof.pathElements = result.globalProof.pathElements.map(e => e.toString());
+            result.localProof.pathElements  = result.localProof.pathElements.map(e => e.toString());
+            res.json(result);
         } catch (error: any) {
-            const { value } = req.params;
-            const result = await dataStream.getProof(value);
             res.status(500).json({ error: error.message });
         }
     });
@@ -134,11 +134,10 @@ async function main() {
     });
 
     app.get('/latestGlobalLeafProof', async (req, res) => {
-        const result: any[] = await dataStream.getLatestGlobalLeafProof();
-        result[0].pathElements = result[0].pathElements.map(element => element.toString())
-        result[2] = result[2].toString()
-        result[3] = result[3].toString()
-        res.json({ result });
+        const result = await dataStream.getLatestGlobalLeafProof();
+        result.dualProof.pathElements   = result.dualProof.pathElements.map(e => e.toString());
+        result.globalProof.pathElements = result.globalProof.pathElements.map(e => e.toString());
+        res.json(result);
     });
 
     app.get('/address', (req, res) => {

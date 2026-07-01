@@ -1,7 +1,7 @@
 import { HexString } from "../../types/protocol/common";
-import { MerkleTree, ProofPath } from 'fixed-merkle-tree'
+import { MerkleTree } from 'fixed-merkle-tree'
 import process from 'node:process';
-import { IDualDataStream } from "./types";
+import { IDualDataStream, DualProofResult, DualLatestGlobalLeafProofResult } from "./types";
 import { toPaddedHex, keccakTreeHasher, createKeccakMerkelTree, signDataInsertRequestJWT, ZERO_KECCAK } from "../utils";
 
 import { IDataStreamPersistence, OnChainPublishingState } from "../persistence/types";
@@ -75,9 +75,6 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
     hasDataStreamRoot: (root: string) => Promise<boolean> = async (root: string) => {
         return this.global_evm_merkle_tree.isKnownDualRoot(root)
     };
-    hasValueRoot: (root: string) => Promise<boolean> = async (root: string) => {
-        return this.global_evm_merkle_tree.isKnownValueRoot(root)
-    };
 
     getUrl(): string {
         return this.id
@@ -119,9 +116,8 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
 
     private async resyncGlobalTree(force: boolean = false): Promise<void> {
         const currentContractGlobalRoot = await this.global_evm_merkle_tree.getLastMerkleRoot()
-        const isKnown = await this.global_evm_merkle_tree.isKnownValueRoot(this.globalValueTree.root.toString())
         console.log("Current contract global root", currentContractGlobalRoot)
-        console.log("Current global root", this.globalValueTree.root, isKnown)
+        console.log("Current global root", this.globalValueTree.root)
         console.log("Current contract global tree index", await this.global_evm_merkle_tree.getCurrentIndex())
         console.log("Current global tree index", this.getGlobalTreeIndex())
 
@@ -287,7 +283,7 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         }
     }
 
-    async getLatestGlobalLeafProof(): Promise<[ProofPath, ProofPath, string, number, number, string]> {
+    async getLatestGlobalLeafProof(): Promise<DualLatestGlobalLeafProofResult> {
         const localTree = await this.persistence.getLocalTree(this.getGlobalTreeIndex() - 1)
         const rootKey = toPaddedHex(BigInt(localTree.root))
         const timestamp: number = this.globalLeafTimestamps.get(rootKey) || 0
@@ -297,32 +293,38 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         )
         const valueTreeRoot = toPaddedHex(BigInt(this.globalValueTree.root))
         const dualProof = this.globalDualTree.proof(valueTreeRoot)
-        return [dualProof, globalProof, rootKey, timestamp, this.getGlobalTreeIndex() - 1, blockHash]
+        return { dualProof, globalProof, leafRoot: rootKey, timestamp, globalIndex: this.getGlobalTreeIndex() - 1, blockHash }
     }
 
-    async getProof(value: HexString): Promise<[ProofPath, ProofPath, ProofPath, number, number, number, string]> {
+    async getProof(value: HexString): Promise<DualProofResult> {
         if (!(await this.isProvable(value))) {
             throw new Error("Not provable")
         }
         var indexes = (await this.persistence.getIndexedLocalLeaf(keccakTreeHasher(BigInt(value), 0n)))
         var indexes2 = indexes[0]
         var localTree = await this.persistence.getLocalTree(indexes2[0])
-        const proof = localTree.path(indexes2[1])
+        const localProof = localTree.path(indexes2[1])
         const rootKey = toPaddedHex(BigInt(localTree.root))
-        const timestamp: number = this.globalLeafTimestamps.get(rootKey) || 0
+        const timestamp: string = (this.globalLeafTimestamps.get(rootKey) || 0).toString()
         const blockHash: string = this.globalLeafBlockHashes.get(rootKey) || "0x0"
 
         const globalProof = this.globalValueTree.proof(
             keccakTreeHasher(BigInt(localTree.root), keccakTreeHasher(BigInt(timestamp), BigInt(blockHash)))
         )
 
-        // The dual leaf at globalIndex is the value tree root AFTER that insertion.
-        // globalValueTree.elements[globalIndex] is the leaf hash; the actual value tree root
-        // is stored in the dual tree. We look up by global index.
         const globalIndex = indexes2[0]
         const dualLeafValue = this.globalDualTree.elements[globalIndex]
         const dualProof = this.globalDualTree.proof(dualLeafValue)
 
-        return [dualProof, globalProof, proof, timestamp, globalIndex, indexes2[1], blockHash]
+        return {
+            dualProof,
+            globalProof,
+            localProof,
+            timestamp,
+            globalIndex,
+            localIndex: indexes2[1],
+            blockHash,
+            dualLeafValue: toPaddedHex(BigInt(dualLeafValue.toString())),
+        }
     }
 }

@@ -1696,7 +1696,7 @@
     ]
   },
   "ChainedProofV2": {
-    "address": "0xe73E36aBe271B4B4FE21A29C20Be009a5cA03601",
+    "address": "0x60F8b580F09AB6846bC74947Fe4e3C4Fb30e2444",
     "abi": [
       {
         "type": "constructor",
@@ -3672,7 +3672,7 @@
     ]
   },
   "EmpheralDualMerkleTreeKeccak": {
-    "address": "0x4123420777C30c47693F0CbD529C551993a18ff4",
+    "address": "0xfAc26F298274706dD48e580306cd421BeD429ED8",
     "abi": [
       {
         "type": "constructor",
@@ -4145,23 +4145,14 @@
       },
       {
         "type": "function",
-        "inputs": [
-          {
-            "name": "_root",
-            "type": "bytes32",
-            "baseType": "bytes32",
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null
-          }
-        ],
-        "name": "isKnownValueRoot",
+        "inputs": [],
+        "name": "lastValueRoot",
         "constant": true,
         "outputs": [
           {
             "name": "",
-            "type": "bool",
-            "baseType": "bool",
+            "type": "bytes32",
+            "baseType": "bytes32",
             "components": null,
             "arrayLength": null,
             "arrayChildren": null
@@ -4200,34 +4191,6 @@
             "name": "",
             "type": "uint32",
             "baseType": "uint32",
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null
-          }
-        ],
-        "stateMutability": "view",
-        "payable": false,
-        "gas": null
-      },
-      {
-        "type": "function",
-        "inputs": [
-          {
-            "name": "",
-            "type": "uint256",
-            "baseType": "uint256",
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null
-          }
-        ],
-        "name": "merkleRoots",
-        "constant": true,
-        "outputs": [
-          {
-            "name": "",
-            "type": "bytes32",
-            "baseType": "bytes32",
             "components": null,
             "arrayLength": null,
             "arrayChildren": null

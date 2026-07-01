@@ -5,6 +5,5 @@ interface IVerifier {
 }
 
 interface IDataStream {
-    function isKnownValueRoot(bytes32 _root) external view returns (bool);
-    function isKnownMerkleRoot(bytes32 _root) external view returns (bool);
+    function isKnownDualRoot(bytes32 _root) external view returns (bool);
 }

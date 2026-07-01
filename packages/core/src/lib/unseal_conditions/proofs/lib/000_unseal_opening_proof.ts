@@ -22,4 +22,5 @@ export const UnsealOpeningProof = new UnsealConditionProof({
         publicKeyHe_validated: [37, 2],
         newCombinedPublicKey: [39, 2],
     },
+    complexity_score: 250_000,
 });

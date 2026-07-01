@@ -1,4 +1,4 @@
-import { IDataStream } from "../../lib/data_stream/types";
+import { IDualDataStream } from "../../lib/data_stream/types";
 import { CompiledCollectionExport, RequiredUserInput } from "../../lib/unseal_conditions/collections/types";
 
 import { UnsealProofAction } from "../../lib/unseal_conditions/types";

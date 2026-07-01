@@ -17,4 +17,5 @@ export const TimeDelayProof = new UnsealConditionProof({
         timestamp_high: [1, 1],
         offset: [2, 1],
     },
+    complexity_score: 250_000,
 });

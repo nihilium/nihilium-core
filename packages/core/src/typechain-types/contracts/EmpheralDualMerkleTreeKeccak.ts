@@ -36,10 +36,9 @@ export interface EmpheralDualMerkleTreeKeccakInterface extends Interface {
       | "iToHex"
       | "insert"
       | "isKnownDualRoot"
-      | "isKnownValueRoot"
+      | "lastValueRoot"
       | "levels"
       | "maxValue"
-      | "merkleRoots"
       | "owner"
       | "renounceOwnership"
       | "setHistorySize"
@@ -91,15 +90,11 @@ export interface EmpheralDualMerkleTreeKeccakInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "isKnownValueRoot",
-    values: [BytesLike]
+    functionFragment: "lastValueRoot",
+    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "levels", values?: undefined): string;
   encodeFunctionData(functionFragment: "maxValue", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "merkleRoots",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -152,15 +147,11 @@ export interface EmpheralDualMerkleTreeKeccakInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "isKnownValueRoot",
+    functionFragment: "lastValueRoot",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "levels", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "maxValue", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "merkleRoots",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
@@ -325,13 +316,11 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
 
   isKnownDualRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
 
-  isKnownValueRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+  lastValueRoot: TypedContractMethod<[], [string], "view">;
 
   levels: TypedContractMethod<[], [bigint], "view">;
 
   maxValue: TypedContractMethod<[], [bigint], "view">;
-
-  merkleRoots: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
 
@@ -400,17 +389,14 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
     nameOrSignature: "isKnownDualRoot"
   ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
   getFunction(
-    nameOrSignature: "isKnownValueRoot"
-  ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+    nameOrSignature: "lastValueRoot"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "levels"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "maxValue"
   ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "merkleRoots"
-  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;

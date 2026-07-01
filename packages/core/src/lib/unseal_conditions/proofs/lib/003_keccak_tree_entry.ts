@@ -15,5 +15,6 @@ export const KeccakTreeEntryProof = new UnsealConditionProof({
     public_signals: {
         plain_value: [0, 1],
         tree_entry: [1, 1],
-    },
+    },  
+    complexity_score: 250_000,
 });

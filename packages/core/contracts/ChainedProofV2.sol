@@ -43,7 +43,7 @@ contract ChainedProofV2 {
 
 
     function has_data_stream_root(address _datastream, bytes32 _root) public view returns (bool) {
-        return IDataStream(_datastream).isKnownValueRoot(_root);
+        return IDataStream(_datastream).isKnownDualRoot(_root);
     }
 
 // Before doing actions we need to prepare the proof.
@@ -80,7 +80,7 @@ contract ChainedProofV2 {
             assert(new_state.proof_verifier != address(0));
             new_state.current_hash = keccak256(abi.encodePacked(new_state.current_hash, ACTION_VALIDATE_DATA_ROOT, datastream, output_signal_index));
             
-            assert(IDataStream(datastream).isKnownValueRoot(new_state.outputs[output_signal_index]));
+            assert(IDataStream(datastream).isKnownDualRoot(new_state.outputs[output_signal_index]));
               
         return new_state;
     }

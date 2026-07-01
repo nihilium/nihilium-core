@@ -17,5 +17,6 @@ export const Poseidon2Verifier = new UnsealConditionProof({
         input1: [1, 1],
         input2: [2, 1],
         expectedHash: [3, 1],
-    },
+    },  
+    complexity_score: 250_000,
 });

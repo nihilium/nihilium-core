@@ -30,7 +30,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
   
   
   
-  mapping(uint256 => bytes32) public merkleRoots;
+  bytes32 public lastValueRoot;
   mapping(uint256 => bytes32) public dualRoots;
   
   uint public treeStopped = 0;
@@ -54,7 +54,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
     levels = _levels;
     //We could do an actual insert here where all leafs are 0 to instantiate the tree
     //with proper time.
-    merkleRoots[0] = zeros(levels);
+    lastValueRoot = zeros(levels);
     dualRoots[0] = zeros(levels);
     transferOwnership(owner);
   }
@@ -191,13 +191,13 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
       }
 
 
-      require(currentValueLeaf == merkleRoots[currentIndex % ROOT_HISTORY_SIZE], "Value leaf mismatch");
+      require(currentValueLeaf == lastValueRoot, "Value leaf mismatch");
       require(currentDualLeaf == dualRoots[currentIndex % ROOT_HISTORY_SIZE], "Dual leaf mismatch");
       unchecked {
         currentIndex += 1;
       }
       
-      merkleRoots[currentIndex  % ROOT_HISTORY_SIZE] = newValueLeafHash;
+      lastValueRoot = newValueLeafHash;
       dualRoots[currentIndex  % ROOT_HISTORY_SIZE] = newDualLeafHash;
 
      
@@ -214,20 +214,6 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
     @dev Whether the root is present in the root history
   */
  //TODO fix uint256 to bytes32, deal with interface and other dualmerkle tree
-  function isKnownValueRoot(bytes32 _root) public view returns (bool) {
-    if (bytes32(_root) == merkleRoots[currentIndex % ROOT_HISTORY_SIZE]) {
-      return true;
-    }
-    uint32 i = ROOT_HISTORY_SIZE - 1;
-    do {
-      if (bytes32(_root) == merkleRoots[i]) {
-        return true;
-      }
-      i--;
-    } while (i != 0);
-    return bytes32(_root) == merkleRoots[0];
-  }
-
   function isKnownDualRoot(bytes32 _root) public view returns (bool) {
     if (bytes32(_root) == dualRoots[currentIndex % ROOT_HISTORY_SIZE]) {
       return true;
@@ -257,7 +243,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
  
 
   function getLastMerkleRoot() public view returns (bytes32) {
-    return merkleRoots[currentIndex % ROOT_HISTORY_SIZE];
+    return lastValueRoot;
   }
 
   function getLastDualRoot() public view returns (bytes32) {

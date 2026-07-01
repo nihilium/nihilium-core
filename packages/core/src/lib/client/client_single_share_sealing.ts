@@ -11,7 +11,7 @@ import axios from "axios";
 
 // import { PubKey } from "@nihilium/noir-circuits";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IDataStream } from "../data_stream/types";
+import { IDualDataStream } from "../data_stream/types";
 // /import { validated_sig_he_addInputType } from "@nihilium/zkp-circuits";
 //import { encryptProofCircuit } from "@nihilium/zkp-circuits";
 import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
@@ -136,7 +136,7 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
     private unsealConditionTemplate: UnsealConditionTemplate;
     // private unsealConditionCollection: UnsealConditionCollection;
     private secret: bigint;
-    private data_streams: IDataStream[];
+    private data_streams: IDualDataStream[];
     private proving_hints: any;
     private reveal_value_preimage: bigint;
     private data_stream_group_preimage: bigint;
@@ -149,7 +149,7 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
 
     constructor(
         processor: ProcessorEndpoint,
-        dataStreams: IDataStream[],
+        dataStreams: IDualDataStream[],
         unsealConditionTemplate: UnsealConditionTemplate,
         proving_hints: any = {},
         paymentProvider: PaymentProvider | null = null,

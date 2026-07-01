@@ -1,5 +1,5 @@
 import { ethers, Signer } from "ethers";
-import { IDataStream } from "../data_stream/types";
+import { IDualDataStream } from "../data_stream/types";
 import { ACTION_CHAIN_PROOF_FORK, ACTION_CHAIN_PROOF_VERIFY, ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT_FROM_USER,
      ACTION_STATIC_INPUT, ACTION_VALIDATE_DATA_ROOT, 
      ACTION_VALIDATE_DATA_ROOT_FROM_USER_INPUT } from "./ChainedProof";
@@ -24,10 +24,10 @@ export abstract class CompiledChainedProofCollection {
     protected opening_proof_address: string;
     protected proof_order: string[] = [];
     protected chainedProof: ChainedProof;
-    protected datastreams: IDataStream[];
+    protected datastreams: IDualDataStream[];
     protected signer: Signer | undefined;
     protected provider: ethers.Provider | undefined;
-    constructor(opening_proof_address: string, datastreams: IDataStream[], provider: ethers.Provider | undefined = undefined, signer: Signer | undefined = undefined) {
+    constructor(opening_proof_address: string, datastreams: IDualDataStream[], provider: ethers.Provider | undefined = undefined, signer: Signer | undefined = undefined) {
         this.opening_proof_address = opening_proof_address;
         this.datastreams = datastreams;
         this.chainedProof = new ChainedProof(this.opening_proof_address, this.opening_proof_address, provider, signer);
@@ -41,9 +41,9 @@ export abstract class CompiledChainedProofCollection {
         return this.unseal_proof_actions;
     }
 
-    abstract produce_proofs(dataStream: IDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<{proofs:any[], public_inputs:any[][]}>;
+    abstract produce_proofs(dataStream: IDualDataStream, processor:ProcessorEndpoint, opening_proof:any, opening_public_inputs: any[]): Promise<{proofs:any[], public_inputs:any[][]}>;
 
-    getDatastreams(): IDataStream[] {
+    getDatastreams(): IDualDataStream[] {
         return this.datastreams;
     }
 

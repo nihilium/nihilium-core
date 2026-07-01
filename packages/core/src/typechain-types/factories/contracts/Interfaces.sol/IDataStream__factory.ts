@@ -17,26 +17,7 @@ const _abi = [
         type: "bytes32",
       },
     ],
-    name: "isKnownMerkleRoot",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "_root",
-        type: "bytes32",
-      },
-    ],
-    name: "isKnownValueRoot",
+    name: "isKnownDualRoot",
     outputs: [
       {
         internalType: "bool",

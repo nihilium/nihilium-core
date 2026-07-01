@@ -3,7 +3,7 @@ import { TopLevelTreeProof } from "../../proofs/lib/002_top_level_tree_proof";
 import { MerkleTreeProof } from "../../proofs/lib/001_merkle_proof";
 import { ProofMode } from "../../proofs/zk_proofs/types";
 import { CompiledChainedProofCollection, UnsealProofAction } from "../../types";
-import { IDataStream } from "../../../data_stream/types";
+import { IDualDataStream } from "../../../data_stream/types";
 import { ethers, Signer } from "ethers";
 import { UnsealOpeningProof } from "../../proofs/lib/000_unseal_opening_proof";
 import { KeccakTreeEntryProof } from "../../proofs/lib/003_keccak_tree_entry";

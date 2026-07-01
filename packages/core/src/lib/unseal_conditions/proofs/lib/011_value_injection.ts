@@ -15,4 +15,5 @@ export const ValueInjection = new UnsealConditionProof({
     public_signals: {
         value: [0, 1],
     },
+    complexity_score: 250_000,
 });

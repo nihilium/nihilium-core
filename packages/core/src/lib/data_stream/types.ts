@@ -1,34 +1,55 @@
 import MerkleTree, { ProofPath } from "fixed-merkle-tree";
 import { HexString } from "../../types/protocol/common";
 
+export interface ProofResult {
+    globalProof: ProofPath;
+    localProof: ProofPath;
+    timestamp: number;
+    globalIndex: number;
+    localIndex: number;
+    blockHash: string;
+}
 
-/*
-DataStream interface to be run by the datastream server and as implemented by the client
+export interface LatestGlobalLeafProofResult {
+    globalProof: ProofPath;
+    leafRoot: string;
+    timestamp: number;
+    globalIndex: number;
+    blockHash: string;
+}
 
+export interface DualProofResult {
+    dualProof: ProofPath;
+    globalProof: ProofPath;
+    localProof: ProofPath;
+    timestamp: number;
+    globalIndex: number;
+    localIndex: number;
+    blockHash: string;
+    dualLeafValue: string;
+}
 
-
-*/
-/**
- * Extended interface for data streams backed by the dual Merkle tree.
- * getProof and getLatestGlobalLeafProof include a proof path in the dual tree.
- */
-export interface IDualDataStream extends Omit<IDataStream, 'getProof' | 'getLatestGlobalLeafProof'> {
-    // Returns [dualProof, globalProof, localProof, timestamp, globalIndex, localIndex, blockHash]
-    getProof(value: HexString): Promise<[ProofPath, ProofPath, ProofPath, number, number, number, string]>;
-    // Returns [dualProof, globalProof, leafRoot, timestamp, globalIndex, blockHash]
-    getLatestGlobalLeafProof(): Promise<[ProofPath, ProofPath, string, number, number, string]>;
+export interface DualLatestGlobalLeafProofResult {
+    dualProof: ProofPath;
+    globalProof: ProofPath;
+    leafRoot: string;
+    timestamp: string;
+    globalIndex: number;
+    blockHash: string;
 }
 
 export interface IDataStream {
-    initialize: () => Promise<void>;    
+    initialize: () => Promise<void>;
     getAddress: () => string;
     getUrl: () => string;
-    // Returns [globalProof, leafRoot, timestamp, globalIndex, blockHash]
-    getLatestGlobalLeafProof: () => Promise<[ProofPath, string, number, number, string]>;
+    getLatestGlobalLeafProof: () => Promise<LatestGlobalLeafProofResult>;
     postData: (data: HexString[]) => Promise<[number, number, string]>;
-    // Returns [globalProof, localProof, timestamp, globalIndex, localIndex, blockHash]
-    getProof: (value: HexString) => Promise<[ProofPath, ProofPath, number, number, number, string]>;
+    getProof: (value: HexString) => Promise<ProofResult>;
     hasDataStreamRoot: (root: string) => Promise<boolean>;
-    hasValueRoot: (root: string) => Promise<boolean>;
-    isProvable:(value: HexString) => Promise<boolean>;
+    isProvable: (value: HexString) => Promise<boolean>;
+}
+
+export interface IDualDataStream extends Omit<IDataStream, 'getProof' | 'getLatestGlobalLeafProof'> {
+    getProof(value: HexString): Promise<DualProofResult>;
+    getLatestGlobalLeafProof(): Promise<DualLatestGlobalLeafProofResult>;
 }
