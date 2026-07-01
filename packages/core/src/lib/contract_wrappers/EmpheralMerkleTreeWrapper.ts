@@ -104,16 +104,17 @@ export class EmpheralMerkleTreeWrapper {
   async getLastInsertEvent(): Promise<{
     leafIndex: bigint,
     timestamp: bigint,
-    newValueRoot: string,    
+    blockHash: string,
+    newValueRoot: string,
     newMerkleRoot: string,
   }> {
     const filter = this.contract.filters.TreeUpdate();
     const latestBlock = await this.signer.provider?.getBlockNumber();
     if(!latestBlock) throw new Error("Unable to get latest block number");
-    const chunkSize = 2048; // Adjust based on your RPC provider's limits (e.g., 1000-10000)
+    const chunkSize = 2048;
     let currentTo = latestBlock;
     let lastEvent = null;
-  
+
     while (currentTo >= 0 && !lastEvent) {
       const currentFrom = Math.max(0, currentTo - chunkSize + 1);
       const events = await this.contract.queryFilter(filter, currentFrom, currentTo);
@@ -122,14 +123,15 @@ export class EmpheralMerkleTreeWrapper {
       }
       currentTo = currentFrom - 1;
     }
-  
+
     if (!lastEvent) {
       throw new Error("No TreeUpdate events found");
     }
-  
+
     return {
       leafIndex: lastEvent.args.leafIndex,
       timestamp: lastEvent.args.timestamp,
+      blockHash: lastEvent.args.blockHash,
       newValueRoot: lastEvent.args.leafValue,
       newMerkleRoot: lastEvent.args.newValueRoot,
     };
@@ -138,7 +140,8 @@ export class EmpheralMerkleTreeWrapper {
   async getTreeUpdateEvents(): Promise<{
     leafIndex: number,
     timestamp: number,
-    newValueRoot: bigint,    
+    blockHash: bigint,
+    newValueRoot: bigint,
     newMerkleRoot: bigint,
     value: bigint
   }[]> {
@@ -177,9 +180,10 @@ export class EmpheralMerkleTreeWrapper {
       return allEvents.map(event => {
         const parsedLog = this.contract.interface.parseLog(event);
         return {
-          value: parsedLog?.args.leafValue,        
+          value: parsedLog?.args.leafValue,
           leafIndex: parsedLog?.args.leafIndex,
           timestamp: parsedLog?.args.timestamp,
+          blockHash: parsedLog?.args.blockHash,
           newValueRoot: parsedLog?.args.newValueRoot,
           newMerkleRoot: parsedLog?.args.newMerkleRoot
         };
@@ -204,9 +208,10 @@ export class EmpheralMerkleTreeWrapper {
         return fallbackEvents.map(event => {
           const parsedLog = this.contract.interface.parseLog(event);
           return {
-            value: parsedLog?.args.leafValue,        
+            value: parsedLog?.args.leafValue,
             leafIndex: parsedLog?.args.leafIndex,
             timestamp: parsedLog?.args.timestamp,
+            blockHash: parsedLog?.args.blockHash,
             newValueRoot: parsedLog?.args.newValueRoot,
             newMerkleRoot: parsedLog?.args.newMerkleRoot
           };
@@ -250,11 +255,15 @@ export class EmpheralMerkleTreeWrapper {
   // }
 
   async insert(previousLeaf: string, insertValue: string, valuePath: string[]): Promise<{
-    index: number, 
-    timestamp: number, 
-    newValueRoot: bigint, leafValue: bigint, leafHash: bigint, gasUsed: string}> {
+    index: number,
+    timestamp: number,
+    blockHash: string,
+    newValueRoot: bigint,
+    leafValue: bigint,
+    gasUsed: string
+  }> {
     const tx = await this.contract.insert(previousLeaf, insertValue, valuePath);
-    
+
     const receipt = await tx.wait();
     if (!receipt) throw new Error("Transaction failed");
     const gasUsed = receipt.gasUsed?.toString();
@@ -268,11 +277,11 @@ export class EmpheralMerkleTreeWrapper {
     const parsedLog = this.contract.interface.parseLog(event);
     const index = parsedLog?.args.leafIndex;
     const timestamp = parsedLog?.args.timestamp;
+    const blockHash = parsedLog?.args.blockHash;
     const newValueRoot = parsedLog?.args.newValueRoot;
     const leafValue = parsedLog?.args.leafValue;
-    const leafHash = parsedLog?.args.leafHash;
     console.log(`Inserted at index: ${index}`);
-    return {index, timestamp, newValueRoot, leafValue, leafHash, gasUsed};
+    return {index, timestamp, blockHash, newValueRoot, leafValue, gasUsed};
   }
 
   

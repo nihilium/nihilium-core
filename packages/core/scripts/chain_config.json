@@ -10,5 +10,13 @@
     "avax-testnet": {
         "url": "https://api.avax-test.network/ext/bc/C/rpc",
         "chainId": 43113
+    },
+    "arbitrum-sepolia": {
+        "url": "https://sepolia-rollup.arbitrum.io/rpc",
+        "chainId": 421614
+    },
+    "sepolia": {
+        "url": "https://rpc.sepolia.ethpandaops.io",
+        "chainId": 11155111
     }
 }

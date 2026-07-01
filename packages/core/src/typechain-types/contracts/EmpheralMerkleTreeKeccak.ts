@@ -185,18 +185,21 @@ export namespace TreeUpdateEvent {
     leafIndex: BigNumberish,
     leafValue: BytesLike,
     timestamp: BigNumberish,
+    blockHash: BytesLike,
     newValueRoot: BytesLike
   ];
   export type OutputTuple = [
     leafIndex: bigint,
     leafValue: string,
     timestamp: bigint,
+    blockHash: string,
     newValueRoot: string
   ];
   export interface OutputObject {
     leafIndex: bigint;
     leafValue: string;
     timestamp: bigint;
+    blockHash: string;
     newValueRoot: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -411,7 +414,7 @@ export interface EmpheralMerkleTreeKeccak extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "TreeUpdate(uint32,bytes32,uint256,bytes32)": TypedContractEvent<
+    "TreeUpdate(uint32,bytes32,uint256,bytes32,bytes32)": TypedContractEvent<
       TreeUpdateEvent.InputTuple,
       TreeUpdateEvent.OutputTuple,
       TreeUpdateEvent.OutputObject

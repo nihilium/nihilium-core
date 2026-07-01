@@ -60,7 +60,7 @@ contract hash_tie {
     uint16 constant pLastMem = 896;
 
     function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[2] calldata _pubSignals) public view returns (bool) {
-        assembly {
+        assembly ("memory-safe") {
             function checkField(v) {
                 if iszero(lt(v, r)) {
                     mstore(0, 0)

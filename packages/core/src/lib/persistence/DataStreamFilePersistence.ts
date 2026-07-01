@@ -12,6 +12,7 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
     private readonly LOCAL_TREE_PREFIX = 'local_tree_';
     private readonly GLOBAL_VALUE_FILE = 'global_value.txt';
     private readonly GLOBAL_ROOT_FILE = 'global_root.txt';
+    private readonly GLOBAL_DUAL_FILE = 'global_dual.txt';
     private readonly ON_CHAIN_PUBLISHING_STATE_FILE = 'onchain_publishing_state.json';
     private readonly LV_INDEX_DB = 'lv_index.level';
     private lv_index_db: Level<string, number[]>;
@@ -74,12 +75,12 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
         await fs.appendFile(filePath, leaf + '\n');
     }
 
-    async storeGlobalValueTreeLeaf(localTreeRoot: string, timestamp: number): Promise<void> {
+    async storeGlobalValueTreeLeaf(localTreeRoot: string, timestamp: number, blockHash: string): Promise<void> {
         if(localTreeRoot == "0x00000000000000000000000000000006b6819950000000000000000000000000") {
             console.log("Skipping global value tree leaf", localTreeRoot, timestamp)
         }
         const filePath = this.getGlobalValuePath();
-        await fs.appendFile(filePath, `${localTreeRoot},${timestamp}\n`);
+        await fs.appendFile(filePath, `${localTreeRoot},${timestamp},${blockHash}\n`);
     }
 
     async getGlobalLeafTimestamps(): Promise<Map<string, number>> {
@@ -88,15 +89,55 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
             const filePath = this.getGlobalValuePath();
             const content = await fs.readFile(filePath, 'utf-8');
             const lines = content.split('\n');
-            
             for (const line of lines) {
-                const [root, timestamp] = line.split(',');
-                timestamps.set(root, Number(timestamp));
+                if (line) {
+                    const [root, timestamp] = line.split(',');
+                    timestamps.set(root, Number(timestamp));
                 }
-            } catch {
+            }
+        } catch {
             return timestamps;
         }
         return timestamps;
+    }
+
+    async getGlobalLeafBlockHashes(): Promise<Map<string, string>> {
+        const blockHashes = new Map<string, string>();
+        try {
+            const filePath = this.getGlobalValuePath();
+            const content = await fs.readFile(filePath, 'utf-8');
+            const lines = content.split('\n');
+            for (const line of lines) {
+                if (line) {
+                    const [root, , blockHash] = line.split(',');
+                    blockHashes.set(root, blockHash);
+                }
+            }
+        } catch {
+            return blockHashes;
+        }
+        return blockHashes;
+    }
+
+    async storeGlobalDualTreeLeaf(valueTreeRoot: string): Promise<void> {
+        const filePath = path.join(this.folderPath, this.GLOBAL_DUAL_FILE);
+        await fs.appendFile(filePath, `${valueTreeRoot}\n`);
+    }
+
+    async getGlobalDualTree(): Promise<MerkleTree> {
+        const filePath = path.join(this.folderPath, this.GLOBAL_DUAL_FILE);
+        try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            const leaves = content.split('\n').filter(line => line.trim());
+            return await this.createMerkelTree(defaultDepth, leaves);
+        } catch {
+            return await this.createMerkelTree(defaultDepth, []);
+        }
+    }
+
+    async resetDualTree(): Promise<void> {
+        const filePath = path.join(this.folderPath, this.GLOBAL_DUAL_FILE);
+        await fs.writeFile(filePath, '');
     }
 
     async storeGlobalRootTreeLeaf(rootValue: string): Promise<void> {
@@ -144,16 +185,15 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
             const lines = content.split('\n');
             var leaves = []
             for (const line of lines) {
-                if(line){
-                const [value, timestamp] = line.split(',');
-                    leaves.push(keccakTreeHasher(BigInt(value), BigInt(timestamp)))
+                if (line) {
+                    const [value, timestamp, blockHash] = line.split(',');
+                    leaves.push(keccakTreeHasher(BigInt(value), keccakTreeHasher(BigInt(timestamp), BigInt(blockHash))))
                 }
             }
-
             return await this.createMerkelTree(defaultDepth, leaves);
-            } catch (e) {
-                console.log(e)
-                return await this.createMerkelTree(defaultDepth, []);
+        } catch (e) {
+            console.log(e)
+            return await this.createMerkelTree(defaultDepth, []);
         }
         // try {
         //     const content = await fs.readFile(filePath, 'utf-8');

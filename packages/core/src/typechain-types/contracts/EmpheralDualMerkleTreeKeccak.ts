@@ -31,9 +31,11 @@ export interface EmpheralDualMerkleTreeKeccakInterface extends Interface {
       | "currentIndex"
       | "dualRoots"
       | "findDivergenceLevelForNext"
+      | "getLastDualRoot"
       | "getLastMerkleRoot"
       | "iToHex"
       | "insert"
+      | "isKnownDualRoot"
       | "isKnownValueRoot"
       | "levels"
       | "maxValue"
@@ -72,13 +74,21 @@ export interface EmpheralDualMerkleTreeKeccakInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "getLastDualRoot",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getLastMerkleRoot",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "iToHex", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "insert",
-    values: [BytesLike, BytesLike, BytesLike[], BytesLike[]]
+    values: [BytesLike, BytesLike, BytesLike[], BytesLike, BytesLike[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isKnownDualRoot",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "isKnownValueRoot",
@@ -128,11 +138,19 @@ export interface EmpheralDualMerkleTreeKeccakInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getLastDualRoot",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getLastMerkleRoot",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "iToHex", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "insert", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "isKnownDualRoot",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "isKnownValueRoot",
     data: BytesLike
@@ -200,6 +218,7 @@ export namespace TreeUpdateEvent {
     leafIndex: BigNumberish,
     leafValue: BytesLike,
     timestamp: BigNumberish,
+    blockHash: BytesLike,
     newValueRoot: BytesLike,
     newDualRoot: BytesLike
   ];
@@ -207,6 +226,7 @@ export namespace TreeUpdateEvent {
     leafIndex: bigint,
     leafValue: string,
     timestamp: bigint,
+    blockHash: string,
     newValueRoot: string,
     newDualRoot: string
   ];
@@ -214,6 +234,7 @@ export namespace TreeUpdateEvent {
     leafIndex: bigint;
     leafValue: string;
     timestamp: bigint;
+    blockHash: string;
     newValueRoot: string;
     newDualRoot: string;
   }
@@ -284,6 +305,8 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
     "view"
   >;
 
+  getLastDualRoot: TypedContractMethod<[], [string], "view">;
+
   getLastMerkleRoot: TypedContractMethod<[], [string], "view">;
 
   iToHex: TypedContractMethod<[buffer: BytesLike], [string], "view">;
@@ -293,11 +316,14 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
       previousLeaf: BytesLike,
       insertValue: BytesLike,
       previousLeafPath: BytesLike[],
+      previousDualLeaf: BytesLike,
       previousDualLeafPath: BytesLike[]
     ],
     [bigint],
     "nonpayable"
   >;
+
+  isKnownDualRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
 
   isKnownValueRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
 
@@ -349,6 +375,9 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
     nameOrSignature: "findDivergenceLevelForNext"
   ): TypedContractMethod<[a: BigNumberish], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getLastDualRoot"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "getLastMerkleRoot"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -361,11 +390,15 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
       previousLeaf: BytesLike,
       insertValue: BytesLike,
       previousLeafPath: BytesLike[],
+      previousDualLeaf: BytesLike,
       previousDualLeafPath: BytesLike[]
     ],
     [bigint],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "isKnownDualRoot"
+  ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "isKnownValueRoot"
   ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
@@ -445,7 +478,7 @@ export interface EmpheralDualMerkleTreeKeccak extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "TreeUpdate(uint32,bytes32,uint256,bytes32,bytes32)": TypedContractEvent<
+    "TreeUpdate(uint32,bytes32,uint256,bytes32,bytes32,bytes32)": TypedContractEvent<
       TreeUpdateEvent.InputTuple,
       TreeUpdateEvent.OutputTuple,
       TreeUpdateEvent.OutputObject

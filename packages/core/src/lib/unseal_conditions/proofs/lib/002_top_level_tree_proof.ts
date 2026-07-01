@@ -17,5 +17,7 @@ export const TopLevelTreeProof = new UnsealConditionProof({
         block_timestamp: [1, 1],
         subtree_root: [2, 1],
         index: [3, 1],
+        block_hash: [4, 1],
     },
+    complexity_score: 250_000,
 });

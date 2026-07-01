@@ -3,13 +3,24 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-ethers";
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.27",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200
-      },
-      evmVersion: "cancun"
+    compilers: [
+      {
+        version: "0.8.27",
+        settings: {
+          optimizer: { enabled: true, runs: 200 },
+          evmVersion: "cancun"
+        }
+      }
+    ],
+    overrides: {
+      "contracts/EmpheralDualMerkleTreeKeccak.sol": {
+        version: "0.8.27",
+        settings: {
+          optimizer: { enabled: true, runs: 200 },
+          viaIR: true,
+          evmVersion: "cancun"
+        }
+      }
     }
   },
   typechain: {

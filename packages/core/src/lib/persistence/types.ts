@@ -18,7 +18,7 @@ export type OnChainPublishingState = {
 export interface IDataStreamPersistence { 
     storeLocalTree(global_tree_index: number, merkleTree:MerkleTree): Promise<void>;
     storeLocalTreeLeaf(global_tree_index: number, local_tree_index: number, leaf: string): Promise<void>;
-    storeGlobalValueTreeLeaf(local_tree_root: string, timestamp: number): Promise<void>;
+    storeGlobalValueTreeLeaf(local_tree_root: string, timestamp: number, blockHash: string): Promise<void>;
     storeGlobalRootTreeLeaf(root_value: string): Promise<void>;
     storeLocalTreeCache(global_tree_index: number, cache: string): Promise<void>;
     getIndexedLocalLeaf(leaf: string): Promise<[number, number][]>;
@@ -26,6 +26,10 @@ export interface IDataStreamPersistence {
     getGlobalValueTree(): Promise<MerkleTree>;
     resetContractTrees(): Promise<void>;
     getGlobalLeafTimestamps(): Promise<Map<string, number>>;
+    getGlobalLeafBlockHashes(): Promise<Map<string, string>>;
+    storeGlobalDualTreeLeaf(value_tree_root: string): Promise<void>;
+    getGlobalDualTree(): Promise<MerkleTree>;
+    resetDualTree(): Promise<void>;
     getGlobalRootTree(): Promise<MerkleTree>;
     getLocalTreeCache(global_tree_index: number): Promise<string>;
     detectLocalTreesAvailable(max_global_tree_index: number): Promise<boolean>;

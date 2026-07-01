@@ -120,7 +120,7 @@ contract EmpheralMerkleTreeKeccak is Ownable {
       //First we calculate the old path. Meanwhile we use the divergence level to calculate the new path.
 
       bytes32 prevBlockHash = blockhash(block.number - 1);
-      bytes32 newValueLeafHash = _efficientHash(_efficientHash(insertValue, bytes32(block.timestamp)), prevBlockHash);
+      bytes32 newValueLeafHash = _efficientHash(insertValue, _efficientHash(bytes32(block.timestamp), prevBlockHash));
       uint32 newIndex = currentIndex + 1;
       for (uint32 i = 0; i < levels;) {
         
@@ -189,7 +189,7 @@ contract EmpheralMerkleTreeKeccak is Ownable {
     pure
     returns (bytes32 value)
     {
-        assembly {
+        assembly ("memory-safe") {
             mstore(0x00, a)
             mstore(0x20, b)
             value := keccak256(0x00, 0x40)

@@ -14,7 +14,15 @@ export type UnsealConditionProofData = {
     description?: string;
     version: string;
     public_signals: {[key: string]: [number, number]};
-    complexity_hint?: number;
+    /**
+     * 
+     * @description The complexity score of the proof. Essentially the gas cost of the proof.
+     * Be generous when setting this score! A score too low will result a proof being unchallangable
+     *
+     * @default 250_000 General gasscost of a ZKProof
+     
+     */
+    complexity_score: number;
 }
 
 

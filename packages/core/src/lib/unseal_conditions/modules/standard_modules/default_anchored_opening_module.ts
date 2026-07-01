@@ -173,7 +173,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         var return_proofs = [opening_proof];
         var return_public_inputs = [opening_public_inputs];
         var reveal_value = opening_public_inputs[this.opening_proof.getSignalIndex("reveal_value")[0]];
-        var data_stream_merkle_proof:[ProofPath, ProofPath, number, number, number] = await dataStream.getProof(reveal_value); //global, subtree
+        var data_stream_merkle_proof:[ProofPath, ProofPath, number, number, number, string] = await dataStream.getProof(reveal_value); //global, subtree
         
         var reveal_value_hash = keccakTreeHasher(reveal_value, 0n)
         var ph = toPaddedHex;
@@ -192,13 +192,12 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         
         
         return_proofs.push("0x" + data_stream_merkle_proof[0].pathElements.map(element => toPaddedHex(BigInt(element.toString())).slice(2)).join(""))
-        //TODO DO THIS=========set the public inputs
-        //return_public_inputs.push(top_level_merkle_proof.publicSignals)
         return_public_inputs.push([
-            toPaddedHex(BigInt(data_stream_merkle_proof[0].pathRoot.toString())),
-            toPaddedHex(BigInt(data_stream_merkle_proof[2])), 
-            toPaddedHex(BigInt(data_stream_merkle_proof[0].pathRoot.toString())), 
-            toPaddedHex(BigInt(data_stream_merkle_proof[3]))
+            toPaddedHex(BigInt(data_stream_merkle_proof[0].pathRoot.toString())),  // merkle_root (global tree root)
+            toPaddedHex(BigInt(data_stream_merkle_proof[2])),                       // block_timestamp
+            toPaddedHex(BigInt(data_stream_merkle_proof[1].pathRoot.toString())),  // subtree_root (local tree root)
+            toPaddedHex(BigInt(data_stream_merkle_proof[3])),                       // index (global index)
+            toPaddedHex(BigInt(data_stream_merkle_proof[5])),                       // block_hash
         ])
 
         return {proofs: return_proofs, 

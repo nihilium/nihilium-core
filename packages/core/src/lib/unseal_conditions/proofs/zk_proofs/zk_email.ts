@@ -17,4 +17,5 @@ export const ZKEmailProof = new UnsealConditionProof({
         subject_value: [1, 1],
         from_address_hash: [2, 1],
     },
+    complexity_score: 250_000,
 });

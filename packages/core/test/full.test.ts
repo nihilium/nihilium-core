@@ -20,12 +20,12 @@ import {Keypair} from "../src/types/index";
 import {ClientSingleShareSealingProcess} from "../src/lib/client/client_single_share_sealing";
 import {Processor} from "../src/lib/processor/processor";
 // import { assert } from "console";
-import { IDataStream } from "../src/lib/data_stream/types";
+import { IDataStream, IDualDataStream } from "../src/lib/data_stream/types";
 //import { describe, it } from "mocha";
 import { buildEddsa } from "circomlibjs";
 //import { cryptoTools } from "@nihilium/zkp-circuits";
 //import { EVMDataStream } from "../src/lib/data_stream/EVMDataStream";
-import { EVMDataStreamNonZK } from "../src/lib/data_stream/EVMDataStreamNonZK";
+import { EVMDataStreamDualMerkleNonZK } from "../src/lib/data_stream/EVMDataStreamDualMerkleNonZK";
 import { ClientSingleShareUnsealingProcess } from "../src/lib/client/client_single_share_unsealing";
 import { ProcessorEndpoint } from "../src/types/protocol/common";
 import { DataStreamClient } from "../src/lib/data_stream/DataStreamClient";
@@ -47,7 +47,7 @@ import { StandardProofLibrary } from "../src/lib/unseal_conditions/proofs";
 describe("Processor-Client intereaction", () => {
   context("rocessor-Client intereaction context", () => {
     let processor:Processor;
-    let data_stream:IDataStream;
+    let data_stream:IDualDataStream;
     //let eddsa: any;
     let signers: Signer[];
     let processor_endpoint:ProcessorEndpoint;
@@ -180,7 +180,7 @@ describe("Processor-Client intereaction", () => {
       const random = Date.now().toString();
       persistence = new DataStreamFilePersistence("./test_data/" + random, createKeccakMerkelTree);
       //data_stream = new EVMDataStream("test", persistence, merkleTreeContractAddress, signers[0], 10, 20, 10);
-      data_stream = new EVMDataStreamNonZK("test", persistence, 
+      data_stream = new EVMDataStreamDualMerkleNonZK("test", persistence, 
         merkleTreeContractAddress, signers[0], 10, 20, 10);
       //data_stream = new DataStreamClient("http://localhost:3000");
       await data_stream.initialize();

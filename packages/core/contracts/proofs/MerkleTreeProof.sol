@@ -39,7 +39,7 @@ contract MerkleTreeProof is IVerifier {
     for (uint i = 0; i < items; i++) {
         bytes32 item;
         // Use assembly to load 32 bytes from data at the correct offset
-        assembly {
+        assembly ("memory-safe") {
             item := mload(add(add(data, 32), mul(i, 32)))
         }
         result[i] = item;
@@ -81,7 +81,7 @@ contract MerkleTreeProof is IVerifier {
     pure
     returns (bytes32 value)
     {
-        assembly {
+        assembly ("memory-safe") {
             mstore(0x00, a)
             mstore(0x20, b)
             value := keccak256(0x00, 0x40)

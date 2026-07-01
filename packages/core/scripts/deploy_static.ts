@@ -207,7 +207,7 @@ async function main() {
     }
 
     const privateKey = process.env.PRIVATE_KEY || process.argv[3] || "0x00c02c2c80ec46a6cbc5ccce6b0ce9e293c46a568cd2ffdfb69315efd7dafa36"; // Ganache default
-    console.log(privateKey);
+    
     const rpcUrl = networkConfig.url;
     const chainId = BigInt(networkConfig.chainId);
 
@@ -288,10 +288,10 @@ async function main() {
         }
     }
 
-    // --- DEPLOY CORE CONTRACTS ---
+    // --- DEPLOY CORE CThis file that is now selectedONTRACTS ---
     
     // EmpheralMerkleTreeKeccak
-    const empheralName = "EmpheralMerkleTreeKeccak";
+    const empheralName = "EmpheralDualMerkleTreeKeccak";
     const empheralBytecode = getContractBytecode(`contracts/${empheralName}.sol/${empheralName}`);
     if (needsRedeployment(empheralName, empheralBytecode, existingDeployments, existingBytecodeMap)) {
         const empheralMerkleTree = await deployContract(empheralName, `contracts/${empheralName}.sol:${empheralName}`, wallet, gasPrice, nonce, wallet.address, 24);

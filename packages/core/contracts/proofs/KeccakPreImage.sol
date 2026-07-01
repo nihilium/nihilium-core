@@ -20,7 +20,7 @@ contract KeccakPreImage is IVerifier {
     pure
     returns (bytes32 value)
     {
-        assembly {
+        assembly ("memory-safe") {
             mstore(0x00, a)
             mstore(0x20, b)
             value := keccak256(0x00, 0x40)

@@ -107,8 +107,9 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
     @return index The index of the new leaf.
     */
     function insert( bytes32 previousLeaf,
-    bytes32 insertValue, 
+    bytes32 insertValue,
     bytes32[] calldata previousLeafPath,
+    bytes32 previousDualLeaf,
     bytes32[] calldata previousDualLeafPath) public onlyOwner returns (uint32 index)  {
       
       
@@ -126,7 +127,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
       //First we calculate the old path. Meanwhile we use the divergence level to calculate the new path.
 
       bytes32 prevBlockHash = blockhash(block.number - 1);
-      bytes32 newValueLeafHash = _efficientHash(_efficientHash(insertValue, bytes32(block.timestamp)), prevBlockHash);
+      bytes32 newValueLeafHash = _efficientHash(insertValue, _efficientHash(bytes32(block.timestamp), prevBlockHash));
       uint32 newIndex = currentIndex + 1;
       for (uint32 i = 0; i < levels;) {
         
@@ -157,10 +158,10 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
         unchecked { ++i; }
       }
       //currentValueLeaf now holds the root of the previous value tree
-      bytes32 currentDualLeaf = currentValueLeaf;
+      bytes32 currentDualLeaf = previousDualLeaf;
     bytes32 newDualLeafHash = newValueLeafHash;
 //now do the same for the dual tree
-    for (uint32 i = 0; i < levels; i++) {
+    for (uint32 i = 0; i < levels;) {
         
         //If we hit divergence level we use the current hashed value
         if(i == divergenceLevel){         
@@ -246,7 +247,7 @@ contract EmpheralDualMerkleTreeKeccak is Ownable {
     pure
     returns (bytes32 value)
     {
-        assembly {
+        assembly ("memory-safe") {
             mstore(0x00, a)
             mstore(0x20, b)
             value := keccak256(0x00, 0x40)

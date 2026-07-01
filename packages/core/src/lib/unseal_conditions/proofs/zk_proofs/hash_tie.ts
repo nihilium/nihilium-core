@@ -18,4 +18,5 @@ export const HashTieProof = new UnsealConditionProof({
         
         
     },
+    complexity_score: 250_000,
 });
