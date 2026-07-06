@@ -23,7 +23,7 @@ import {
   printStakeTable,
   printSpinner,
   printSuccess,
-  printError,
+  printException,
   printInfo,
 } from "../ui/output";
 import {
@@ -76,7 +76,7 @@ const statusCmd = {
       printDatastreamStatus(info, stakes);
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -98,7 +98,7 @@ const registerCmd = {
       printSuccess("Datastream registered and all keys uploaded.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -124,7 +124,7 @@ const metadataUpdateCmd = {
       printSuccess("Datastream metadata updated.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -168,7 +168,7 @@ const keysListCmd = {
       }
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -192,7 +192,7 @@ const keysDeactivateCmd = {
       printSuccess(`Key ${keyId} deactivated.`);
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -226,7 +226,7 @@ const stakeListCmd = {
       printStakeTable(rows);
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -263,7 +263,7 @@ const stakeAddCmd = {
       printSuccess("Stake deposited.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -297,7 +297,7 @@ const stakeSignalCmd = {
       printSuccess("Stake removal signalled. Wait for grace period, then run `stake finalize`.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -332,7 +332,7 @@ const stakeFinalizeCmd = {
       printSuccess("Stake withdrawn.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },

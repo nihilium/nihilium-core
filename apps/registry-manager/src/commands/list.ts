@@ -7,7 +7,7 @@ import {
 } from "@nihilium/registry";
 import { getChainId, getRpcUrl } from "../config";
 import {
-  printError,
+  printException,
   printInfo,
   printRegistryStakeList,
   printSpinner,
@@ -43,7 +43,7 @@ export async function handler(argv: unknown): Promise<void> {
     printRegistryStakeList(rows);
   } catch (e) {
     stop();
-    printError(String(e));
+    printException(e);
     process.exit(1);
   }
 }

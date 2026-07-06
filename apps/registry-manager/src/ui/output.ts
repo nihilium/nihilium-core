@@ -11,7 +11,7 @@ import Table from "cli-table3";
 import { formatEther, ZeroAddress } from "ethers";
 import type { ProcessorOnChainInfo, KeyRecord } from "@nihilium/registry";
 import type { DatastreamOnChainInfo, DatastreamKeyRecord } from "@nihilium/registry";
-import type { StakeRow } from "../lib/processor"; // same shape in datastream
+import type { StakeRow, KeysWithExposure } from "../lib/processor"; // same shape in datastream
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -135,11 +135,21 @@ export function printDatastreamStatus(info: DatastreamOnChainInfo, stakes?: Stak
 // Key tables
 // ---------------------------------------------------------------------------
 
-export function printKeyTable(keys: KeyRecord[]): void {
+/**
+ * Render the on-chain key table.
+ *
+ * When `servedKeyIds` is supplied (the set of keyIds the running processor
+ * advertises on its `/identity` endpoint) an extra "Served" column is added
+ * showing whether each on-chain key is actually being served. Omit it to skip
+ * the column (e.g. when the endpoint could not be reached).
+ */
+export function printKeyTable(keys: KeyRecord[], servedKeyIds?: Set<string>): void {
   if (keys.length === 0) {
     console.log(chalk.dim("No keys."));
     return;
   }
+
+  const withServed = servedKeyIds !== undefined;
 
   const t = new Table({
     head: [
@@ -147,20 +157,75 @@ export function printKeyTable(keys: KeyRecord[]): void {
       chalk.cyan("Type"),
       chalk.cyan("Public Key (x)"),
       chalk.cyan("Status"),
+      ...(withServed ? [chalk.cyan("Served")] : []),
     ],
     style: { head: [], border: [] },
   });
 
   for (const k of keys) {
-    t.push([
+    const row = [
       shortHex(k.keyId, 6),
       k.keyType,
       shortHex("0x" + k.keyX.toString(16), 8),
       keyStatus(k.isActive, k.deactivatedAt),
-    ]);
+    ];
+    if (withServed) {
+      row.push(
+        !k.isActive
+          ? chalk.dim("—") // inactive keys are not expected to be served
+          : servedKeyIds!.has(k.keyId) ? chalk.green("✔") : chalk.red("✖"),
+      );
+    }
+    t.push(row);
   }
 
   console.log(t.toString());
+}
+
+/**
+ * Print the outcome of cross-checking on-chain keys against the processor's
+ * live `/identity` endpoint. Called after `printKeyTable` in `keys list`.
+ */
+export function printKeyExposureCheck(report: KeysWithExposure): void {
+  console.log();
+
+  if (report.identityUrl === null) {
+    printInfo(
+      "No processor URL set on-chain or in PROCESSOR_URL — skipped /identity verification.",
+    );
+    return;
+  }
+
+  const endpoint = `${report.identityUrl.replace(/\/$/, "")}/identity`;
+
+  if (report.identity === null) {
+    printError(`Could not reach ${endpoint} — skipped key verification.`);
+    return;
+  }
+
+  const activeOnChain = report.keys.filter((k) => k.isActive);
+  const notServed = activeOnChain.filter((k) => !report.servedKeyIds.has(k.keyId));
+  const unregistered = report.unregisteredServedKeys;
+
+  if (notServed.length === 0 && unregistered.length === 0) {
+    printSuccess(`All active on-chain keys match the keys served at ${endpoint}.`);
+    return;
+  }
+
+  console.log(chalk.yellow.bold(`⚠  Key mismatch against ${endpoint}`));
+
+  for (const k of notServed) {
+    console.log(
+      chalk.yellow("  • Registered on-chain but NOT served: ") +
+        `${shortHex(k.keyId, 6)} (${k.keyType})`,
+    );
+  }
+  for (const k of unregistered) {
+    console.log(
+      chalk.yellow("  • Served by /identity but NOT active on-chain: ") +
+        `${shortHex(k.keyId, 6)} (${k.keyType})`,
+    );
+  }
 }
 
 export function printDatastreamKeyTable(keys: DatastreamKeyRecord[]): void {
@@ -247,6 +312,82 @@ export function printSuccess(msg: string): void {
 
 export function printError(msg: string): void {
   console.error(chalk.red("✖") + "  " + msg);
+}
+
+/** JSON.stringify that survives bigint values and circular refs. */
+function safeJson(value: unknown): string {
+  const seen = new WeakSet<object>();
+  try {
+    return JSON.stringify(
+      value,
+      (_k, v) => {
+        if (typeof v === "bigint") return v.toString();
+        if (typeof v === "object" && v !== null) {
+          if (seen.has(v)) return "[Circular]";
+          seen.add(v);
+        }
+        return v;
+      },
+      2,
+    );
+  } catch {
+    return String(value);
+  }
+}
+
+/** Surface the non-standard fields ethers/JSON-RPC errors attach (code, reason, …). */
+function pickErrorFields(err: Error): string[] {
+  const fields = ["code", "shortMessage", "reason", "info", "data", "transaction", "receipt"];
+  const rec = err as unknown as Record<string, unknown>;
+  const parts: string[] = [];
+  for (const f of fields) {
+    if (rec[f] !== undefined) {
+      const v = rec[f];
+      parts.push(`${f}=${typeof v === "object" ? safeJson(v) : String(v)}`);
+    }
+  }
+  return parts;
+}
+
+/**
+ * Render an error with its full stack trace and the entire `cause` chain,
+ * plus any ethers-specific fields. Use this instead of `printError(String(e))`
+ * so failures show *where* they happened, not just the top-level message.
+ */
+export function printException(e: unknown, context?: string): void {
+  const prefix = context ? `${context}: ` : "";
+
+  if (!(e instanceof Error)) {
+    printError(prefix + safeJson(e));
+    return;
+  }
+
+  const short =
+    (e as unknown as { shortMessage?: string }).shortMessage ?? e.message;
+  printError(prefix + short);
+
+  const lines: string[] = [];
+  let current: unknown = e;
+  let level = 0;
+  while (current instanceof Error) {
+    const indent = "  ".repeat(level);
+    const label = level === 0 ? "" : `${indent}caused by: `;
+    lines.push(label + (current.stack ?? `${current.name}: ${current.message}`));
+    for (const field of pickErrorFields(current)) {
+      lines.push(`${indent}  ${field}`);
+    }
+    current = (current as { cause?: unknown }).cause;
+    level++;
+    if (level > 12) {
+      lines.push(`${indent}… (cause chain truncated)`);
+      break;
+    }
+  }
+  if (current !== undefined && !(current instanceof Error)) {
+    lines.push(`${"  ".repeat(level)}caused by: ${safeJson(current)}`);
+  }
+
+  console.error(chalk.dim(lines.join("\n")));
 }
 
 export function printInfo(msg: string): void {

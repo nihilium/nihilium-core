@@ -2,7 +2,7 @@
  * Circuit Wrapper
  * Self-contained assets via URL resolution (Vite/rollup friendly, Node+browser)
  */
-import { detectEnvironment, resolvePath, loadWasm, loadZKey, loadVKey } from './wasm-loader';
+import { detectEnvironment, resolvePath, loadWasm, loadZKey, loadVKey, loadAsArrayBuffer } from './wasm-loader';
 import type { CircuitConfigCircom, CircuitWrapper, ProofOptions } from './types/circuit_wrapper';
 
 // Node.js specific imports - only available in Node.js environment
@@ -224,9 +224,10 @@ export class WrappedCircomCircuit implements CircuitWrapper<any> {
       if (this.snarkjs?.default?.groth16 && !this.snarkjs.groth16) this.snarkjs = this.snarkjs.default;
     }
     if (forceFetch) {
-      fetch(this.resolvedWasmPath)
-      fetch(this.resolvedZkeyPath)
-      
+      await Promise.all([
+        loadAsArrayBuffer(this.resolvedWasmPath),
+        loadAsArrayBuffer(this.resolvedZkeyPath),
+      ]);
     }
   }
 

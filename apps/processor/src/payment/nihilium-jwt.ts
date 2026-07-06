@@ -8,6 +8,12 @@ function hashBody(body: unknown): string {
   return '0x' + createHash('sha256').update(JSON.stringify(body)).digest('hex');
 }
 
+// jose 6.x is ESM-only. Under tsconfig `module: commonjs`, tsc rewrites a literal
+// `await import('jose')` back into `require('jose')`, which throws ERR_REQUIRE_ESM on
+// Node. Wrapping the import in `new Function` hides it from the compiler so a real
+// dynamic import() survives to runtime and loads the ESM module from this CJS module.
+const importJose = new Function('return import("jose")') as () => Promise<typeof import('jose')>;
+
 export type NihiliumJwtConfig = {
   jwksUrl: string;
   issuer: string;
@@ -32,7 +38,7 @@ export class NihiliumJwtVerifier implements PaymentVerifier {
   }
 
   async verify(req: Request): Promise<PaymentContext> {
-    const { createRemoteJWKSet, jwtVerify } = await import('jose');
+    const { createRemoteJWKSet, jwtVerify } = await importJose();
 
     if (!this.jwks) {
       this.jwks = createRemoteJWKSet(this.jwksUrl);

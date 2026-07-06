@@ -25,11 +25,12 @@ import { fetchProcessorClaimStatus } from "../lib/nihilium-api";
 import {
   printProcessorStatus,
   printKeyTable,
+  printKeyExposureCheck,
   printDerivedProcessorKey,
   printStakeTable,
   printSpinner,
   printSuccess,
-  printError,
+  printException,
   printInfo,
   printClaimWarning,
 } from "../ui/output";
@@ -88,7 +89,7 @@ const statusCmd = {
       }
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -105,10 +106,11 @@ const registerCmd = {
     const cfg = getProcessorConfig();
     const address = new Wallet(cfg.ethPrivateKey).address;
 
+    // The portal claim status is informational only — it must not gate on-chain
+    // registration. Warn if unclaimed, but still upload keys to the contract.
     const claimStatus = await fetchProcessorClaimStatus(getNihiliumApiUrl(), address);
     if (claimStatus !== null && !claimStatus.claimed) {
       printClaimWarning(address, getNihiliumPortalUrl());
-      process.exit(1);
     }
 
     const stop = printSpinner("Registering processor…");
@@ -118,7 +120,7 @@ const registerCmd = {
       printSuccess("Processor registered and all keys uploaded.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e, "Registration failed");
       process.exit(1);
     }
   },
@@ -144,7 +146,7 @@ const metadataUpdateCmd = {
       printSuccess("Processor metadata updated.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -177,18 +179,20 @@ const keysListCmd = {
     }),
   handler: async (argv: { all: boolean }) => {
     const cfg = getProcessorConfig();
-    const stop = printSpinner("Loading keys…");
+    const stop = printSpinner("Loading keys and verifying /identity…");
     try {
-      const keys = argv.all ? await lib.getAllKeys(cfg) : await lib.getActiveKeys(cfg);
+      const report = await lib.getKeysWithExposureCheck(cfg, argv.all);
       stop();
-      if (keys.length === 0) {
+      if (report.keys.length === 0) {
         printInfo(argv.all ? "No keys registered." : "No active keys found.");
       } else {
-        printKeyTable(keys);
+        // Only render the "Served" column when the endpoint was reachable.
+        printKeyTable(report.keys, report.identity ? report.servedKeyIds : undefined);
       }
+      printKeyExposureCheck(report);
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -211,7 +215,8 @@ const keysDeactivateCmd = {
       printSuccess(`Key ${keyId} deactivated.`);
     } catch (e) {
       stop();
-      printError(String(e));
+      console.log("error", e);
+      printException(e);
       process.exit(1);
     }
   },
@@ -235,7 +240,7 @@ const keysDeriveCmd = {
       }
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -270,7 +275,7 @@ const stakeListCmd = {
       printStakeTable(rows);
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -307,7 +312,7 @@ const stakeAddCmd = {
       printSuccess("Stake deposited.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -341,7 +346,7 @@ const stakeSignalCmd = {
       printSuccess("Stake removal signalled. Wait for grace period, then run `stake finalize`.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },
@@ -377,7 +382,7 @@ const stakeFinalizeCmd = {
       printSuccess("Stake withdrawn.");
     } catch (e) {
       stop();
-      printError(String(e));
+      printException(e);
       process.exit(1);
     }
   },

@@ -9,12 +9,13 @@
  * and expose via JSON endpoints.
  */
 
-import { ProcessorClient } from "@nihilium/registry";
+import { ProcessorClient, keyId as computeKeyId } from "@nihilium/registry";
 import type {
   ProcessorConfig,
   ProcessorMetadata,
   ProcessorOnChainInfo,
   KeyRecord,
+  KeyType,
   PendingRemoval,
 } from "@nihilium/registry";
 import { ZeroAddress } from "ethers";
@@ -78,6 +79,136 @@ export async function getActiveKeys(cfg: ProcessorConfig): Promise<KeyRecord[]> 
 
 export async function getAllKeys(cfg: ProcessorConfig): Promise<KeyRecord[]> {
   return (await (await client(cfg)).getOnChainInfo()).keys;
+}
+
+// ---------------------------------------------------------------------------
+// Identity-endpoint verification
+//
+// The keys shown by `keys list` are the ones registered on-chain. A running
+// processor also advertises the keys it is actually serving on its public
+// `/identity` HTTP endpoint. These two views can drift (e.g. the daemon runs
+// with a different key file than what was registered, or an on-chain key was
+// deactivated but the daemon still serves it). The functions below fetch the
+// live `/identity` view so the CLI can flag any mismatch.
+// ---------------------------------------------------------------------------
+
+/** A single Baby Jubjub key advertised by a processor's `/identity` endpoint. */
+export interface IdentityKey {
+  keyType: KeyType;
+  keyX:    bigint;
+  keyY:    bigint;
+  keyId:   string; // keccak256(x ++ y) — same id scheme as the on-chain registry
+  active:  boolean;
+}
+
+export interface ProcessorIdentity {
+  chainId:             string;
+  chainedProofAddress: string;
+  keys:                IdentityKey[];
+}
+
+interface RawIdentityEntry {
+  signing_public_key?: [string, string];
+  he_public_key?:      [string, string];
+  active?:             boolean;
+}
+
+function parseIdentityEntry(entry: RawIdentityEntry): IdentityKey | null {
+  const active = entry.active !== false;
+  const pair =
+    Array.isArray(entry.signing_public_key)
+      ? { keyType: "Signing" as KeyType, coords: entry.signing_public_key }
+      : Array.isArray(entry.he_public_key)
+        ? { keyType: "HE" as KeyType, coords: entry.he_public_key }
+        : null;
+  if (!pair) return null;
+
+  try {
+    const keyX = BigInt(pair.coords[0]);
+    const keyY = BigInt(pair.coords[1]);
+    return { keyType: pair.keyType, keyX, keyY, keyId: computeKeyId(keyX, keyY), active };
+  } catch {
+    return null; // non-numeric coordinates — treat as malformed
+  }
+}
+
+/**
+ * Fetch and parse a processor's public `/identity` endpoint.
+ *
+ * Best-effort: returns null when the URL is missing, the endpoint is
+ * unreachable, or the payload is malformed, so callers can warn rather than
+ * fail hard.
+ *
+ * @param baseUrl Processor base URL (the `/identity` path is appended).
+ */
+export async function fetchProcessorIdentity(baseUrl: string): Promise<ProcessorIdentity | null> {
+  try {
+    const url = `${baseUrl.replace(/\/$/, "")}/identity`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const body = await res.json() as { result?: {
+      chain_id?: unknown;
+      chained_proof_address?: unknown;
+      public_keys?: RawIdentityEntry[];
+    } };
+    const result = body?.result;
+    if (!result || !Array.isArray(result.public_keys)) return null;
+
+    const keys = result.public_keys
+      .map(parseIdentityEntry)
+      .filter((k): k is IdentityKey => k !== null);
+
+    return {
+      chainId:             String(result.chain_id ?? ""),
+      chainedProofAddress: String(result.chained_proof_address ?? ""),
+      keys,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export interface KeysWithExposure {
+  /** On-chain keys, filtered by the `includeInactive` flag. */
+  keys: KeyRecord[];
+  /** Base URL used to reach `/identity`, or null if none is configured. */
+  identityUrl: string | null;
+  /** Parsed `/identity` response, or null if unreachable/malformed. */
+  identity: ProcessorIdentity | null;
+  /** keyIds the running processor is actively serving on `/identity`. */
+  servedKeyIds: Set<string>;
+  /** Keys served on `/identity` that are NOT active in the on-chain registry. */
+  unregisteredServedKeys: IdentityKey[];
+}
+
+/**
+ * Load on-chain keys and cross-check them against the processor's live
+ * `/identity` endpoint.
+ *
+ * The endpoint URL is taken from the on-chain metadata (what clients actually
+ * see), falling back to the locally-configured `PROCESSOR_URL`.
+ */
+export async function getKeysWithExposureCheck(
+  cfg: ProcessorConfig,
+  includeInactive: boolean,
+): Promise<KeysWithExposure> {
+  const info = await (await client(cfg)).getOnChainInfo();
+  const keys = includeInactive ? info.keys : info.keys.filter((k) => k.isActive);
+
+  const identityUrl = info.metadata.url || cfg.metadata.url || null;
+  const identity = identityUrl ? await fetchProcessorIdentity(identityUrl) : null;
+
+  const servedKeyIds = new Set<string>(
+    (identity?.keys ?? []).filter((k) => k.active).map((k) => k.keyId),
+  );
+
+  const activeOnChainIds = new Set(info.keys.filter((k) => k.isActive).map((k) => k.keyId));
+  const unregisteredServedKeys = (identity?.keys ?? []).filter(
+    (k) => k.active && !activeOnChainIds.has(k.keyId),
+  );
+
+  return { keys, identityUrl, identity, servedKeyIds, unregisteredServedKeys };
 }
 
 export async function deactivateKey(cfg: ProcessorConfig, keyId: string): Promise<void> {
