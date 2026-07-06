@@ -19,7 +19,7 @@
     "@nihilium/core": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "ethers": "^6.14.0",
+    
     "express": "^4.19.2",
     "fixed-merkle-tree": "^0.7.3",
     "yargs": "^17.7.2"
