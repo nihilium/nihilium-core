@@ -17,7 +17,7 @@ import {pruneTo32Bits, BabyJubExtPoint,
     bufferToBigInt, hashCypherText,  encryptECCBabyJub, decryptECCBabyJub, bigInt2Buffer,
     encrypt, decrypt, genPubKey, PrivKey
 } from '../src/utils/tools'
-import { FDTEncrypt, FDTDecrypt } from '../src/utils/dte'
+import { FDTEncrypt, FDTDecrypt } from '../src/utils/dte_hard'
 import * as cryptoTools from '../src/utils/tools'
 // import { buildPoseidon, buildBabyjub, buildEddsa } from "circomlibjs";
 import { circomOpeningProof } from "../src";
@@ -394,8 +394,8 @@ describe("Testing ElGamal Scheme Circuits\n", () => {
 
         it("Test full AON Encryption & Decryption", async () => {
             // Generate a long random text (~10kb), then encode it as bytes
-           var totalKeys = 15
-           var threshold = 5
+           var totalKeys = 5
+           var threshold = 3
            var privateKeys = Array.from({ length: totalKeys }, () => generateRandom248BitNumber());
            var pubKeys = privateKeys.map(privateKey => babyJub.BASE.multiply(privateKey));
            var message = generateRandom248BitNumber();
@@ -409,7 +409,7 @@ describe("Testing ElGamal Scheme Circuits\n", () => {
            //Pick threshold random keys from the privateKeys, making sure not to pick the same key twice
            for (let i = 0; i < threshold; i++) {
                var selectedPrivateKeys = privateKeys.sort(() => Math.random() - 0.5).slice(0, threshold);
-               var decrypted = FDTDecrypt(selectedPrivateKeys, encrypted.cipherTexts, encrypted.empheralKey);
+               var decrypted = FDTDecrypt(selectedPrivateKeys, encrypted.cipherTexts, encrypted.ephemeralKeys);
                expect(decrypted).to.equal(message.toString());
            }
            

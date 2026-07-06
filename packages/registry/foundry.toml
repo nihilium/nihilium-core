@@ -1,0 +1,27 @@
+[profile.default]
+src     = "contracts/src"
+test    = "test"
+out     = "out"
+ffi     = true
+fs_permissions = [
+  { access = "read-write", path = "./cache_forge" },
+]
+# Avoid flaky FFI file races when tests share cache_forge/ (each test uses a unique filename too).
+threads = 1
+# npm workspaces hoist packages to the workspace root
+libs    = ["/home/olaf/git/nihilium-core/node_modules", "node_modules", "lib"]
+cache   = true
+cache_path = "cache_forge"
+evm_version = "cancun"
+remappings = [
+    "@openzeppelin/=../../node_modules/@openzeppelin/",
+    "poseidon2-evm/=../../node_modules/poseidon2-evm/",
+    "@nihilium/core/=../../node_modules/@nihilium/core/",
+]
+
+optimizer         = true
+optimizer_runs    = 200
+via_ir            = true
+
+[fmt]
+line_length = 100

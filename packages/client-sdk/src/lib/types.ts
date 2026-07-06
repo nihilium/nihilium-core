@@ -5,7 +5,8 @@ export type SelectableProcessor = {
     is_tor: boolean;
     jurisdiction: string;
     stake: bigint;
-
+    name: string;
+    ethAddress: string;
 }
 
 

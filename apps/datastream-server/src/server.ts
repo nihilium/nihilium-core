@@ -1,14 +1,14 @@
 import express from 'express';
 import cors from 'cors';
-import {  NETWORK_IDS, deployedProtocolContracts, DataStream, Persistence } from '@nihilium/privacy-lib';
+import {  NETWORK_IDS, deployedProtocolContracts, DataStream, Persistence } from '@nihilium/core';
 //import { Processor, deployedProtocolContracts, NETWORK_IDS, DataStream, Persistence } from '../../../packages/privacy-lib/src/index';
-// import { EVMDataStreamNonZK} from '@nihilium/privacy-lib/src/lib/data_stream/EVMDataStreamNonZK';
-// import { DataStreamFilePersistence } from '@nihilium/privacy-lib/src/lib/persistence/DataStreamFilePersistence';
+// import { EVMDataStreamNonZK} from '@nihilium/core/src/lib/data_stream/EVMDataStreamNonZK';
+// import { DataStreamFilePersistence } from '@nihilium/core/src/lib/persistence/DataStreamFilePersistence';
 import { ethers, Signer, Network } from 'ethers';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import 'dotenv/config'; 
-import { utils } from '@nihilium/privacy-lib';
+import { utils } from '@nihilium/core';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,7 +16,7 @@ dotenv.config();
 // "avax-testnet": {
 //         "url": "https://api.avax-test.network/ext/bc/C/rpc",
 //         "chainId": 43113
-//     }
+//     }    
 
 async function main() {
     const argv = await yargs(hideBin(process.argv))
@@ -49,6 +49,30 @@ async function main() {
             type: 'number',
             description: 'Chain ID for the Ethereum node',
             required: !process.env.CHAIN_ID,
+        })
+        .option('publishing-interval', {
+            alias: 'pi',
+            type: 'number',
+            description: 'Publishing interval in seconds',
+            default: process.env.PUBLISHING_INTERVAL ? parseInt(process.env.PUBLISHING_INTERVAL) : 10,
+        })
+        .option('depth', {
+            alias: 'd',
+            type: 'number',
+            description: 'Merkle tree depth',
+            default: process.env.DEPTH ? parseInt(process.env.DEPTH) : 20,
+        })
+        .option('max-local-tree-elements', {
+            alias: 'mlte',
+            type: 'number',
+            description: 'Maximum number of local tree elements (-1 for auto)',
+            default: process.env.MAX_LOCAL_TREE_ELEMENTS ? parseInt(process.env.MAX_LOCAL_TREE_ELEMENTS) : -1,
+        })
+        .option('forced-publication-interval', {
+            alias: 'fpi',
+            type: 'number',
+            description: 'Forced publication interval in seconds',
+            default: process.env.FORCED_PUBLICATION_INTERVAL ? parseInt(process.env.FORCED_PUBLICATION_INTERVAL) : 60 * 10,
         }).argv;
 
     const privateKey = (argv.privateKey || process.env.PRIVATE_KEY) as string;
@@ -56,6 +80,10 @@ async function main() {
     const rpcUrl = (argv.rpcUrl || process.env.RPC_URL) as string;
     const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;
     const port = (argv.port || process.env.PORT || 3006) as number;
+    const publishingInterval = argv.publishingInterval as number;
+    const depth = argv.depth as number;
+    const maxLocalTreeElements = argv.maxLocalTreeElements as number;
+    const forcedPublicationInterval = argv.forcedPublicationInterval as number;
 
     if (!privateKey || !contractAddress || !rpcUrl) {
         throw new Error("Missing required configuration: private key, contract address, or RPC URL.");
@@ -84,7 +112,8 @@ async function main() {
     const persistence = new Persistence.DataStreamFilePersistence('./server-stream/' + contractAddress, utils.createKeccakMerkelTree);
     
 
-    const dataStream = new DataStream.EVMDataStreamNonZK('server-stream', persistence, contractAddress, wallet, 10, 20, -1, 60 * 10);
+    const dataStream = new DataStream.EVMDataStreamDualMerkleNonZK('server-stream',
+         persistence, contractAddress, wallet, publishingInterval, depth, maxLocalTreeElements, forcedPublicationInterval);
     await dataStream.initialize();
 
     const app = express();
@@ -108,12 +137,11 @@ async function main() {
         try {
             const { value } = req.params;
             const result = await dataStream.getProof(value);
-            result[0].pathElements = result[0].pathElements.map(element => element.toString())
-            result[1].pathElements = result[1].pathElements.map(element => element.toString())
-            res.json({ globalProof: result[0], localProof: result[1], timestamp: result[2].toString(), globalIndex: result[3], localIndex: result[4] });
+            result.dualProof.pathElements   = result.dualProof.pathElements.map(e => e.toString());
+            result.globalProof.pathElements = result.globalProof.pathElements.map(e => e.toString());
+            result.localProof.pathElements  = result.localProof.pathElements.map(e => e.toString());
+            res.json(result);
         } catch (error: any) {
-            const { value } = req.params;
-            const result = await dataStream.getProof(value);
             res.status(500).json({ error: error.message });
         }
     });
@@ -134,11 +162,10 @@ async function main() {
     });
 
     app.get('/latestGlobalLeafProof', async (req, res) => {
-        const result: any[] = await dataStream.getLatestGlobalLeafProof();
-        result[0].pathElements = result[0].pathElements.map(element => element.toString())
-        result[2] = result[2].toString()
-        result[3] = result[3].toString()
-        res.json({ result });
+        const result = await dataStream.getLatestGlobalLeafProof();
+        result.dualProof.pathElements   = result.dualProof.pathElements.map(e => e.toString());
+        result.globalProof.pathElements = result.globalProof.pathElements.map(e => e.toString());
+        res.json(result);
     });
 
     app.get('/address', (req, res) => {

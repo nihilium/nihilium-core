@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
        {
-            "name": "Debug Test Circuits Noir",
+            "name": "Debug zkp-circuits encryption.test.ts",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
@@ -26,11 +26,11 @@
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
         {
-            "name": "Test Privacy Lib full",
+            "name": "Test Core full",
             "type": "node",
             "request": "launch",
             "env": {
-                "TS_NODE_PROJECT": "${workspaceRoot}/packages/privacy-lib/test/tsconfig.json"
+                "TS_NODE_PROJECT": "${workspaceRoot}/packages/core/test/tsconfig.json"
             },
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
             "args": [
@@ -39,15 +39,15 @@
                 "--no-config",
                 "--require",
                 "mocha-suppress-logs",
-                "${workspaceRoot}/packages/privacy-lib/test/full.test.ts",
+                "${workspaceRoot}/packages/core/test/full.test.ts",
                 "--exit"
             ],
-            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "cwd": "${workspaceRoot}/packages/core",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
         {
-            "name": "Test Privacy Lib Integrated",
+            "name": "Test Core Integrated",
             "type": "node",
             "request": "launch",
             
@@ -55,12 +55,13 @@
             "args": [
                 "--timeout",
                 "5000000",
+                "--no-config",
                 "--require",
                 "mocha-suppress-logs",
-                "${workspaceRoot}/packages/privacy-lib/test/integrated.test.ts",
+                "${workspaceRoot}/packages/core/test/integrated.test.ts",
                 "--exit"
             ],
-            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "cwd": "${workspaceRoot}/packages/core",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
@@ -75,10 +76,10 @@
                 "5000000",
                 "--require",
                 "mocha-suppress-logs",
-                "${workspaceRoot}/packages/privacy-lib/test/base_actions.test.ts",
+                "${workspaceRoot}/packages/core/test/base_actions.test.ts",
                 "--exit"
             ],
-            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "cwd": "${workspaceRoot}/packages/core",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },{
@@ -86,7 +87,7 @@
             "type": "node",
             "request": "launch",
             "env": {
-                "TS_NODE_PROJECT": "${workspaceRoot}/packages/privacy-lib/test/tsconfig.json"
+                "TS_NODE_PROJECT": "${workspaceRoot}/packages/core/test/tsconfig.json"
             },
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
             "args": [
@@ -95,10 +96,10 @@
                 "--no-config",
                 "--require",
                 "mocha-suppress-logs",
-                "${workspaceRoot}/packages/privacy-lib/test/chained_proofs.test.ts",
+                "${workspaceRoot}/packages/core/test/chained_proofs.test.ts",
                 "--exit"
             ],
-            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "cwd": "${workspaceRoot}/packages/core",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
@@ -114,10 +115,10 @@
                 "5000000",
                 "--require",
                 "mocha-suppress-logs",
-                "${workspaceRoot}/packages/privacy-lib/test/mimc.test.ts",
+                "${workspaceRoot}/packages/core/test/mimc.test.ts",
                 "--exit"
             ],
-            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "cwd": "${workspaceRoot}/packages/core",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
@@ -132,10 +133,10 @@
                 "5000000",
                 "--require",
                 "mocha-suppress-logs",
-                "${workspaceRoot}/packages/privacy-lib/test/merkle_contracts.test.ts",
+                "${workspaceRoot}/packages/core/test/merkle_contracts.test.ts",
                 "--exit"
             ],
-            "cwd": "${workspaceRoot}/packages/privacy-lib",
+            "cwd": "${workspaceRoot}/packages/core",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },

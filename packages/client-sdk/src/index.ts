@@ -1,10 +1,10 @@
 // Example: re-export browser entry from privacy-lib
-import * as nhsdk from '@nihilium/privacy-lib'; 
-export * from '@nihilium/privacy-lib';
+import * as nhsdk from '@nihilium/core'; 
+export * from '@nihilium/core';
 import axios from "axios";
 import { SelectableDataStream, SelectableProcessor,  } from "./lib/types";
 import { getDatastreams, getProcessors, getProcessorEndpoint } from './lib/endpoint-selection';
-import { DataStream } from '@nihilium/privacy-lib';
+import { DataStream } from '@nihilium/core';
 import { circomHashTie, circomOpeningProof } from '@nihilium/zkp-circuits';
 export type SingleSealStoragePackage = nhsdk.protocolTypes.SingleSealStoragePackage;
 export { getFullDatastreams, getFullProcessors } from './lib/endpoint-selection';
@@ -46,7 +46,7 @@ export async function getDefaultSealingProcess(chainId: number = nhsdk.NETWORK_I
    await resolvedDataStream.initialize();
    var processorEndpoints = await getProcessors();
    var processorEndpoint = processorEndpoints[0];
-   const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint.url);
+   const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint);
    const genanche = nhsdk.deployedProtocolContracts[chainId];
    const proofCollection = nhsdk.createRevealOnlyCollection(chainId);
      
@@ -64,7 +64,7 @@ export async function getDefaultUnsealingProcess(seal: nhsdk.protocolTypes.Singl
     chainId: number = nhsdk.NETWORK_IDS.ANVIL
 ) {
     
-    const processorEndpoint = await getProcessorEndpoint(seal.public_package.processor_url);
+    const processorEndpoint = await getProcessorEndpoint({url: seal.public_package.processor_url, name: "Processor", ethAddress: "0x0000000000000000000000000000000000000000", is_tor: false, jurisdiction: "US", stake: BigInt(1000000000000000000)});
     const dataStream = new nhsdk.DataStreamClient(seal.public_package.data_stream_urls[0]);
     await dataStream.initialize();
     

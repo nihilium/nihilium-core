@@ -2,19 +2,27 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { router as apiRouter } from './routes/api';
-import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/privacy-lib';
+import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/core';
+import { buildPaymentVerifier } from './payment';
 //Only for debugging purposes
 //import { Processor, deployedProtocolContracts, NETWORK_IDS } from '../../../packages/privacy-lib/src/index';
-//import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/privacy-lib/src/index';
+//import { Processor, deployedProtocolContracts, NETWORK_IDS } from '@nihilium/core/src/index';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { ethers, Network } from 'ethers';
+import { createEvidenceStore } from './evidence';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 async function main() {
 
   const argv = await yargs(hideBin(process.argv))
+        .option('processor-private-key', {
+            alias: 'ppk',
+            type: 'string',
+            description: 'Private key for the processor wallet',
+            required: !process.env.CHAIN_PRIVATE_KEY,
+        })
         .option('private-key-signing', {
             alias: 'pk',
             type: 'string',
@@ -52,6 +60,7 @@ async function main() {
             required: !process.env.CHAIN_ID,
         }).argv;
 
+    const processorPrivateKey = (argv.processorPrivateKey || process.env.CHAIN_PRIVATE_KEY) as string;
     const privateKey = (argv.privateKey || process.env.PRIVATE_KEY) as string;
     const privateKeyHE = (argv.privateKeyHE || process.env.PRIVATE_KEY_HE) as string;
     const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;  
@@ -71,10 +80,12 @@ async function main() {
   }
   console.log(chainId, rpcUrl, contractAddress);
   
-  // Create a custom network for any chain ID
+  // Create a custom network for any chain ID. Mark it as a static network so
+  // ethers trusts the configured chain id instead of performing an eth_chainId
+  // roundtrip (and throwing "network changed") on every getNetwork() call.
   const network = new Network('custom', chainId);
-  const provider = new ethers.JsonRpcProvider(rpcUrl, network);
-  const wallet = new ethers.Wallet(privateKey, provider);
+  const provider = new ethers.JsonRpcProvider(rpcUrl, network, { staticNetwork: network });
+  const wallet = new ethers.Wallet(processorPrivateKey, provider);
 
   // Create Express app
 
@@ -91,15 +102,36 @@ async function main() {
     openingProofAddress, 
     wallet);
     await app.locals.processor.initialize();
+  const paymentVerifier = buildPaymentVerifier(process.env, wallet.address);
+  if (paymentVerifier) {
+    console.log(`Payment verification enabled (${paymentVerifier.name}), processor ID: ${wallet.address}`);
+    app.locals.paymentVerifier = paymentVerifier;
+  } else {
+    console.warn('Payment verification disabled — NIHILIUM_JWKS_URL not set');
+  }
+  app.locals.evidenceStore = await createEvidenceStore();
+  console.log(`Evidence store quorum: ${app.locals.evidenceStore.quorumLabel}`);
   // Routes
   app.use('/', apiRouter);
 
   // Allow larger POST requests by increasing the body size limit
 
 
+  const healthStrict = process.env.EVIDENCE_HEALTH_STRICT === 'true';
+
   // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  app.get('/health', async (req, res) => {
+    const evidence = await app.locals.evidenceStore.checkHealth();
+    const payload = {
+      status: evidence.healthy ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      evidence,
+    };
+    if (healthStrict && !evidence.healthy) {
+      res.status(503).json(payload);
+      return;
+    }
+    res.status(200).json(payload);
   });
 
   // Start server

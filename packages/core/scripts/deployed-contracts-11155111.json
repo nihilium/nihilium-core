@@ -1,0 +1,4329 @@
+{
+  "TopLevelMerkleProof": {
+    "address": "0xea5c2BAe655965b907C9a5bff3DD9845F08c65DB",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "b",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_efficientHash",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "extractBytes32List",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "MerkleTreeProof": {
+    "address": "0x6c124843cF1eAFF04390d69ACF71Ece2CB289eDe",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "v1",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "v2",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "v3",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "Log",
+        "anonymous": false
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "b",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_efficientHash",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "extractBytes32List",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "KeccakTreeEntry": {
+    "address": "0x99E9242f05729a4c3c202eFb56C7D5f48D018337",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "b",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_efficientHash",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "GreaterOrEqualThen": {
+    "address": "0xEB27109844082b12BD1cE4b1D55c38EF28e102C0",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "SmallerThan": {
+    "address": "0x028E401BB9e9BB9c18Cc6E74C56865672b54Fa59",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "TimeDelayProof": {
+    "address": "0xF916925DBc4f2E158EB3C1499fC5C8f2e990DdaE",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "VerifyEDDSA": {
+    "address": "0x0F774c1a319932eD492942647966E03e54E40d40",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "VerifyECDSA": {
+    "address": "0xB2103665068Ad2f080C83b81aa17A1c0A5d3E0F8",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "AdditionProof": {
+    "address": "0xF594173DE573D52A850AE27b10f6E3DcF81662d3",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ManualChoice": {
+    "address": "0x563e8d38F01C078e32E671173b9c99fB9ea0Ad03",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ValueInjection": {
+    "address": "0x72e0FB3442B07aF31aBC1Faa974e993DCa35e6Da",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "Poseidon2Verifier": {
+    "address": "0xBA5A66ae9eef112c9Fa1f4afF53F61e1e619B9b4",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "publicSignals",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "opening_proof": {
+    "address": "0x2941c0189D3bd0B1C30eFc5db42B10db4fFC0740",
+    "abi": [
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_pA",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "_pB",
+            "type": "uint256[2][2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256[2]",
+              "baseType": "array",
+              "components": null,
+              "arrayLength": 2,
+              "arrayChildren": {
+                "name": "",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            }
+          },
+          {
+            "name": "_pC",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "_pubSignals",
+            "type": "uint256[11]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 11,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verifyProof",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "hash_tie": {
+    "address": "0x52f8F9Baa00bd59fA253eEBf01824B0154999152",
+    "abi": [
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_pA",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "_pB",
+            "type": "uint256[2][2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256[2]",
+              "baseType": "array",
+              "components": null,
+              "arrayLength": 2,
+              "arrayChildren": {
+                "name": "",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            }
+          },
+          {
+            "name": "_pC",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "_pubSignals",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verifyProof",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "EmpheralMerkleTreeKeccak": {
+    "address": "0xb475e531be3f88e725c654ec2bD3f8Eb355D2ef8",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_levels",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "error",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "OwnableInvalidOwner"
+      },
+      {
+        "type": "error",
+        "inputs": [
+          {
+            "name": "account",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "OwnableUnauthorizedAccount"
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "value1",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "value2",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "value3",
+            "type": "uint256",
+            "baseType": "uint256",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "Log",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "previousOwner",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "newOwner",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "leafIndex",
+            "type": "uint32",
+            "baseType": "uint32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "leafValue",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "baseType": "uint256",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "blockHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "newValueRoot",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "TreeUpdate",
+        "anonymous": false
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "ROOT_HISTORY_SIZE",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "b",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_efficientHash",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "currentIndex",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "findDivergenceLevelForNext",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "getLastMerkleRoot",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "buffer",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "iToHex",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "string",
+            "baseType": "string",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "previousLeaf",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "insertValue",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "previousLeafPath",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "insert",
+        "constant": false,
+        "outputs": [
+          {
+            "name": "index",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_root",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "isKnownValueRoot",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "levels",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "maxValue",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "merkleRoots",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "owner",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "renounceOwnership",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "stopTree",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "newOwner",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "transferOwnership",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "treeStopped",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "i",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "zeros",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ChainedProofV2": {
+    "address": "0x60F8b580F09AB6846bC74947Fe4e3C4Fb30e2444",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "_public_proof_verifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_forced_opening_verifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "public_input_indexes",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "output_indexes",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "_dryrun_chain_pass_signal",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "mask",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "ignore_proof",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_dryrun_chain_proof_verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "public_input_index",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_dryrun_chain_static_input",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_verifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_verifierMustBeTrue",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_dryrun_prepare_next_proof",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "datastream",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "output_signal_index",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_dryrun_validate_data_root",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "public_input_indexes",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "output_indexes",
+            "type": "uint256[2]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": 2,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint256",
+              "baseType": "uint256",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "dryrun_chain_pass_signal",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "mask",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "ignore_proof",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "dryrun_chain_proof_verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "public_input_index",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "dryrun_chain_static_input",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_verifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_verifierMustBeTrue",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "dryrun_prepare_next_proof",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "datastream",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "output_signal_index",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "dryrun_validate_data_root",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "forced_opening_verifier",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_datastream",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_root",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "has_data_stream_root",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "state",
+            "type": "tuple",
+            "baseType": "tuple",
+            "components": [
+              {
+                "name": "current_hash",
+                "type": "bytes32",
+                "baseType": "bytes32",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "current_index",
+                "type": "uint256",
+                "baseType": "uint256",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "outputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_public_inputs",
+                "type": "bytes32[]",
+                "baseType": "array",
+                "components": null,
+                "arrayLength": -1,
+                "arrayChildren": {
+                  "name": "",
+                  "type": "bytes32",
+                  "baseType": "bytes32",
+                  "components": null,
+                  "arrayLength": null,
+                  "arrayChildren": null
+                }
+              },
+              {
+                "name": "prepared_proof",
+                "type": "bytes",
+                "baseType": "bytes",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "verifier_must_be_true",
+                "type": "bool",
+                "baseType": "bool",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "proof_verifier",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              },
+              {
+                "name": "initiator",
+                "type": "address",
+                "baseType": "address",
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null
+              }
+            ],
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "hashProvingState",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "provingStates",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "current_hash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "current_index",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "prepared_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "verifier_must_be_true",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "proof_verifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "initiator",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "public_proof_verifier",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "EmpheralDualMerkleTreeKeccak": {
+    "address": "0xfAc26F298274706dD48e580306cd421BeD429ED8",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_levels",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "error",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "OwnableInvalidOwner"
+      },
+      {
+        "type": "error",
+        "inputs": [
+          {
+            "name": "account",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "OwnableUnauthorizedAccount"
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "value1",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "value2",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "value3",
+            "type": "uint256",
+            "baseType": "uint256",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "Log",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "previousOwner",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "newOwner",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "leafIndex",
+            "type": "uint32",
+            "baseType": "uint32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "leafValue",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "baseType": "uint256",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "blockHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "newValueRoot",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "newDualRoot",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "TreeUpdate",
+        "anonymous": false
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "ROOT_HISTORY_SIZE",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "b",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "_efficientHash",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "value",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "currentIndex",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "dualRoots",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "a",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "findDivergenceLevelForNext",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "getLastDualRoot",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "getLastMerkleRoot",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "buffer",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "iToHex",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "string",
+            "baseType": "string",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "previousLeaf",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "insertValue",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "previousLeafPath",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          },
+          {
+            "name": "previousDualLeaf",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "previousDualLeafPath",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "insert",
+        "constant": false,
+        "outputs": [
+          {
+            "name": "index",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_root",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "isKnownDualRoot",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "lastValueRoot",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "levels",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "maxValue",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "owner",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "renounceOwnership",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_historySize",
+            "type": "uint32",
+            "baseType": "uint32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "setHistorySize",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "stopTree",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "newOwner",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "transferOwnership",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "treeStopped",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "i",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "zeros",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  }
+}

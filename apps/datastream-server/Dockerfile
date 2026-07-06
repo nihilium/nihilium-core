@@ -13,8 +13,8 @@ RUN npm install
 # Copy the rest of the application's source code from your context
 COPY . .
 
-# Copy privacy-lib
-COPY ../privacy-lib ./privacy-lib
+# Copy core
+COPY ../core ./core
 
 # Build the TypeScript code
 RUN npm run build

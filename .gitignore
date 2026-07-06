@@ -85,6 +85,8 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+.env.sepolia
+.env.arbsep
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -136,19 +138,27 @@ dist
 .yarn/install-state.gz
 .pnp.*
 circom/circuits/test/*
-/privacy-lib/circuits/*
+/core/circuits/*
 *.r1cs
 *.sym
 *.zkey
 *.wtns
 *.wasm
 node_modules/*
+**/forge-std/*
+**/artifacts/*
+**/broadcast/*
+**/out/*
+**/cache_forge/*
+**/packages/registry/typechain-types/*
 
 apps/datastream-server/.env-ganache
-packages/privacy-lib/anvil-state.json
-packages/privacy-lib/scripts/deployed-contracts-bytecode-31337.json
-packages/privacy-lib/scripts/deployed-contracts-bytecode-43113.json
+packages/core/anvil-state.json
+packages/core/scripts/deployed-contracts-bytecode-31337.json
+packages/core/scripts/deployed-contracts-bytecode-43113.json
 x19xlookupTable.json
 apps/processor/.env.anvil
 apps/processor/.env.avax
 packages/zkp-circuits/lookupTables/x16xlookupTable.json
+apps/datastream-server/.env-live
+apps/datastream-server/.env-anvil

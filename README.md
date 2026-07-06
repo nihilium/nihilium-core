@@ -23,7 +23,7 @@ https://recovery.nihilium.io
 # Manual relevant locations
 
 The core circuit can be found in: /packages/zkp-circuits/circom-circuits/circuits/nihilium_core.circom
-
+  
 The combinational threshold encryption can be found here: /packages/zkp-circuits/src/utils/dte.ts
 
 Starting point for full circle test is: /packages/privacy-lib/test/full.test.ts
@@ -67,7 +67,7 @@ High-performance discrete logarithm solver for the Baby Jubjub curve, implemente
 - Curve parameters: a=168700, d=168696 (twisted Edwards, BN254 base field)
 - Required by the privacy-lib for decrypting homomorphically encrypted values
 
-#### `packages/privacy-lib` — `@nihilium/privacy-lib`
+#### `packages/privacy-lib` — `@nihilium/core`
 
 Core protocol library covering data streams, processors, and client interactions. Built with Hardhat (Solidity 0.8.27, Cancun EVM) and TypeScript.
 
@@ -100,7 +100,7 @@ Supports both browser and Node.js environments. The main integration test is `pa
 
 #### `packages/client-sdk` — `@nihilium/client-sdk`
 
-Browser-focused SDK wrapping `@nihilium/privacy-lib`:
+Browser-focused SDK wrapping `@nihilium/core`:
 
 - Re-exports the full privacy-lib API
 - Adds endpoint selection (`getDatastreams`, `getProcessors`, `getProcessorEndpoint`)

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { CloudUpload, Download, Settings, CheckCircle } from '@mui/icons-material';
 import { getDefaultSealingProcess, getDefaultUnsealingProcess, getProcessorEndpoint, getFullDatastreams, getFullProcessors, nhsdk} from '@nihilium/client-sdk';
-import { DefaultAnchoredOpeningProofModule } from '@nihilium/privacy-lib/dist/lib/unseal_conditions/modules/standard_modules/default_anchored_opening_module';
+import { DefaultAnchoredOpeningProofModule } from '@nihilium/core/dist/lib/unseal_conditions/modules/standard_modules/default_anchored_opening_module';
 
 const App: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);

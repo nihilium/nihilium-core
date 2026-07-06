@@ -17,14 +17,14 @@ import hashTieIPFS from './ipfsrefs/hash_tie.json';
 
 // Create IPFS configuration for opening_proof circuit
 const openingProofIPFSConfig: IPFSConfig = {
-  gateway: 'https://ipfs.io',
+  gateway: 'https://amethyst-hollow-lungfish-86.mypinata.cloud',
   circuitName: openingProofIPFS.circuitName,
   files: openingProofIPFS.files
 };
 
 // Create IPFS configuration for hash_tie circuit
 const hashTieIPFSConfig: IPFSConfig = {
-  gateway: 'https://ipfs.io',
+  gateway: 'https://amethyst-hollow-lungfish-86.mypinata.cloud',
   circuitName: hashTieIPFS.circuitName,
   files: hashTieIPFS.files
 };
@@ -47,6 +47,14 @@ export const circomHashTie = WrappedCircomCircuit.fromIPFS(hashTieIPFSConfig);
 
 import * as cryptoTools from "./utils/tools";
 import { precompute } from "./utils/precompute";
+import {
+    deriveHEKeyScalar,
+    deriveHEPublicKey,
+    deriveSigningKeyScalar,
+    deriveSigningPublicKey,
+    normalizeSigningKeyMaterial,
+    hexToSkBuffer,
+} from "./utils/tools";
 // import * as decodeCypherText from "./utils/decode";
 //import * as ec from "./ecelgamal";
 //import type { generic_adjacent_tree_proofInputType } from './tscircuits/generic_adjacent_tree_proof';
@@ -60,8 +68,15 @@ export {
     // encrypt_proofInputType,
     // validated_sig_he_addInputType,
     // generic_adjacent_tree_proofInputType,
-    cryptoTools, 
+    cryptoTools,
     WrappedCircomCircuit,
     IPFSConfig,
-    precompute
+    precompute,
+    // Canonical key-derivation helpers (used by @nihilium/registry)
+    deriveHEKeyScalar,
+    deriveHEPublicKey,
+    deriveSigningKeyScalar,
+    deriveSigningPublicKey,
+    normalizeSigningKeyMaterial,
+    hexToSkBuffer,
 }

@@ -10,6 +10,7 @@
 //     return createHash("blake2b512");
 // }
 import * as ff from "ffjavascript";
+import { argon2d } from '@noble/hashes/argon2';
 //const ff = require("ffjavascript");
 const stringifyBigInts = ff.utils.stringifyBigInts;
 const unstringifyBigInts = ff.utils.unstringifyBigInts;
@@ -21,6 +22,7 @@ import { decode, encode } from "./decode";
 import { bytesToHex, concatBytes, hexToBytes } from "@noble/hashes/utils";
 import { sha256 } from "@noble/hashes/sha2";
 import * as zkJub from "@zk-kit/baby-jubjub";
+import { subOrder as BJJ_SUBGROUP_ORDER } from "@zk-kit/baby-jubjub";
 import { blake2b } from "@noble/hashes/blake2b";
 import { poseidon16, poseidon8 } from "poseidon-lite";
 export * as poseidonTools from "poseidon-lite";
@@ -32,14 +34,15 @@ const CHUNK_MASK = (1n << CHUNK_SIZE) - 1n; // Mask for 32 bits: 0xFFFFFFFF
 export function createNobleBlakeHash(data) {
     return Buffer.from(blake2b(data, { dkLen: 32 }).slice(0, 32));
 }
-/**
- * Generate a random number of 125 bits.
- * @returns {BigInt} - A random 125-bit number.
- */
 export function generateRandom248BitNumber() {
     const randomBytesBuffer = portableRandomBytes(31); // 31 bytes = 248 bits
     // randomBytesBuffer[0] &= 0x1F; // Mask the first 3 bits to ensure the number is 125 bits
     return BigInt('0x' + randomBytesBuffer.toString('hex').padStart(62, '0'));
+}
+export function generateRandom240BitNumber() {
+    const randomBytesBuffer = portableRandomBytes(30); // 30 bytes = 240 bits
+    // randomBytesBuffer[0] &= 0x1F; // Mask the first 3 bits to ensure the number is 125 bits
+    return BigInt('0x' + randomBytesBuffer.toString('hex').padStart(60, '0'));
 }
 export function shrinkToBits(number, bits) {
     return number & ((1n << BigInt(bits)) - 1n);
@@ -209,6 +212,16 @@ export const bufferToBigInt = (buf) => BigInt('0x' + Buffer.from(buf).toString('
 export function coordinatesToExtPointBigint(x, y) {
     const affine_point = { x: x, y: y };
     return babyJub.fromAffine(affine_point);
+}
+var defaultOptions = { memory: 64 * 1024, iterations: 3, parallelism: 4 };
+export function portableArgon2(data, options = defaultOptions) {
+    const params = {
+        t: options.iterations, // iterations (time cost)
+        m: options.memory, // memory cost in KiB (~64 MiB)
+        p: options.parallelism, // parallelism
+        maxmem: 2 ** 28 - 1, // safety limit (~256 MB)
+    };
+    return Buffer.from(argon2d(data, Buffer.from(data), params).slice(0, data.length));
 }
 /**
  * Returns a Uint8Array of cryptographically secure random bytes.
@@ -442,6 +455,9 @@ function toBytesLE(bn, length = 32) {
     const hex = bn.toString(16).padStart(length * 2, '0');
     return Uint8Array.from(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 }
+export function fromBytesLE(bytes) {
+    return bufferToBigInt(bytes);
+}
 // XOR helper
 function xor(a, b) {
     return new Uint8Array(a.map((byte, i) => byte ^ b[i]));
@@ -631,3 +647,84 @@ function rerandomize(pubKey, ephemeral_key, encrypted_message, randomVal) {
     return { randomized_ephemeralKey, randomized_encryptedMessage };
 }
 export { stringToCurve, combineTwoPublicKeys, uint8ArrayToHex, pruneBuffer, privateScalarToPubKey, prv2pub, bigInt2Buffer, hexString2Buffer, buffer2HexString, toBytesLE, getSignalByName, stringifyBigInts, unstringifyBigInts, toStringArray, toBigIntArray, formatPrivKeyForBabyJub, coordinatesToExtPoint, pruneTo64Bits, pruneTo32Bits, ffEncodedToBigInt, encryptAESBigInt, decryptAESBigInt, encryptECCBabyJub, decryptECCBabyJub };
+// ---------------------------------------------------------------------------
+// Canonical key-derivation helpers for the Nihilium registry
+//
+// HE keys and signing keys use deliberately different derivation functions:
+//
+//   HE      — blake2b(sk_bytes) → prune → shr(3) → s' · BASE8
+//             Matches genPubKey / formatPrivKeyForBabyJub used in ElGamal.
+//
+//   Signing — sha512(sk_bytes)[0..32] → prune → shr(3) → s' · BASE8
+//             Matches @zk-kit/eddsa-poseidon used by the Processor and EdDSA circuits.
+//             Registry addKey challenge binds keyMaterial = uint256(hex secret) so leading
+//             zero nybbles in hex are not distinguished in the challenge preimage.
+//
+// Both helpers accept a 0x-prefixed hex string (matching env-var format).
+// The returned scalar is the value that should be used as the private key in
+// Schnorr proof-of-knowledge generation: pk = scalar · BASE8.
+// ---------------------------------------------------------------------------
+/** Canonical uint256 secret material (0x00abc and 0xabc are the same integer). */
+export function normalizeSigningKeyMaterial(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return BigInt(normalised) % BJJ_SUBGROUP_ORDER;
+}
+/**
+ * Raw secret bytes for EdDSA (@zk-kit/eddsa-poseidon) from canonical integer hex.
+ * Leading zero nybbles in the env string are not preserved as extra bytes.
+ */
+export function hexToSkBuffer(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return Buffer.from(BigInt(normalised).toString(16), "hex");
+}
+/**
+ * Derive the scalar used inside the HE (ElGamal) key derivation.
+ * This is `formatPrivKeyForBabyJub(BigInt(hexKey))` and matches the scalar
+ * used in `genPubKey` / `HEDecrypt` / `encrypt`.
+ *
+ * @param hexKey  0x-prefixed 32-byte private key hex string
+ */
+export function deriveHEKeyScalar(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return formatPrivKeyForBabyJub(BigInt(normalised));
+}
+/**
+ * Derive the HE public key `[x, y]` from a raw private key hex string.
+ * Equivalent to `genPubKey(BigInt(hexKey))` but accepts a hex string and
+ * returns affine coordinates rather than an ExtPointType.
+ *
+ * @param hexKey  0x-prefixed 32-byte private key hex string
+ */
+export function deriveHEPublicKey(hexKey) {
+    const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
+    return toBigIntArray(genPubKey(BigInt(normalised)));
+}
+// Lazy import cache so we don't pay the dynamic-import cost on every call
+let _zkeddsa = null;
+async function getZkEddsa() {
+    if (!_zkeddsa) {
+        _zkeddsa = await import("@zk-kit/eddsa-poseidon");
+    }
+    return _zkeddsa;
+}
+/**
+ * Derive the scalar used inside the EdDSA signing key derivation (Schnorr PoK).
+ * Matches `@zk-kit/eddsa-poseidon.deriveSecretScalar`.
+ *
+ * @param hexKey  0x-prefixed private key hex string
+ */
+export async function deriveSigningKeyScalar(hexKey) {
+    const zkeddsa = await getZkEddsa();
+    return zkeddsa.deriveSecretScalar(hexToSkBuffer(hexKey));
+}
+/**
+ * Derive the EdDSA signing public key `[x, y]` from a raw private key hex string.
+ * Matches `@zk-kit/eddsa-poseidon.derivePublicKey` used by the Processor and circuits.
+ *
+ * @param hexKey  0x-prefixed private key hex string
+ */
+export async function deriveSigningPublicKey(hexKey) {
+    const zkeddsa = await getZkEddsa();
+    const pk = zkeddsa.derivePublicKey(hexToSkBuffer(hexKey));
+    return pk;
+}
