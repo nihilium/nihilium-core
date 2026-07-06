@@ -22,7 +22,7 @@ export interface DualProofResult {
     dualProof: ProofPath;
     globalProof: ProofPath;
     localProof: ProofPath;
-    timestamp: number;
+    timestamp: string;
     globalIndex: number;
     localIndex: number;
     blockHash: string;

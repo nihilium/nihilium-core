@@ -293,7 +293,7 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         )
         const valueTreeRoot = toPaddedHex(BigInt(this.globalValueTree.root))
         const dualProof = this.globalDualTree.proof(valueTreeRoot)
-        return { dualProof, globalProof, leafRoot: rootKey, timestamp, globalIndex: this.getGlobalTreeIndex() - 1, blockHash }
+        return { dualProof, globalProof, leafRoot: rootKey, timestamp: timestamp.toString(), globalIndex: this.getGlobalTreeIndex() - 1, blockHash }
     }
 
     async getProof(value: HexString): Promise<DualProofResult> {

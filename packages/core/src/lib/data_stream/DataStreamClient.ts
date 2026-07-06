@@ -58,7 +58,7 @@ export class DataStreamClient implements IDualDataStream {
             dualProof:     result.dualProof as ProofPath,
             globalProof:   result.globalProof as ProofPath,
             localProof:    result.localProof as ProofPath,
-            timestamp:     parseInt(result.timestamp),
+            timestamp:     parseInt(result.timestamp).toString(),
             globalIndex:   parseInt(result.globalIndex),
             localIndex:    parseInt(result.localIndex),
             blockHash:     result.blockHash as string,
@@ -76,7 +76,7 @@ export class DataStreamClient implements IDualDataStream {
             dualProof:   result.dualProof as ProofPath,
             globalProof: result.globalProof as ProofPath,
             leafRoot:    result.leafRoot as string,
-            timestamp:   parseInt(result.timestamp),
+            timestamp:   parseInt(result.timestamp).toString(),
             globalIndex: parseInt(result.globalIndex),
             blockHash:   result.blockHash as string,
         }

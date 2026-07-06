@@ -46,7 +46,7 @@ export async function getDefaultSealingProcess(chainId: number = nhsdk.NETWORK_I
    await resolvedDataStream.initialize();
    var processorEndpoints = await getProcessors();
    var processorEndpoint = processorEndpoints[0];
-   const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint.url);
+   const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint);
    const genanche = nhsdk.deployedProtocolContracts[chainId];
    const proofCollection = nhsdk.createRevealOnlyCollection(chainId);
      
@@ -64,7 +64,7 @@ export async function getDefaultUnsealingProcess(seal: nhsdk.protocolTypes.Singl
     chainId: number = nhsdk.NETWORK_IDS.ANVIL
 ) {
     
-    const processorEndpoint = await getProcessorEndpoint(seal.public_package.processor_url);
+    const processorEndpoint = await getProcessorEndpoint({url: seal.public_package.processor_url, name: "Processor", ethAddress: "0x0000000000000000000000000000000000000000", is_tor: false, jurisdiction: "US", stake: BigInt(1000000000000000000)});
     const dataStream = new nhsdk.DataStreamClient(seal.public_package.data_stream_urls[0]);
     await dataStream.initialize();
     

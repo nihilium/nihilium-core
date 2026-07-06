@@ -22,6 +22,7 @@ export {NETWORK_IDS, deployedProtocolContracts, toAddressMap} from './static_con
 //Protocol interaction interfaces
 export {ClientSingleShareSealingProcess} from './lib/client/client_single_share_sealing'
 export {ClientSingleShareUnsealingProcess} from './lib/client/client_single_share_unsealing'
+export {NihiliumPaymentProvider, NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE} from './lib/client/payments';
 export { createRevealOnlyCollection } from './lib/unseal_conditions/templates/reveal_only_template';
 export {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
 
