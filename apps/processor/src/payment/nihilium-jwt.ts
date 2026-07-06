@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import type { createRemoteJWKSet } from 'jose';
 import type { Request } from 'express';
 import type { PaymentContext, PaymentVerifier } from './types';
 import { RequestIdStore } from './dedup';
@@ -17,18 +17,27 @@ export type NihiliumJwtConfig = {
 export class NihiliumJwtVerifier implements PaymentVerifier {
   readonly name = 'nihilium-jwt';
 
-  private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
+  // Lazy-initialized on first verify() call — deferred so we can dynamic-import
+  // the ESM-only jose package from a CommonJS module.
+  private jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
+  private readonly jwksUrl: URL;
   private readonly issuer: string;
   private readonly processorId: string;
   private readonly dedup = new RequestIdStore();
 
   constructor(config: NihiliumJwtConfig) {
-    this.jwks = createRemoteJWKSet(new URL(config.jwksUrl));
+    this.jwksUrl = new URL(config.jwksUrl);
     this.issuer = config.issuer;
     this.processorId = config.processorId;
   }
 
   async verify(req: Request): Promise<PaymentContext> {
+    const { createRemoteJWKSet, jwtVerify } = await import('jose');
+
+    if (!this.jwks) {
+      this.jwks = createRemoteJWKSet(this.jwksUrl);
+    }
+
     const authHeader = req.headers['authorization'];
     if (!authHeader) throw new Error('Missing Authorization header');
 
