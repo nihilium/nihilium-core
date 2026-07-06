@@ -37,7 +37,7 @@ RUN mkdir -p /data/e0 /data/e1 /data/e2 /data/e3 /data/e4 \
 
 # Ensure the processor user has write permissions for runtime-generated files
 RUN chown -R processor:nodejs /app/apps/processor \
-  && chown -R processor:nodejs /app/packages/privacy-lib/dist/lib/processor \
+  && chown -R processor:nodejs /app/packages \
   && chown -R processor:nodejs /data
 
 USER processor
