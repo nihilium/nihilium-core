@@ -15,8 +15,10 @@ RUN apt-get update \
 COPY . .
 
 # Install processor-only deps (workspace npm may not hoist @aws-sdk) and build
+# Remove local ethers after --no-workspaces install to avoid duplicate type identities with root
 RUN cd apps/processor \
   && npm install @aws-sdk/client-s3@3.758.0 --no-workspaces \
+  && rm -rf node_modules/ethers \
   && npm run build
 
 # Expose the port (default is 3006 based on server.ts)
