@@ -1,5 +1,7 @@
-# Use Node.js 18 LTS with newer glibc for linux-x64-gnu native modules
-FROM node:18-bookworm-slim
+# Use Node.js 20 LTS with newer glibc for linux-x64-gnu native modules.
+# Node 20 exposes the global Web Crypto API (globalThis.crypto), which jose 6.x
+# requires; Node 18 does not and is EOL.
+FROM node:20-bookworm-slim
 
 # Set working directory
 WORKDIR /app
