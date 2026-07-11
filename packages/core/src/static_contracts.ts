@@ -7,13 +7,15 @@ import networkConfig from "../scripts/chain_config.json";
 // @ts-ignore
 import deployedContractsAnvil from "../scripts/deployed-contracts-31337.json";
 // @ts-ignore
+import deployedContractsAbritrum from "../scripts/deployed-contracts-42161.json"
+// @ts-ignore
 import deployedContractsSepolia from "../scripts/deployed-contracts-11155111.json";
 import { AddressMap, BasicAddressMap } from "./lib/unseal_conditions/collections/types";
 
 export var NETWORK_IDS = {
   ANVIL: 31337,
   GENANCHE: 1337,
-  ARBITRUM_SEPOLIA: 421614,
+  ARBITRUM: 42161,
   AVAX_TESTNET: 43113,
   SEPOLIA: 11155111,
   CUSTOM: 0,
@@ -24,6 +26,7 @@ export var deployedProtocolContracts = {
   //[NETWORK_IDS.GENANCHE]: deployedContracts1337,
   [NETWORK_IDS.AVAX_TESTNET]: deployedContracts43113,
   [NETWORK_IDS.SEPOLIA]: deployedContractsSepolia,
+  [NETWORK_IDS.ARBITRUM]: deployedContractsAbritrum,
   [NETWORK_IDS.CUSTOM]: {},
 }
 

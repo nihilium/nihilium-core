@@ -15,6 +15,10 @@
         "url": "https://sepolia-rollup.arbitrum.io/rpc",
         "chainId": 421614
     },
+    "arbitrum": {
+        "url": "https://arb1.arbitrum.io/rpc",
+        "chainId": 42161
+    },
     "sepolia": {
         "url": "https://rpc.sepolia.ethpandaops.io",
         "chainId": 11155111

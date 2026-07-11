@@ -162,3 +162,8 @@ apps/processor/.env.avax
 packages/zkp-circuits/lookupTables/x16xlookupTable.json
 apps/datastream-server/.env-live
 apps/datastream-server/.env-anvil
+packages/core/env.arb
+packages/core/.env.arb
+apps/.DS_Store
+packages/.DS_Store
+apps/datastream-server/.env.ganance

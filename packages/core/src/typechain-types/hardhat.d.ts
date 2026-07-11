@@ -74,6 +74,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseHonkVerifier__factory>;
     getContractFactory(
+      name: "Email_send_no_body",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Email_send_no_body__factory>;
+    getContractFactory(
+      name: "IVerifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IVerifier__factory>;
+    getContractFactory(
+      name: "BaseHonkVerifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BaseHonkVerifier__factory>;
+    getContractFactory(
       name: "Encrypt_proof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Encrypt_proof__factory>;
@@ -222,6 +234,21 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.BaseHonkVerifier>;
     getContractAt(
+      name: "Email_send_no_body",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Email_send_no_body>;
+    getContractAt(
+      name: "IVerifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IVerifier>;
+    getContractAt(
+      name: "BaseHonkVerifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BaseHonkVerifier>;
+    getContractAt(
       name: "Encrypt_proof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -373,6 +400,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseHonkVerifier>;
     deployContract(
+      name: "Email_send_no_body",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Email_send_no_body>;
+    deployContract(
+      name: "IVerifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IVerifier>;
+    deployContract(
+      name: "BaseHonkVerifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.BaseHonkVerifier>;
+    deployContract(
       name: "Encrypt_proof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Encrypt_proof>;
@@ -515,6 +554,21 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Between>;
+    deployContract(
+      name: "BaseHonkVerifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.BaseHonkVerifier>;
+    deployContract(
+      name: "Email_send_no_body",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Email_send_no_body>;
+    deployContract(
+      name: "IVerifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IVerifier>;
     deployContract(
       name: "BaseHonkVerifier",
       args: any[],

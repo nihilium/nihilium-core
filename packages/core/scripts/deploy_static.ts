@@ -48,11 +48,11 @@ async function deployContract(
     });
     await contract.waitForDeployment();
     const address = await contract.getAddress();
-    
+
     // Get bytecode and ABI from the factory
     const bytecode = factory.bytecode;
     const abi = factory.interface.fragments.map((fragment: any) => fragment);
-    
+
     console.log(`${contractName} deployed to:`, address);
     return { name: contractName, address, bytecode, abi, contract };
 }
@@ -102,19 +102,19 @@ function loadExistingDeployments(chainId: string): { deploymentData: DeploymentD
     const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
     const deploymentPath = path.join(__dirname, deploymentFilename);
     const deploymentByteCodePath = path.join(__dirname, deploymentByteCodeFilename);
-    
+
     const deploymentData: DeploymentData = {};
     const bytecodeMap: BytecodeMap = {};
-    
+
     // Load bytecode from separate file if it exists
     if (fs.existsSync(deploymentByteCodePath)) {
         const existingBytecode = JSON.parse(fs.readFileSync(deploymentByteCodePath, "utf-8"));
         Object.assign(bytecodeMap, existingBytecode);
     }
-    
+
     if (fs.existsSync(deploymentPath)) {
         const existingData = JSON.parse(fs.readFileSync(deploymentPath, "utf-8"));
-        
+
         // Convert old format to new format if needed
         for (const [name, value] of Object.entries(existingData)) {
             if (typeof value === 'string') {
@@ -133,11 +133,11 @@ function loadExistingDeployments(chainId: string): { deploymentData: DeploymentD
                 }
             }
         }
-        
+
         console.log(`Loaded existing deployments for chain ${chainId}`);
         return { deploymentData, bytecodeMap };
     }
-    
+
     console.log(`No existing deployments found for chain ${chainId}`);
     return { deploymentData, bytecodeMap };
 }
@@ -149,13 +149,13 @@ function needsRedeployment(contractName: string, newBytecode: string, existingDe
         console.log(`${contractName}: No existing deployment found - needs deployment`);
         return true;
     }
-    
+
     const existingBytecode = bytecodeMap[contractName];
     if (!existingBytecode || existingBytecode !== newBytecode) {
         console.log(`${contractName}: Bytecode changed - needs redeployment`);
         return true;
     }
-    
+
     console.log(`${contractName}: Bytecode unchanged - skipping deployment (${existing.address})`);
     return false;
 }
@@ -164,19 +164,19 @@ function needsRedeployment(contractName: string, newBytecode: string, existingDe
 function saveDeploymentState(chainId: string, deploymentData: DeploymentData, bytecodeMap: BytecodeMap): void {
     const deploymentFilename = `deployed-contracts-${chainId}.json`;
     const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
-    
+
     // Save deployment data (without bytecode)
     fs.writeFileSync(
         path.join(__dirname, deploymentFilename),
         JSON.stringify(deploymentData, null, 2)
     );
-    
+
     // Save bytecode separately
     fs.writeFileSync(
         path.join(__dirname, deploymentByteCodeFilename),
         JSON.stringify(bytecodeMap, null, 2)
     );
-    
+
     console.log(`Deployment state saved (${deploymentFilename}, ${deploymentByteCodeFilename})`);
 }
 
@@ -187,15 +187,15 @@ async function main() {
     const configPath = path.resolve(__dirname, "chain_config.json");
     const chainConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
     console.log(chainConfig);
-    
+
     // Determine which network to use (default: ganache, or via CLI arg/env)
     let network = "ganache";
-    
+
     // Use positional argument: npm run deploy -- privateKey networkName
     if (process.argv[2] && chainConfig[process.argv[2]]) {
         network = process.argv[2];
     }
-    
+
     // Allow override via env
     if (process.env.DEPLOY_NETWORK && chainConfig[process.env.DEPLOY_NETWORK]) {
         network = process.env.DEPLOY_NETWORK;
@@ -207,17 +207,21 @@ async function main() {
     }
 
     const privateKey = process.env.PRIVATE_KEY || process.argv[3] || "0x00c02c2c80ec46a6cbc5ccce6b0ce9e293c46a568cd2ffdfb69315efd7dafa36"; // Ganache default
-    
+
     const rpcUrl = networkConfig.url;
     const chainId = BigInt(networkConfig.chainId);
 
     const provider = new ethersjs.JsonRpcProvider(rpcUrl, chainId);
     const wallet = new ethersjs.Wallet(privateKey, provider);
-    
+
     // Set gas price for Ganache compatibility  
     const feeData = await provider.getFeeData();
-    const gasPrice = feeData.gasPrice || ethersjs.parseUnits("20", "gwei");
-    console.log(`Current gas price: ${gasPrice} wei (${ethersjs.formatUnits(gasPrice, "gwei")} Gwei)`);
+    const baseGasPrice = feeData.gasPrice || ethersjs.parseUnits("20", "gwei");
+    // Add 100% headroom so small base-fee drift between fetching and broadcasting
+    // (common on Arbitrum) doesn't invalidate the tx. You still only pay the actual base fee.
+    const gasPrice = (baseGasPrice * 200n) / 100n;
+    console.log(`Base gas price: ${baseGasPrice} wei (${ethersjs.formatUnits(baseGasPrice, "gwei")} Gwei)`);
+    console.log(`Using gas price with headroom: ${gasPrice} wei (${ethersjs.formatUnits(gasPrice, "gwei")} Gwei)`);
 
     console.log(`Deploying contracts with account: ${wallet.address}`);
     console.log(`Using RPC URL: ${rpcUrl} with Chain ID: ${chainId}`);
@@ -231,7 +235,7 @@ async function main() {
     const { deploymentData: existingDeployments, bytecodeMap: existingBytecodeMap } = loadExistingDeployments(chainId.toString());
     const deploymentData: DeploymentData = { ...existingDeployments };
     const bytecodeMap: BytecodeMap = { ...existingBytecodeMap };
-//TimeDelayProof
+    //TimeDelayProof
     var nonce = (await wallet.provider?.getTransactionCount(wallet.address, "pending")) || 0;
     // --- DEPLOY VERIFIERS ---
     const verifierConfigs = [
@@ -243,27 +247,27 @@ async function main() {
         { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
         { name: "VerifyEDDSA", artifactPath: "contracts/proofs/VerifyEDDSA.sol/VerifyEDDSA", contractPath: "contracts/proofs/VerifyEDDSA.sol:VerifyEDDSA" },
         { name: "VerifyECDSA", artifactPath: "contracts/proofs/VerifyECDSA.sol/VerifyECDSA", contractPath: "contracts/proofs/VerifyECDSA.sol:VerifyECDSA" },
-        
+
         { name: "AdditionProof", artifactPath: "contracts/proofs/AdditionProof.sol/AdditionProof", contractPath: "contracts/proofs/AdditionProof.sol:AdditionProof" },
         //ManualChoiceProof
         { name: "ManualChoice", artifactPath: "contracts/proofs/ManualChoice.sol/ManualChoice", contractPath: "contracts/proofs/ManualChoice.sol:ManualChoice" },
         { name: "ValueInjection", artifactPath: "contracts/proofs/ValueInjection.sol/ValueInjection", contractPath: "contracts/proofs/ValueInjection.sol:ValueInjection" },
         { name: "Poseidon2Verifier", artifactPath: "contracts/proofs/Poseidon2.sol/Poseidon2Verifier", contractPath: "contracts/proofs/Poseidon2.sol:Poseidon2Verifier" },
         //{ name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
-       // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
+        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
         //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
         // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
         // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
         { name: "opening_proof", artifactPath: "contracts/proofs/opening_proof.sol/opening_proof", contractPath: "contracts/proofs/opening_proof.sol:opening_proof" },
         { name: "hash_tie", artifactPath: "contracts/proofs/hash_tie.sol/hash_tie", contractPath: "contracts/proofs/hash_tie.sol:hash_tie" },
-        // { name: "validated_sig_he_add", artifactPath: "contracts/proofs/validated_sig_he_add.sol/validated_sig_he_add", contractPath: "contracts/proofs/validated_sig_he_add.sol:validated_sig_he_add" },
+        { name: "zk_email_proof", artifactPath: "contracts/proofs/EmailSendVerifier.sol/email_send_no_body", contractPath: "contracts/proofs/EmailSendVerifier.sol:email_send_no_body" },
     ];
 
     const verifierAddresses: { [name: string]: string } = {};
 
     for (const config of verifierConfigs) {
         const contractBytecode = getContractBytecode(config.artifactPath);
-        
+
         if (needsRedeployment(config.name, contractBytecode, existingDeployments, existingBytecodeMap)) {
             const verifier = await deployContract(config.name, config.contractPath, wallet, gasPrice, nonce);
             deploymentData[verifier.name] = {
@@ -289,7 +293,7 @@ async function main() {
     }
 
     // --- DEPLOY CORE CThis file that is now selectedONTRACTS ---
-    
+
     // EmpheralMerkleTreeKeccak
     const empheralName = "EmpheralDualMerkleTreeKeccak";
     const empheralBytecode = getContractBytecode(`contracts/${empheralName}.sol/${empheralName}`);
