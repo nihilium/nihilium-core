@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "build": "npm run build:sol && npm run build:ts",
-    "build:sol": "forge build",
+    "build:sol": "command -v forge >/dev/null 2>&1 && forge build || echo 'forge (foundry) not found — skipping build:sol (Solidity artifacts in out/ will not be (re)generated)'",
     "build:ts": "tsc -p tsconfig.lib.json",
     "build:watch": "tsc -p tsconfig.lib.json --watch",
     "test": "jest",
