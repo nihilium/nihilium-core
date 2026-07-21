@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
     "@nihilium/core": "*",
+    "@nihilium/registry": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ethers": "^6.14.0",

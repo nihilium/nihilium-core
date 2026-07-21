@@ -22,14 +22,18 @@ import { parseEther, ZeroAddress, Wallet } from "ethers";
 import { getProcessorConfig, getNihiliumApiUrl, getNihiliumPortalUrl } from "../config";
 import * as lib from "../lib/processor";
 import { fetchProcessorClaimStatus } from "../lib/nihilium-api";
+import { generateHEKeys, formatPrivateKeysForEnv, writePrivateKeysToFile } from "../lib/keygen";
+import { copyToClipboard } from "../lib/clipboard";
 import {
   printProcessorStatus,
   printKeyTable,
   printKeyExposureCheck,
   printDerivedProcessorKey,
+  printGeneratedHEKeys,
   printStakeTable,
   printSpinner,
   printSuccess,
+  printError,
   printException,
   printInfo,
   printClaimWarning,
@@ -246,6 +250,49 @@ const keysDeriveCmd = {
   },
 };
 
+const keysGenerateCmd = {
+  command:  "generate",
+  describe: "Generate new HE (ECElGamal) private key(s); the secret goes to the clipboard, never to the terminal",
+  builder:  (y: Argv) =>
+    y
+      .option("count", {
+        alias:    "n",
+        type:     "number",
+        default:  1,
+        describe: "How many HE keys to generate",
+      })
+      .option("out", {
+        type:     "string",
+        describe: "Write the private key(s) to this file (mode 0600) instead of the clipboard",
+      }),
+  handler: async (argv: { count: number; out?: string }) => {
+    if (!Number.isInteger(argv.count) || argv.count < 1) {
+      printError("--count must be a positive integer.");
+      process.exit(1);
+    }
+
+    // No config is loaded here on purpose: generating keys is the first thing a
+    // new operator does, before .env has an ETH key or an RPC endpoint.
+    const keys = generateHEKeys(argv.count);
+
+    if (argv.out) {
+      writePrivateKeysToFile(keys, argv.out);
+      printGeneratedHEKeys(keys, { kind: "file", path: argv.out });
+      return;
+    }
+
+    try {
+      const result = await copyToClipboard(formatPrivateKeysForEnv(keys));
+      printGeneratedHEKeys(keys, { kind: "clipboard", ...result });
+    } catch (e) {
+      // The generated secret is deliberately dropped rather than printed.
+      printException(e, "Could not copy the private key to the clipboard");
+      printInfo("Nothing was printed or saved — re-run with --out <file> to write the key to disk instead.");
+      process.exit(1);
+    }
+  },
+};
+
 const keysCmd = {
   command:  "keys <action>",
   describe: "Manage registered keys",
@@ -254,7 +301,8 @@ const keysCmd = {
       .command(keysListCmd)
       .command(keysDeactivateCmd)
       .command(keysDeriveCmd)
-      .demandCommand(1, "Specify an action: list | deactivate | derive")
+      .command(keysGenerateCmd)
+      .demandCommand(1, "Specify an action: list | deactivate | derive | generate")
       .strict(),
   handler: () => undefined,
 };

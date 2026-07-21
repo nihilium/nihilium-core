@@ -19,18 +19,23 @@ dotenv.config();
 //     }    
 
 async function main() {
+    // Unified env names (DATASTREAM_*) shared with registry-manager. No legacy
+    // fallbacks: the process fails if the expected variable is not set.
+    const envPrivateKey = process.env.DATASTREAM_PRIVATE_KEY;
+    const envContractAddress = process.env.DATASTREAM_CONTRACT_ADDRESS;
+
     const argv = await yargs(hideBin(process.argv))
         .option('private-key', {
             alias: 'pk',
             type: 'string',
             description: 'Private key for the wallet',
-            required: !process.env.PRIVATE_KEY,
+            required: !envPrivateKey,
         })
         .option('contract-address', {
             alias: 'ca',
             type: 'string',
             description: 'Datastream contract address',
-            required: !process.env.CONTRACT_ADDRESS,
+            required: !envContractAddress,
         })
         .option('rpc-url', {
             alias: 'rpc',
@@ -75,8 +80,8 @@ async function main() {
             default: process.env.FORCED_PUBLICATION_INTERVAL ? parseInt(process.env.FORCED_PUBLICATION_INTERVAL) : 60 * 10,
         }).argv;
 
-    const privateKey = (argv.privateKey || process.env.PRIVATE_KEY) as string;
-    const contractAddress = (argv.contractAddress || process.env.CONTRACT_ADDRESS) as string;
+    const privateKey = (argv.privateKey || envPrivateKey) as string;
+    const contractAddress = (argv.contractAddress || envContractAddress) as string;
     const rpcUrl = (argv.rpcUrl || process.env.RPC_URL) as string;
     const chainId = (argv.chainId || process.env.CHAIN_ID || 1337) as number;
     const port = (argv.port || process.env.PORT || 3006) as number;

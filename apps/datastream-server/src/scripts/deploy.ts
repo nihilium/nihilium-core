@@ -12,6 +12,11 @@ dotenv.config();
 //         "url": "https://api.avax-test.network/ext/bc/C/rpc",
 //         "chainId": 43113
 //     }
+
+// Unified env name (DATASTREAM_PRIVATE_KEY) shared with registry-manager. No
+// legacy fallback: the script fails if this variable is not set.
+const envPrivateKey = process.env.DATASTREAM_PRIVATE_KEY;
+
 const argv = yargs(hideBin(process.argv))
   .option("rpcUrl", {
     alias: "rpc",
@@ -23,8 +28,8 @@ const argv = yargs(hideBin(process.argv))
     alias: "p",
     description: "Private key for the deploying account",
     type: "string",
-    demandOption: !process.env.PRIVATE_KEY,
-    default: process.env.PRIVATE_KEY,
+    demandOption: !envPrivateKey,
+    default: envPrivateKey,
   })
   .option("levels", {
     alias: "l",

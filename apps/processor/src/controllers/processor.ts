@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { Processor } from '@nihilium/core';
-import { SingleSealRequest, SingleUnsealRequest } from '@nihilium/core/dist/types/protocol/common';
+import { Processor, protocolTypes } from '@nihilium/core';
+type SingleSealRequest = protocolTypes.SingleSealRequest;
+type SingleUnsealRequest = protocolTypes.SingleUnsealRequest;
 import { buildEvidenceMeta } from '../evidence/helpers';
 import { QuorumNotMetError, EvidenceStoreError } from '../evidence';
 

@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import { CloudUpload, Download, Settings, CheckCircle } from '@mui/icons-material';
 import { getDefaultSealingProcess, getDefaultUnsealingProcess, getProcessorEndpoint, getFullDatastreams, getFullProcessors, nhsdk} from '@nihilium/client-sdk';
-import { DefaultAnchoredOpeningProofModule } from '@nihilium/core/dist/lib/unseal_conditions/modules/standard_modules/default_anchored_opening_module';
 
 const App: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -60,7 +59,7 @@ const App: React.FC = () => {
     for(var module of modules) {
       switch(module.compiled_module.module_name) {
         case "DefaultAnchoredOpeningModule":
-          var typedModule = module.module as DefaultAnchoredOpeningProofModule;
+          var typedModule = module.module as nhsdk.standardModules.DefaultAnchoredOpeningProofModule;
           var result = await typedModule.produce_proofs(data_stream, processor_endpoint,
             res.private_package.proof, res.private_package.public_signals);
           for(var proof of result.proofs) {

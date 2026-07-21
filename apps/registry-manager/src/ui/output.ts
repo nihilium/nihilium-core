@@ -423,6 +423,58 @@ export function printDerivedProcessorKey(data: {
   console.log(chalk.dim("keyId:  ") + data.keyId);
 }
 
+/**
+ * Render freshly generated HE keys.
+ *
+ * Only public material is printed. The private keys left this process through
+ * the clipboard (or a 0600 file) precisely so they stay out of terminal
+ * scrollback and shell logs — do not add them to this output.
+ */
+export function printGeneratedHEKeys(
+  keys: Array<{ x: bigint; y: bigint; keyId: string }>,
+  destination: { kind: "clipboard"; method: string; confirmed: boolean } | { kind: "file"; path: string },
+): void {
+  console.log();
+  console.log(chalk.bold(`Generated ${keys.length} HE key${keys.length === 1 ? "" : "s"}`));
+
+  keys.forEach((k, i) => {
+    console.log();
+    if (keys.length > 1) console.log(chalk.dim(`Key ${i + 1}`));
+    console.log(chalk.dim("x (dec): ") + k.x.toString(10));
+    console.log(chalk.dim("y (dec): ") + k.y.toString(10));
+    console.log(chalk.dim("keyId:   ") + k.keyId);
+  });
+
+  const plural = keys.length === 1 ? "" : "s";
+  const subject = keys.length === 1 ? "The private key was" : "The private keys were";
+
+  console.log();
+  if (destination.kind === "file") {
+    printSuccess(`Private key${plural} written to ${destination.path} (mode 0600).`);
+    console.log();
+    console.log(chalk.yellow(`⚠  ${subject} not printed and exist${keys.length === 1 ? "s" : ""} only in that file.`));
+    console.log(chalk.dim("   Move the PROCESSOR_HE_PRIVATE_KEYS line into your .env, delete the file, then run:"));
+    console.log(chalk.dim("     registry-manager processor register"));
+    return;
+  }
+
+  if (destination.confirmed) {
+    printSuccess(`Private key${plural} copied to the clipboard via ${destination.method}.`);
+  } else {
+    printInfo(
+      `Private key${plural} sent to the clipboard via ${destination.method} — ` +
+        `verify the paste worked, as not every terminal honours it.`,
+    );
+  }
+
+  console.log();
+  console.log(chalk.yellow(`⚠  ${subject} not printed and ${keys.length === 1 ? "is" : "are"} not stored anywhere else.`));
+  console.log(chalk.dim("   Paste it now into PROCESSOR_HE_PRIVATE_KEYS in your .env"));
+  console.log(chalk.dim("   (comma-separate to keep existing keys), then run:"));
+  console.log(chalk.dim("     registry-manager processor register"));
+  console.log(chalk.dim("   Clear your clipboard afterwards — it is readable by other apps."));
+}
+
 export interface RegistryStakeListRow {
   kind: "Processor" | "Datastream";
   address: string;

@@ -4,11 +4,10 @@
   "version": "1.0.1",
   "workspaces": [
     "./packages/dlog-solver-rs",
-    "./packages/zkp-circuits",    
+    "./packages/zkp-circuits",
     "./packages/core",
     "./packages/client-sdk",
     "./packages/registry",
-    
     "./apps/datastream-server",
     "./apps/processor",
     "./apps/registry-manager",
@@ -17,24 +16,27 @@
   "overrides": {
     "circomlibjs": "^0.1.7"
   },
-  
   "scripts": {
     "build": "npm run build --workspaces",
-    "build-circuits": "cd packages/zkp-circuits && npm run build",
-    "build-lib": "cd packages/zkp-circuits && npm run build && cd ../core && npm run build && cd ../client-sdk && npm run build",
-    "test": "npm run test --workspaces",
-    "clean": "npm run clean --workspaces",
+    "build-circuits": "npm run build -w @nihilium/zkp-circuits",
+    "build-lib": "npm run build -w @nihilium/zkp-circuits -w @nihilium/core -w @nihilium/client-sdk",
+    "build-registry": "npm run build -w @nihilium/zkp-circuits -w @nihilium/core -w @nihilium/registry",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "publish-lib": "npm run build-lib && cd packages/client-sdk && npm run publish --access public",
-    "build:watch": "npm run build:watch --workspaces --if-present"
+    "publish-lib": "npm run build-lib && npm publish -w @nihilium/client-sdk --access public",
+    "build:watch": "npm run build:watch --workspaces --if-present",
+    "publish-registry-manager": "cd apps/registry-manager && npm run build && npm publish --access public"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.3.1",
+    "rollup": "^4.44.2",
+    "rollup-plugin-dts": "^6.2.3",
+    "ts-mocha": "^11.1.0",
     "typescript": "^5.3.3",
     "vite": "^7.0.4",
-    "vite-plugin-dts": "^4.0.0",
     "vite-plugin-static-copy": "^3.1.1",
     "vite-plugin-top-level-await": "^1.5.0",
-    "vite-plugin-wasm": "^3.5.0",
-    "ts-mocha": "^11.1.0"
+    "vite-plugin-wasm": "^3.5.0"
   }
 }

@@ -28,8 +28,11 @@
  *
  *   registry-manager list [--all]
  *
+ *   registry-manager init [--output <path>] [--force]
+ *
  * Configuration is read from a .env file in the current working directory.
- * See .env.example for all supported variables.
+ * Run `registry-manager init` to generate an example file, or see .env.example
+ * for all supported variables.
  */
 
 import yargs from "yargs";
@@ -41,6 +44,7 @@ import { printError, printException } from "./ui/output";
 import * as processorCommand  from "./commands/processor";
 import * as datastreamCommand from "./commands/datastream";
 import * as listCommand from "./commands/list";
+import * as initCommand from "./commands/init";
 
 // Last-resort safety net: any error that escapes a command handler (e.g. thrown
 // during config loading, wallet construction, or a network call that runs
@@ -62,7 +66,8 @@ async function main(): Promise<void> {
     .command(processorCommand)
     .command(datastreamCommand)
     .command(listCommand)
-    .demandCommand(1, "Specify a command: processor | datastream | list")
+    .command(initCommand)
+    .demandCommand(1, "Specify a command: processor | datastream | list | init")
     .strict()
     .help()
     .alias("h", "help")

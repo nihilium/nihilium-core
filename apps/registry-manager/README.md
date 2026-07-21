@@ -2,7 +2,31 @@
 
 CLI for managing Nihilium processor and datastream registry entries.
 
-## Setup
+Published to npm as [`nihilium-registry`](https://www.npmjs.com/package/nihilium-registry).
+
+## Install & run (published package)
+
+No clone or build required — with Node.js ≥ 20 installed:
+
+```bash
+# Run without installing (downloads + caches on first use)
+npx nihilium-registry <command> [options]
+
+# ...or install once, globally
+npm install -g nihilium-registry
+nihilium-registry <command> [options]
+```
+
+Configuration is read from a `.env` file in the **current working directory**
+(see [Configuration](#configuration)), so run the CLI from a directory that
+contains your `.env`:
+
+```bash
+cp .env.example .env   # then fill it in
+npx nihilium-registry processor status
+```
+
+## Local development
 
 ```bash
 cd apps/registry-manager
@@ -50,13 +74,28 @@ npm run dev -- <command> [options]
 npm run dev -- processor status
 ```
 
-### Production (compiled)
+### Production (bundled)
+
+`npm run build` uses esbuild to bundle the CLI and its entire dependency graph
+(including the `@nihilium/*` workspace packages) into a single self-contained
+`dist/cli.js` with a `#!/usr/bin/env node` shebang. This is what gets published,
+which is why `npx nihilium-registry` needs no dependency installation.
 
 ```bash
 npm run build
-node dist/index.js <command> [options]
+node dist/cli.js <command> [options]
 # or, if installed globally / via `npm link`:
-registry-manager <command> [options]
+nihilium-registry <command> [options]
+```
+
+### Publishing
+
+`prepublishOnly` type-checks and rebuilds the bundle automatically:
+
+```bash
+npm publish            # public npm registry
+# For a private registry, point npm at it, e.g.:
+#   npm publish --registry https://npm.your-org.example
 ```
 
 ## Commands
@@ -82,6 +121,18 @@ processor keys derive
     Derive public key coordinates for all keys in PROCESSOR_HE_PRIVATE_KEYS
     and PROCESSOR_SIGNING_PRIVATE_KEYS without sending a tx.
     Prints x and y in decimal form, and keyId in 0x-prefixed hex.
+
+processor keys generate [--count N] [--out <file>]
+    Generate new 248-bit Baby Jubjub HE (ECElGamal) private key(s).
+    Only the public x, y and keyId are printed — the private key is copied
+    straight to your system clipboard so it never reaches the terminal,
+    scrollback or shell history. Paste it into PROCESSOR_HE_PRIVATE_KEYS
+    (comma-separated for multiple keys), then run `processor register`.
+
+    Clipboard support: wl-copy, xclip or xsel on Linux, pbcopy on macOS,
+    clip on Windows/WSL, with an OSC 52 terminal escape as fallback over SSH.
+    On a headless box with none of those, use --out <file> to write the key
+    to a 0600 file instead. Nothing is printed if the copy fails.
 
 processor stake list
     Show active stake and any pending removals for ETH and

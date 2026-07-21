@@ -1,31 +1,44 @@
 {
-  "name": "registry-manager",
+  "name": "@nihilium/registry-manager",
   "version": "1.0.0",
   "description": "CLI for managing Nihilium processor and datastream registry entries",
-  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "main": "dist/cli.js",
   "bin": {
-    "registry-manager": "./dist/index.js"
+    "nihilium-registry": "dist/cli.js",
+    "registry-manager": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    ".env.example",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "clean": "rm -rf dist"
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "start": "node dist/cli.js",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
-  "dependencies": {
-    "@nihilium/registry": "../packages/registry",
-    "chalk": "^4.1.2",
-    "cli-table3": "^0.6.5",
-    "dotenv": "^16.4.5",
-    "ethers": "^6.14.0",
-    "inquirer": "^8.2.6",
-    "yargs": "^17.7.2"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@nihilium/registry": "../packages/registry",
+    "@nihilium/zkp-circuits": "../packages/zkp-circuits",
     "@types/inquirer": "^8.2.10",
     "@types/node": "^20.17.6",
     "@types/yargs": "^17.0.32",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
+    "dotenv": "^16.4.5",
+    "esbuild": "^0.25.6",
+    "ethers": "^6.14.0",
+    "inquirer": "^8.2.6",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "yargs": "^17.7.2"
   }
 }

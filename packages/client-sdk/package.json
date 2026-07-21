@@ -1,17 +1,15 @@
 {
   "name": "@nihilium/client-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Browser SDK for privacy-accounts, using privacy-lib.",
-  "main": "dist/index.js",
-  "module": "dist/browser/index.es.js",
-  "browser": "dist/browser/index.es.js",
+  "type": "module",
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "browser": "./dist/browser/index.es.js",
-      "import": "./dist/browser/index.es.js",
-      "require": "./dist/index.js",
-      "default": "./dist/browser/index.es.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
     }
   },
   "files": [
@@ -21,14 +19,19 @@
   ],
   "scripts": {
     "publish-script": "npm run build && npm publish --access public",
-    "build": "NODE_OPTIONS='--max-old-space-size=18192' tsc && NODE_OPTIONS='--max-old-space-size=18192' vite build --config vite.config.cjs",
-    "dev": "tsc --watch"
+    "build": "npm run build:js && npm run build:types",
+    "build:js": "NODE_OPTIONS='--max-old-space-size=18192' vite build --config vite.config.mjs",
+    "build:types": "NODE_OPTIONS='--max-old-space-size=18192' rollup -c rollup.dts.config.mjs",
+    "clean": "rm -rf dist",
+    "dev": "vite build --config vite.config.mjs --watch"
   },
   "dependencies": {
-    "@nihilium/core": "file:../core",
-    "axios": "^1.10.0"
+    "poseidon-lite": "^0.3.0"
   },
   "devDependencies": {
+    "@nihilium/core": "*",
+    "@nihilium/zkp-circuits": "*",
+    "axios": "^1.10.0",
     "typescript": "^5.3.3"
   }
 }

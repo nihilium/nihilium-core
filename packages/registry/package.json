@@ -13,8 +13,9 @@
   },
   "files": [
     "dist",
-    "artifacts",
-    "typechain-types"
+    "out",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "npm run build:sol && npm run build:ts",
@@ -31,7 +32,6 @@
     "deploy": "dotenv -e .env -- sh -c 'forge script script/Deploy.s.sol:DeployScript --rpc-url \"$RPC_URL\" --broadcast'"
   },
   "dependencies": {
-    "@nihilium/core": "*",
     "@nihilium/zkp-circuits": "*",
     "@noble/curves": "^1.5.0",
     "@noble/hashes": "^1.3.3",
@@ -41,6 +41,7 @@
     "poseidon2-evm": "^1.0.0"
   },
   "devDependencies": {
+    "@nihilium/core": "*",
     "@types/node": "^20.17.6",
     "dotenv-cli": "^11.0.0",
     "ts-node": "^10.9.2",

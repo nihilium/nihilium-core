@@ -2,25 +2,36 @@
   "name": "@nihilium/core",
   "version": "1.0.0",
   "description": "TypeScript library for privacy-preserving computations using Circom",
+  "private": true,
   "main": "dist/index.js",
-  "module": "dist/browser/index.browser.mjs",
-  "browser": "dist/browser/index.browser.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "browser": "./dist/browser/index.browser.mjs",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js",
-      "index": "./src/index.ts"
+      "browser": {
+        "types": "./dist/index.browser.d.ts",
+        "default": "./dist/browser/index.browser.mjs"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
-    "./src/*": "./src/*"
+    "./contracts/*": "./contracts/*"
   },
+  "files": [
+    "dist",
+    "contracts",
+    "README.md",
+    "LICENSE"
+  ],
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "build": "hardhat compile && tsc && vite build",
+    "build": "npm run build:contracts && npm run build:lib",
+    "build:lib": "tsc && vite build",
+    "build:contracts": "hardhat compile",
+    "clean": "rm -rf dist",
     "test": "jest",
     "start-anvil": "anvil --state ./anvil-state.json --mnemonic \"test test test test test test test test test test test junk\"",
     "deploy-static-ganache": "DEPLOY_NETWORK=ganache PRIVATE_KEY=0x00c02c2c80ec46a6cbc5ccce6b0ce9e293c46a568cd2ffdfb69315efd7dafa36 npx hardhat run scripts/deploy_static.ts",
@@ -34,7 +45,6 @@
     "test-circuits": "ts-mocha --timeout 5000000 ./test/full.test.ts --exit",
     "copy-circuits": "rm -rf ./circuits && mkdir circuits && cp -rf ../circom/build/encrypt_proof ./circuits/encrypt_proof && cp -rf ../circom/build/validated_sig_he_add ./circuits/validated_sig_he_add && cp -rf ../circom/build/severed_commitment ./circuits/severed_commitment",
     "test:watch": "jest --watch",
-    "build-browser": "vite build",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\""
   },

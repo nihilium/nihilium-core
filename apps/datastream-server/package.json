@@ -19,7 +19,7 @@
     
     "express": "^4.19.2",
     "fixed-merkle-tree": "^0.7.3",
-    "@nihilium/core": "file:../../packages/core",
+    "@nihilium/core": "*",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
