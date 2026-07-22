@@ -30,16 +30,19 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: 'src/index.ts',
+      // Two entries: the main SDK and the flat `types` subpath. Vite shares chunks
+      // between them, so dist/types.mjs is a thin re-export of the common bundle.
+      entry: { index: 'src/index.ts', types: 'src/types.ts' },
       formats: ['es'],
-      fileName: () => 'index.mjs',
+      fileName: (_format, name) => `${name}.mjs`,
     },
     target: 'esnext',
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      // Nothing external: the published tarball must stand alone.
-      external: [],
+      // poseidon-lite stays external (a declared runtime dep) so cryptoTools.poseidonTools
+      // keeps its value namespace; everything else is inlined for a standalone tarball.
+      external: ['poseidon-lite'],
     },
     chunkSizeWarningLimit: 100000,
   },

@@ -1,8 +1,8 @@
-import type { Processor, protocolTypes } from '@nihilium/core';
+import type { Processor, types } from '@nihilium/core';
 import type { EvidenceMeta } from './types';
 
-type SingleSealRequest = protocolTypes.SingleSealRequest;
-type SingleUnsealRequest = protocolTypes.SingleUnsealRequest;
+type SingleSealRequest = types.SingleSealRequest;
+type SingleUnsealRequest = types.SingleUnsealRequest;
 
 export async function buildEvidenceMeta(
   processor: Processor,

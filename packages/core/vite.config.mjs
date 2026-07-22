@@ -7,9 +7,15 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.browser.ts'),
+      // Two ESM entries: the main browser bundle and the flat `types` barrel. The barrel
+      // must be emitted as ESM here (not just the CJS tsc output) so client-sdk's browser
+      // build can bundle @nihilium/core/types without dragging CJS `require`/`exports` in.
+      entry: {
+        'index.browser': resolve(__dirname, 'src/index.browser.ts'),
+        'types': resolve(__dirname, 'src/types/public.ts'),
+      },
       name: 'PrivacyLib',
-      fileName: 'index.browser',
+      fileName: (_format, entryName) => `${entryName}.mjs`,
       formats: ['es']
     },
     outDir: 'dist/browser',

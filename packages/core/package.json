@@ -16,6 +16,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./types": {
+      "browser": {
+        "types": "./dist/types/public.d.ts",
+        "default": "./dist/browser/types.mjs"
+      },
+      "default": {
+        "types": "./dist/types/public.d.ts",
+        "default": "./dist/types/public.js"
+      }
+    },
     "./contracts/*": "./contracts/*"
   },
   "files": [

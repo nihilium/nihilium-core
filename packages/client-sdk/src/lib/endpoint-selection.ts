@@ -84,7 +84,7 @@ export async function getFullDatastreams(): Promise<nhsdk.DataStreamClient[]> {
     const dataStreams = await getDatastreams();
     return dataStreams.map(dataStream => new nhsdk.DataStreamClient(dataStream.url));
 }
-export async function getFullProcessors(): Promise<nhsdk.protocolTypes.ProcessorEndpoint[]> {
+export async function getFullProcessors(): Promise<nhsdk.types.ProcessorEndpoint[]> {
     const processors = await getProcessors();
     return Promise.all(processors.map(async processor => await getProcessorEndpoint(processor)));
 }
