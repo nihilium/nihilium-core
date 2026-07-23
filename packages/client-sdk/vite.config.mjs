@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // This package is the protocol's only public browser surface. It must be installable
@@ -12,8 +11,12 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 // which is wrong for a zero-dependency package.
 export default defineConfig({
   plugins: [
+    // No vite-plugin-top-level-await: the build targets esnext, so wasm instantiation emits
+    // NATIVE top-level await. Native TLA propagates through the module graph automatically,
+    // so any consumer (whatever bundler) correctly awaits the SDK's init before reading its
+    // exports. The __tla transform would instead gate exports behind a promise that only the
+    // SDK's own plugin-processed modules await, leaving external consumers with undefined.
     wasm(),
-    topLevelAwait(),
     nodePolyfills({
       include: ['buffer', 'process', 'util', 'stream', 'events'],
       globals: { Buffer: true, global: true, process: true },

@@ -9,8 +9,8 @@ export function setApiEndpoint(endpoint: string) {
     apiEndpoint = endpoint;
 }
 
-export async function getProcessors(): Promise<SelectableProcessor[]>{
-    const response = await fetch(`${apiEndpoint}/${API_PATHS.GET_PROCESSORS}`);
+export async function getProcessors(apiUrl: string = apiEndpoint): Promise<SelectableProcessor[]>{
+    const response = await fetch(`${apiUrl}/${API_PATHS.GET_PROCESSORS}`);
     const data = await response.json();
     return data;
 // return [
@@ -37,8 +37,8 @@ export async function getProcessors(): Promise<SelectableProcessor[]>{
 
 }
 
-export async function getDatastreams(): Promise<SelectableDataStream[]>{
-    const response = await fetch(`${apiEndpoint}/${API_PATHS.GET_DATA_STREAMS}`);
+export async function getDatastreams(apiUrl: string = apiEndpoint): Promise<SelectableDataStream[]>{
+    const response = await fetch(`${apiUrl}/${API_PATHS.GET_DATA_STREAMS}`);
     const data = await response.json();
     return data;
     // return [

@@ -10,7 +10,7 @@ import { KeccakTreeEntryProof } from "../../proofs/lib/003_keccak_tree_entry";
 import { ProcessorEndpoint } from "../../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../../utils";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, UnsealConditionModule } from "../types";
+import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, ProofProductionContext, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
 import { cryptoTools } from "@nihilium/zkp-circuits";
@@ -202,7 +202,17 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
         };
     }
 
-    
-
-    
+    /**
+     * Context-driven: the opening module needs no application input. It reads the anchored
+     * opening proof + public signals from the seal and resolves the merkle proofs against
+     * the datastream, so the driver can run it with an empty resolver.
+     */
+    override async produce(ctx: ProofProductionContext): Promise<ModuleProof> {
+        return this.produce_proofs(
+            ctx.dataStreams[0],
+            ctx.processor,
+            ctx.seal.private_package.proof,
+            ctx.seal.private_package.public_signals,
+        );
+    }
 }

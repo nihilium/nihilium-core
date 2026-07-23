@@ -2,12 +2,9 @@
  * Public type surface — the single flat namespace for all Nihilium domain types.
  *
  * Re-exports every protocol / proof / module / collection declaration so consumers can
- * reach them as `types.X` instead of the old nested `nhsdk.protocolTypes.X` /
- * `nhsdk.CollectionTypes.X`. These modules mix type aliases with the classes, enums and
+ * reach them as `types.X`. These modules mix type aliases with the classes, enums and
  * functions they describe (e.g. BasicAddressMap, UnsealConditionCollection, the enums), so
- * this barrel intentionally carries values too — it is emitted as real JS, not types-only.
- *
- * Flattening is collision-free (verified: 76 unique names across these modules).
+ * this barrel carries values too — it is emitted as real JS, not types-only.
  */
 export * from './protocol/common';
 export * from '../lib/unseal_conditions/proofs/types';

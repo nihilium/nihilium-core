@@ -1,6 +1,6 @@
 import { IDualDataStream } from "../../lib/data_stream/types";
-import { CompiledCollectionExport, RequiredUserInput } from "../../lib/unseal_conditions/collections/types";
-
+    import { CompiledCollectionExport, RequiredUserInput } from "../../lib/unseal_conditions/collections/types";
+    import { FDTSealedPackage } from "@nihilium/zkp-circuits/src/utils/dte_hard";
 import { UnsealProofAction } from "../../lib/unseal_conditions/types";
 import { ProofPath } from "fixed-merkle-tree";
 
@@ -258,6 +258,13 @@ export type SingleSealStoragePackage = {
 
 }
 
+export type NihiliumSeal = {
+    packages: SingleSealStoragePackage[],
+    fdt_seal: FDTSealedPackage,
+    
+
+}
+
 export type ECCEncryptedMessage = {
     ciphertextHex: HexString;
     R: {
@@ -276,6 +283,7 @@ export type UnsealConditionTemplateExport = {
     collection_id: string;
 }
 export type SingleShareSealPrivatePackage = PrivatePackage & {
+    constructed_public_key: [HexString, HexString],
     cyphertexts: HexString[],
     empheral_keys: HexString[],
     proof: any,

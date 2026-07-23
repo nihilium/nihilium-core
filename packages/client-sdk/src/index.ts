@@ -6,6 +6,9 @@ import { circomHashTie, circomOpeningProof } from '@nihilium/zkp-circuits';
 export type SingleSealStoragePackage = nhsdk.types.SingleSealStoragePackage;
 export { getFullDatastreams, getFullProcessors } from './lib/endpoint-selection';
 export { getProcessorEndpoint, setApiEndpoint } from './lib/endpoint-selection';
+// Configured client (instance config, filtered selection, high-level seal/unseal).
+export { NihiliumClient } from './client';
+export type { EndpointFilter, NihiliumClientOptions } from './client';
 
 export const cryptoTools = nhsdk.cryptoTools;
 

@@ -248,14 +248,13 @@ describe("Processor-Client intereaction", () => {
     revealOnlyTemplate.template = from_json(single_seal.private_package.unseal_template, 
       new StandardProofLibrary(), new StandardModuleLibrary());
 
-    const unsealing_process = new ClientSingleShareUnsealingProcess(
-      processor_endpoint,
-      revealOnlyTemplate.collection,
-      revealOnlyTemplate.template,
-      {[data_stream.getAddress()]: data_stream},
-      single_seal
-    );
-    await unsealing_process.initialize();
+    const unsealing_process = await ClientSingleShareUnsealingProcess.create({
+      processor: processor_endpoint,
+      collection: revealOnlyTemplate.collection,
+      template: revealOnlyTemplate.template,
+      dataStreams: [data_stream],
+      seal: single_seal,
+    });
     await data_stream.postData([cryptoTools.generateRandom248BitNumber().toString()]);
     await data_stream.postData([cryptoTools.generateRandom248BitNumber().toString()]);
     await unsealing_process.publish_reveal_value(data_stream.getAddress());
@@ -279,25 +278,10 @@ describe("Processor-Client intereaction", () => {
       
     }
 
-    var proofs: any[] = []
-    var public_inputs: any[][] = []
-    var proof_index = 0;
-    const modules = unsealing_process.getModulesForPath(proof_index);
-    for(var module of modules) {
-      switch(module.compiled_module.module_name) {
-        case "UnsealOpeningModule":
-          var typedModule = module.module as DefaultAnchoredOpeningProofModule;
-          var result = await typedModule.produce_proofs(data_stream, processor_endpoint,
-            single_seal.private_package.proof, single_seal.private_package.public_signals);
-          for(var proof of result.proofs) {
-            proofs.push(proof);
-          }
-          for(var public_input of result.public_inputs) {
-            public_inputs.push(public_input);
-          }
-          break;
-      }
-    }
+    // The fork driver runs the path's modules in template order. The reveal-only path is a
+    // single context-driven opening module, so no resolvers are needed.
+    const proof_index = 0;
+    const { proofs, public_inputs } = await unsealing_process.runPath(proof_index);
     const unseal_request = await unsealing_process.get_unseal_request(proof_index, proofs, public_inputs);
     //await validatedSigHeAddCircuit.init()
     // var testtesta = await validatedSigHeAddCircuit.verifyProof(unseal_request.proof)

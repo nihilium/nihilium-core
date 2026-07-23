@@ -11,7 +11,7 @@ import { ProofPath } from "fixed-merkle-tree";
 import { ProcessorEndpoint } from "../../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../../utils";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, UnsealConditionModule } from "../types";
+import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, ProofProductionContext, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
 import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
@@ -90,9 +90,24 @@ export class HashTieModule extends UnsealConditionModule {
         console.timeEnd("circomHashTie.proof");
         var return_proofs = ["0x" + cryptoTools.uint8ArrayToHex(proof.proof)];
         var return_public_inputs = [proof.publicSignals];
-        
+
         return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: {}}
 
+    }
+
+    /**
+     * Only the preimage is application-supplied; the tied value is the seal's reveal_value,
+     * taken from the protocol context.
+     */
+    override productionInputs(): IOMap {
+        return {
+            preimage: { type_order: ["HexString"], user_input: true, required: true,
+                description: "The hash-tie preimage (hex) chosen by the application" },
+        };
+    }
+
+    override async produce(ctx: ProofProductionContext, inputs: { preimage: string }): Promise<ModuleProof> {
+        return this.produce_proofs(inputs.preimage, ctx.seal.public_package.reveal_value);
     }
 
     

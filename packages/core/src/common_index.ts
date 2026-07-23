@@ -7,8 +7,8 @@
 // Export the main components
 
 // Single flat namespace for ALL domain types (protocol, proof, module, collection,
-// crypto-primitive). Consumers use `types.X` (also `nhsdk.types.X`) instead of the old
-// per-group namespaces. Also published as the `@nihilium/core/types` subpath.
+// crypto-primitive). Consumers use `types.X` (also `nhsdk.types.X`). Also published as the
+// `@nihilium/core/types` subpath.
 export * as types from './types/public';
 //Expose cryptoTools from zkp-circuits
 export {cryptoTools} from '@nihilium/zkp-circuits';
@@ -24,11 +24,17 @@ export {NETWORK_IDS, deployedProtocolContracts, toAddressMap} from './static_con
 //Protocol interaction interfaces
 export {ClientSingleShareSealingProcess} from './lib/client/client_single_share_sealing'
 export {ClientSingleShareUnsealingProcess} from './lib/client/client_single_share_unsealing'
+// Friendlier aliases for the sealing/unsealing process classes.
+export { ClientSingleShareSealingProcess as SealingProcess } from './lib/client/client_single_share_sealing'
+export { ClientSingleShareUnsealingProcess as UnsealingProcess } from './lib/client/client_single_share_unsealing'
+// Driver types for the unseal fork runner.
+export type { UnsealResolver, UnsealResolvers, UnsealModuleEvent } from './lib/client/client_single_share_unsealing'
+export { UnsealModuleError, UnsealModulePhase } from './lib/client/client_single_share_unsealing'
 export {NihiliumPaymentProvider, NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE} from './lib/client/payments';
+export type { PaymentProvider } from './lib/client/payments';
 export { createRevealOnlyCollection } from './lib/unseal_conditions/templates/reveal_only_template';
-// Parse a stored unseal template into an UnsealConditionTemplate. Promoted to a top-level
-// export (was UnsealConditionTemplate.from_json / types.from_json) because it is needed
-// early in the unseal flow. Still available as `types.from_json`.
+// Parse a stored unseal template into an UnsealConditionTemplate. Exposed as a top-level
+// export because it is needed early in the unseal flow. Also available as `types.from_json`.
 export { from_json as collection_from_json } from './lib/unseal_conditions/collections/UnsealConditionTemplate';
 export {EmpheralMerkleTreeWrapper} from './lib/contract_wrappers/EmpheralMerkleTreeWrapper';
 

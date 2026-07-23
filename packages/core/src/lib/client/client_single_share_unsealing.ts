@@ -9,16 +9,51 @@ import { cryptoTools } from "@nihilium/zkp-circuits";
 import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
 import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { hexToBytes } from "@noble/hashes/utils";
-import { CompiledModule, UnsealConditionModule } from "../unseal_conditions/modules";
+import { CompiledModule, ModuleProof, ProofProductionContext, UnsealConditionModule } from "../unseal_conditions/modules";
 
 
-export type UnsealingState = { 
+export type UnsealingState = {
     phase: UnsealingStatus
     seal: SingleSealStoragePackage,
     unseal_response?: SingleSealUnsealRequestResponse
     data_stream_id?: string
     data_stream_local_index?: number
     data_stream_global_index?: number
+}
+
+/**
+ * Supplies a module's external inputs (the app-owned, irreducible parts such as a ZKEmail
+ * proof) during unseal proof production. Keyed by CompiledModule.module_id (with module_name
+ * as a fallback) so it works with modules the SDK does not know at compile time.
+ */
+export type UnsealResolver = (
+    module: UnsealConditionModule,
+    compiled_module: CompiledModule,
+) => Promise<{ [key: string]: any }> | { [key: string]: any };
+
+export type UnsealResolvers = { [moduleIdOrName: string]: UnsealResolver };
+
+/** Lifecycle phase of a module during unseal proof production, emitted via on(). */
+export enum UnsealModulePhase {
+    Producing = "producing",
+    Produced = "produced",
+    Failed = "failed",
+}
+
+export type UnsealModuleEvent = {
+    proof_index: number;
+    module_id: string;
+    module_name: string;
+    phase: UnsealModulePhase;
+    error?: unknown;
+};
+
+/** Error thrown by the driver, tagged with the module that failed. */
+export class UnsealModuleError extends Error {
+    constructor(public module_id: string, public module_name: string, message: string) {
+        super(`Module ${module_name} (${module_id}): ${message}`);
+        this.name = "UnsealModuleError";
+    }
 }
 
 export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnsealingProcess {
@@ -65,15 +100,121 @@ export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnse
         }
     }
 
+    /**
+     * Options-object factory. Builds the {[address]: dataStream} map from the dataStreams
+     * array and runs initialize().
+     */
+    static async create(opts: {
+        processor: ProcessorEndpoint;
+        collection: UnsealConditionCollection;
+        template: UnsealConditionTemplate;
+        dataStreams: IDualDataStream[];
+        seal: SingleSealStoragePackage;
+    }): Promise<ClientSingleShareUnsealingProcess> {
+        const mapping: { [address: string]: IDualDataStream } = {};
+        for (const dataStream of opts.dataStreams) {
+            mapping[dataStream.getAddress()] = dataStream;
+        }
+        const process = new ClientSingleShareUnsealingProcess(
+            opts.processor, opts.collection, opts.template, mapping, opts.seal,
+        );
+        await process.initialize();
+        return process;
+    }
+
     getModulesForPath(proof_index: number): {compiled_module: CompiledModule, module: UnsealConditionModule}[] {
         var toReturn: {compiled_module: CompiledModule, module: UnsealConditionModule}[] = [];
 
         for(var module of this.unsealConditionTemplate.compiled_collection.compiled_modules[proof_index]) {
-            toReturn.push({compiled_module: module, 
-                module: this.unsealConditionTemplate.module_library.getModule(module.module_name, 
+            toReturn.push({compiled_module: module,
+                module: this.unsealConditionTemplate.module_library.getModule(module.module_name,
                     this.unsealConditionTemplate.proof_library)});
         }
         return toReturn;
+    }
+
+    // ---- Fork driver ---------------------------------------------------------------
+    // Completed module proofs, keyed by module_id, so a retry re-runs only failed modules.
+    private producedProofs: { [module_id: string]: ModuleProof } = {};
+    private moduleListeners: ((event: UnsealModuleEvent) => void)[] = [];
+
+    /**
+     * Enumerate the unseal paths (forks) this template exposes. Each fork is its own ordered
+     * module flow; the caller picks one by index and passes it to runPath.
+     */
+    paths(): { index: number }[] {
+        return this.unsealConditionTemplate.compiled_collection.compiled_modules.map(
+            (_: unknown, index: number) => ({ index })
+        );
+    }
+
+    /** Subscribe to per-module lifecycle events (structured progress). */
+    on(listener: (event: UnsealModuleEvent) => void): void {
+        this.moduleListeners.push(listener);
+    }
+
+    private emitModule(event: UnsealModuleEvent): void {
+        for (const listener of this.moduleListeners) {
+            try { listener(event); } catch { /* listener errors must not break production */ }
+        }
+    }
+
+    /**
+     * Produce every proof for one fork, in template order, and return the assembled
+     * proofs/public_inputs. Transport-agnostic: the caller then feeds the result to
+     * get_unseal_request (in-process) or unseal_request_to_processor (HTTP).
+     *
+     * Modules that declare productionInputs() require a resolver (keyed by module_id, with
+     * module_name as fallback) supplying those external inputs; context-only modules (e.g.
+     * the opening module) run with no resolver. Completed proofs are memoized so a retry
+     * after a transient failure re-runs only the failed modules.
+     */
+    async runPath(
+        proof_index: number,
+        resolvers: UnsealResolvers = {},
+    ): Promise<{ proofs: any[]; public_inputs: any[][] }> {
+        const modules = this.getModulesForPath(proof_index);
+        const ctx: ProofProductionContext = {
+            dataStreams: this.dataStreams,
+            processor: this.processor,
+            seal: this.seal,
+            upstream: {},
+        };
+        const proofs: any[] = [];
+        const public_inputs: any[][] = [];
+
+        for (const { compiled_module, module } of modules) {
+            const module_id = compiled_module.module_id;
+            const module_name = compiled_module.module_name;
+
+            let result = this.producedProofs[module_id];
+            if (!result) {
+                const requiredInputs = Object.keys(module.productionInputs());
+                const resolver = resolvers[module_id] ?? resolvers[module_name];
+                if (requiredInputs.length > 0 && !resolver) {
+                    throw new UnsealModuleError(module_id, module_name,
+                        `requires external inputs (${requiredInputs.join(", ")}) but no resolver was provided`);
+                }
+                const inputs = resolver ? await resolver(module, compiled_module) : {};
+                this.emitModule({ proof_index, module_id, module_name, phase: UnsealModulePhase.Producing });
+                try {
+                    result = await module.produce(ctx, inputs);
+                } catch (error) {
+                    this.emitModule({ proof_index, module_id, module_name, phase: UnsealModulePhase.Failed, error });
+                    if (error instanceof UnsealModuleError) throw error;
+                    throw new UnsealModuleError(module_id, module_name,
+                        error instanceof Error ? error.message : String(error));
+                }
+                this.producedProofs[module_id] = result;
+                this.emitModule({ proof_index, module_id, module_name, phase: UnsealModulePhase.Produced });
+            }
+
+            ctx.upstream[module_id] = result;
+            proofs.push(...result.proofs);
+            public_inputs.push(...result.public_inputs);
+        }
+
+        return { proofs, public_inputs };
     }
 
     private isLocalStorageAvailable(): boolean {

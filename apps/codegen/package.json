@@ -1,0 +1,33 @@
+{
+  "name": "@nihilium/codegen",
+  "version": "0.1.0",
+  "description": "Generate typed unseal resolver scaffolding from a Nihilium template",
+  "license": "Apache-2.0",
+  "main": "dist/cli.js",
+  "bin": {
+    "nihilium-codegen": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "start": "node dist/cli.js",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run typecheck && npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@nihilium/core": "*",
+    "@types/node": "^20.17.6",
+    "esbuild": "^0.25.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

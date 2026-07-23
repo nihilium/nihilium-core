@@ -11,7 +11,7 @@ import { ProofPath } from "fixed-merkle-tree";
 import { ProcessorEndpoint } from "../../../../types/protocol/common";
 import { createMimcMerkelTree, toPaddedHex, keccakTreeHasher } from "../../../utils";
 import { hexToBytes } from "@noble/hashes/utils";
-import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, UnsealConditionModule } from "../types";
+import { IOMap, ModuleEdge, ModuleEdgeInput, ModuleNode, ModuleProof, ProofProductionContext, UnsealConditionModule } from "../types";
 import { UnsealConditionProof } from "../../proofs/types";
 import { ProofLibraryType } from "../../proofs";
 import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
@@ -109,9 +109,26 @@ export class ZKEmailModule extends UnsealConditionModule {
     async produce_proofs(proof_hex: string, public_inputs: any[]): Promise<ModuleProof> {
         var return_proofs = [proof_hex];
         var return_public_inputs = [public_inputs.map(input => toPaddedHex(BigInt(input)))];
-        
+
         return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: this.obtain_outputs(return_public_inputs)}
 
+    }
+
+    /**
+     * The ZKEmail proof and its public signals come entirely from the external email flow
+     * (the app produces them out of band), so both are application-supplied inputs.
+     */
+    override productionInputs(): IOMap {
+        return {
+            proof: { type_order: ["HexString"], user_input: true, required: true,
+                description: "The ZKEmail proof (hex) produced by the email verification service" },
+            publicSignals: { type_order: [["String"]], user_input: true, required: true,
+                description: "The ZKEmail proof public signals" },
+        };
+    }
+
+    override async produce(_ctx: ProofProductionContext, inputs: { proof: string; publicSignals: any[] }): Promise<ModuleProof> {
+        return this.produce_proofs(inputs.proof, inputs.publicSignals);
     }
 
     

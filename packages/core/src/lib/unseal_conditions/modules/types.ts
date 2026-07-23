@@ -4,6 +4,8 @@ import { AddressMap } from "../collections/types";
 import { ProofLibraryType } from "../proofs";
 import { UnsealConditionProof } from "../proofs/types";
 import { UnsealProofAction } from "../types";
+import type { IDualDataStream } from "../../data_stream/types";
+import type { ProcessorEndpoint, SingleSealStoragePackage } from "../../../types/protocol/common";
 
 
 export type IOType = "Timestamp" | "BigInt" | "Number" | "String" | "HexString" | "Randomness" | "Other" | "Boolean" | IOType[];
@@ -292,6 +294,20 @@ export type ModuleProof = {
     }
 }
 
+/**
+ * Protocol-supplied context handed to every module during unseal proof production.
+ * The driver (ClientSingleShareUnsealingProcess.runPath) assembles this so modules can
+ * pull what they need from the seal / datastreams / upstream module outputs, and only ask
+ * the application for the truly external inputs declared by `productionInputs()`.
+ */
+export type ProofProductionContext = {
+    dataStreams: IDualDataStream[];
+    processor: ProcessorEndpoint;
+    seal: SingleSealStoragePackage;
+    // outputs of modules already produced earlier in this path, keyed by CompiledModule.module_id
+    upstream: { [module_id: string]: ModuleProof };
+}
+
 export abstract class UnsealConditionModule {
     public name: string = "";
     public short_description: string = "";
@@ -379,10 +395,34 @@ export abstract class UnsealConditionModule {
 
     /**
      * Produces the proofs for the module
-     * @param args 
+     * @param args
      */
     async produce_proofs(...args: any[]): Promise<ModuleProof> {
         throw new Error("Not implemented");
+    }
+
+    /**
+     * The external inputs the application must supply for this module's proof production,
+     * beyond what the protocol context (seal/datastreams/upstream) already provides.
+     * Empty means the module is fully context-driven and needs no resolver.
+     * The unseal driver reads this to decide whether a resolver is required; codegen reads
+     * it to emit typed resolver stubs.
+     */
+    productionInputs(): IOMap {
+        return {};
+    }
+
+    /**
+     * Uniform producer entrypoint used by the fork driver. Maps the protocol context and
+     * the application-supplied external inputs onto this module's `produce_proofs(...)`.
+     * The base throws with guidance so a module without produce() fails loudly; each
+     * standard module that participates in the driver overrides this.
+     */
+    async produce(_ctx: ProofProductionContext, _inputs: { [key: string]: any } = {}): Promise<ModuleProof> {
+        throw new Error(
+            `Module "${this.name}" does not implement produce(ctx, inputs); ` +
+            `override it (mapping ctx/inputs to produce_proofs) or call produce_proofs directly.`
+        );
     }
 
     /**

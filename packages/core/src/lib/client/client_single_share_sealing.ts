@@ -174,6 +174,27 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
                 // }
     }
 
+    /**
+     * Options-object factory. Payment is a pluggable per-operation strategy; omit it for
+     * unauthorized processors. initialize() is called separately because its inputs (secret,
+     * metadata root, template inputs, stream mapping) are seal-specific.
+     */
+    static create(opts: {
+        processor: ProcessorEndpoint;
+        dataStreams: IDualDataStream[];
+        template: UnsealConditionTemplate;
+        provingHints?: any;
+        payment?: PaymentProvider | null;
+    }): ClientSingleShareSealingProcess {
+        return new ClientSingleShareSealingProcess(
+            opts.processor,
+            opts.dataStreams,
+            opts.template,
+            opts.provingHints ?? {},
+            opts.payment ?? null,
+        );
+    }
+
     async initialize(secret: bigint, metadata_root: bigint, template_inputs: {[key:string]:any} = {}, data_stream_mapping: {[key:string]:string} = {}): Promise<void> {
         if(this.phase != ClientProcessorSealingPhase.NOT_STARTED) {
             throw new Error("Sealing process already started");
@@ -394,7 +415,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
       
         //TODO should be removed and replaced with the DTE method
         // -------------------------------------------------------------------------------------------
-        //encrypt shamir secret using ECC
+        //encrypt secret using ECC
         // -------------------------------------------------------------------------------------------  
         var newCombinedPublicKeyX = BigInt(proof.publicSignals[9])
         var newCombinedPublicKeyY = BigInt(proof.publicSignals[10])
@@ -410,6 +431,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         
         return {
             private_package: {
+                constructed_public_key: [newCombinedPublicKeyX.toString(), newCombinedPublicKeyY.toString()],
                 cyphertexts:  encrypted_message_hexes.map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[0] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),
                 empheral_keys:  encrypted_empheral_hexes.map(a => BigInt(a).toString()),//(proof.parsedSignals.outputs[1] as Curve[]).map(bigint => [bigint.x.toString(), bigint.y.toString()]).flat(),                
                 public_key_he: [this.processor.public_he_encryption_key[0].toString(), this.processor.public_he_encryption_key[1].toString()],
@@ -422,6 +444,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
                 metadata_root: this.metadata_root.toString(), //This metadata root can be hashed or even encrypted to create password protection
                 reveal_value: BigInt(proof.publicSignals[0]).toString(),
                 unseal_collection_id: this.unsealConditionTemplate.collection_id,
+                //TODO should be moved up
                 proving_hints: this.proving_hints,
             },
             public_package: { //TODO should be different proof of the severed commitment

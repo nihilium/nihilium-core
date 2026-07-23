@@ -23,7 +23,7 @@ import {
   } from "./tools";
   import { bytesToHex, hexToBytes, concatBytes } from "@noble/hashes/utils";
   import { sha256 } from "@noble/hashes/sha256";
-import { estimateRounds } from "./dte_difficulty";
+// import { estimateRounds } from "./dte_difficulty";
   
   /*
   Full-Disclosure Threshold Encryption AKA Combinatorial Threshold Encryption
@@ -52,13 +52,6 @@ import { estimateRounds } from "./dte_difficulty";
     rounds=10: high security (~640 GB MPC communication for k=5)
   */
   
-  const DEFAULT_DIFFICULTY = 3;
-
-  const default_parameters = {
-    memory: 1 * 1024,
-    iterations: 10,
-    parallelism: 1
-  }
   
   export interface FDTSealedPackage {
     cipherTexts: { [key: string]: string };
@@ -138,8 +131,8 @@ import { estimateRounds } from "./dte_difficulty";
   
       // KDF over full concatenation → symmetric key
       const concatenated = concatBytes(...sharedSecretParts);
-      const key = portableArgon2(Buffer.from(concatenated), default_parameters).slice(0, msgBytes.length);
-      //const key = sha256(concatenated).slice(0, msgBytes.length);
+      //const key = portableArgon2(Buffer.from(concatenated), default_parameters).slice(0, msgBytes.length);
+      const key = sha256(concatenated).slice(0, msgBytes.length);
       const ciphertext = xor(msgBytes, key);
   
       // Index by combined pubkey prefix (same as original for compatibility)
@@ -216,8 +209,8 @@ import { estimateRounds } from "./dte_difficulty";
     // KDF over full concatenation → symmetric key
     const concatenated = concatBytes(...sharedSecretParts);
     const ciphertextBytes = hexToBytes(ciphertext);
-    const key = portableArgon2(Buffer.from(concatenated), default_parameters).slice(0, ciphertextBytes.length);
-    //const key = sha256(concatenated).slice(0, ciphertextBytes.length);
+    //const key = portableArgon2(Buffer.from(concatenated), default_parameters).slice(0, ciphertextBytes.length);
+    const key = sha256(concatenated).slice(0, ciphertextBytes.length);
     const decrypted = xor(ciphertextBytes, key);
   
     console.timeEnd("FDTDecrypt");
