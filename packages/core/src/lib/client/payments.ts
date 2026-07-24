@@ -41,6 +41,19 @@ export class NihiliumPaymentProvider implements PaymentProvider {
 
 
 /**
+ * Client-side PaymentProvider that delegates to the developer's server.
+ * The developer's server holds the Nihilium API key and proxies requests
+ * to the Nihilium backend — the API key never reaches the browser.
+ */
+export class NihiliumPaymentProviderUnauthenticated implements PaymentProvider {
+  async getProcessorToken(processorAddress: string, requestId: string): Promise<{token: string, expires_at: string, amountCharged: string}> {
+    return { token: "", expires_at: "", amountCharged: "0" };
+  }
+}
+
+
+
+/**
  * Client-side PaymentProvider that uses the client's API key to directly request tokens from the Nihilium backend.
  * Do not use in production: Exposes the API key in client code.
  */

@@ -1,3 +1,4 @@
+//NOTE DEPRECATED
 import { ethers, keccak256, Signer } from "ethers";
 import { ChainedProofWrapper } from "../contract_wrappers/ChainedProofWrapper";
 import { toPaddedHex } from "../utils";

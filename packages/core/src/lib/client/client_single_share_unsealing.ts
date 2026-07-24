@@ -407,7 +407,7 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
         if(open_metadata) {
             private_scalar = open_metadata(private_scalar)
         }else{
-            var metadata_root_shrinked = cryptoTools.shrinkToBits(BigInt(this.seal.private_package.metadata_root), 247);
+            var metadata_root_shrinked = cryptoTools.shrinkToBits(BigInt(this.seal.private_package.metadata_root || "0"), 247);
             private_scalar = private_scalar - metadata_root_shrinked
         }
         

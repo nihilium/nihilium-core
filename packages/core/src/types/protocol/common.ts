@@ -250,6 +250,9 @@ export type SingleUnsealRequest = {
     unseal_root_proof: ProofPath
 }
 
+/**
+ * Not to be used directly, should be used through the NihiliumSeal type.
+ * */
 export type SingleSealStoragePackage = {
     private_package: SingleShareSealPrivatePackage,
     public_package: SingleShareSealPublicPackage,
@@ -258,10 +261,23 @@ export type SingleSealStoragePackage = {
 
 }
 
+/**
+ * Core type for Nihilium, this is the end result of the sealing phase
+ * and the starting point of the unsealing phase
+ * */
 export type NihiliumSeal = {
     packages: SingleSealStoragePackage[],
     fdt_seal: FDTSealedPackage,
-    
+    shared_unseal_template?: UnsealConditionTemplateExport
+    shared_unseal_condition_root?: HexString,
+    shared_metadata_root?: HexString,
+    shared_proving_hints?: any,
+}
+
+/**
+ * Exported from the NihiliumSeal, can be used to observer the seal status from the outside
+ */
+export type NihiliumObserverPackage = {
 
 }
 
@@ -282,6 +298,9 @@ export type UnsealConditionTemplateExport = {
     compiled_collection: CompiledCollectionExport;
     collection_id: string;
 }
+/**
+ * Not to be used directly, should be used through the NihiliumSeal type.
+ * */
 export type SingleShareSealPrivatePackage = PrivatePackage & {
     constructed_public_key: [HexString, HexString],
     cyphertexts: HexString[],
@@ -292,14 +311,17 @@ export type SingleShareSealPrivatePackage = PrivatePackage & {
     public_verification_key: [HexString, HexString],
     encrypted_secret: ECCEncryptedMessage,
     reveal_value: HexString,
-    unseal_condition_root: HexString,
-    metadata_root: HexString,
-    unseal_template: UnsealConditionTemplateExport,
-    proving_hints: any,
-    unseal_collection_id: string
+    unseal_condition_root?: HexString,
+    metadata_root?: HexString,
+    unseal_template?: UnsealConditionTemplateExport,
+    proving_hints?: any,
+    unseal_collection_id?: string
     
 }
 
+/**
+ * Not to be used directly, should be used through the NihiliumSeal type.
+ * */
 export type SingleShareSealPublicPackage = PublicPackage & {
     reveal_value: HexString,
     address: HexString,
@@ -311,16 +333,12 @@ export type SingleShareSealPublicPackage = PublicPackage & {
     processor_url: string,
 }
 
+/**
+ * Not to be used directly, should be used through the NihiliumSeal type.
+ * */
 export type SingleShareSealHiddenPackage = HiddenPackage & {
     // committed_public_key: [bigint, bigint],
     // proof: any,
     // public_signals: any,
 }
 
-
-export type ThrowAwayShamirSecret = {
-    shamir_secret: bigint,
-    secret_ecc_scalar: bigint, //max 248 bit
-    ecc_public_key: [bigint, bigint], //Ax, Ay
-    
-}

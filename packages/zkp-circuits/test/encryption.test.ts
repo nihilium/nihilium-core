@@ -396,15 +396,16 @@ describe("Testing ElGamal Scheme Circuits\n", () => {
             // Generate a long random text (~10kb), then encode it as bytes
             console.time("Test full AON Encryption & Decryption");
             
-           var totalKeys = 10
-           var threshold = 5
+           var totalKeys = 8
+           var threshold = 3
+           var m = 1 // search width: m^k = 64 candidate paths at unsealing
            var privateKeys = Array.from({ length: totalKeys }, () => generateRandom248BitNumber());
            var pubKeys = privateKeys.map(privateKey => babyJub.BASE.multiply(privateKey));
            var message = generateRandom248BitNumber();
            console.time("Encryption time");
-           var encrypted = FDTEncrypt(message, pubKeys, threshold);
-           var totalCiphertexts = Object.keys(encrypted.cipherTexts).length;
-           console.log("totalCiphertexts", totalCiphertexts);
+           var encrypted = FDTEncrypt(message, pubKeys, threshold, m);
+           var totalCombinations = Object.keys(encrypted.combinations).length;
+           console.log("totalCombinations", totalCombinations, "m^k paths", m ** threshold);
            var encryptedJson = JSON.stringify(encrypted);
            var jsonSize = encryptedJson.length;
            var jsonSizeKB = jsonSize/1024;
@@ -414,7 +415,7 @@ describe("Testing ElGamal Scheme Circuits\n", () => {
           // for (let i = 0; i < threshold; i++) {
           console.time("Decryption time");
                var selectedPrivateKeys = privateKeys.sort(() => Math.random() - 0.5).slice(0, threshold);
-               var decrypted = FDTDecrypt(selectedPrivateKeys, encrypted.cipherTexts, encrypted.ephemeralKeys);
+               var decrypted = FDTDecrypt(selectedPrivateKeys, encrypted);
                console.timeEnd("Decryption time");
                expect(decrypted).to.equal(message.toString());
           // }

@@ -420,6 +420,7 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
         var newCombinedPublicKeyX = BigInt(proof.publicSignals[9])
         var newCombinedPublicKeyY = BigInt(proof.publicSignals[10])
            
+        //OLD should be deprecated and replaced with the NihiliumClient
         var encrypted_shamir_key = cryptoTools.encryptECCBabyJub(this.secret, cryptoTools.coordinatesToExtPointBigint(newCombinedPublicKeyX, newCombinedPublicKeyY) )
  
          
