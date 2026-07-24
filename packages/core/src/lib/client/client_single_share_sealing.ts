@@ -225,7 +225,13 @@ export class ClientSingleShareSealingProcess implements IClientSingleShareSealin
         // Implementation will be added later
     }
 
-async request_commitment_to_processor(require_proof: boolean = false): Promise<SingleSealStoragePackage> {
+/**
+ * Payment + POST only: charges the processor and returns its raw seal response WITHOUT running
+ * the local ZK proof. Split out of request_commitment_to_processor so an orchestrator can persist
+ * the (paid) response before the heavy, crash-prone process_seal_response — a crash during proving
+ * then resumes locally and never re-charges the processor.
+ */
+async post_commitment_request(require_proof: boolean = false): Promise<SingleSealRequestResponse> {
     const commitment_request = await this.request_commitment(require_proof, false);
     const request_url = this.processor.url + PROTOCOL_PROCESSOR_PATHS.REQUEST_SEAL;
 
@@ -243,7 +249,12 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
     if (response.status != 200) {
         throw new Error("Failed to request commitment");
     }
-    return await this.process_seal_response(response.data);
+    return response.data;
+}
+
+async request_commitment_to_processor(require_proof: boolean = false): Promise<SingleSealStoragePackage> {
+    const response = await this.post_commitment_request(require_proof);
+    return await this.process_seal_response(response);
 }
 
     async request_commitment( require_proof: boolean = false, call_processor: boolean = true): Promise<SingleSealRequest> {
@@ -468,6 +479,27 @@ async request_commitment_to_processor(require_proof: boolean = false): Promise<S
 
     get_phase(): ClientProcessorSealingPhase {
         return this.phase;
+    }
+
+    /** The random reveal-value preimage generated in initialize(); persist it to resume later. */
+    get_reveal_value_preimage(): bigint {
+        return this.reveal_value_preimage;
+    }
+
+    /**
+     * Rehydrate a process that was serialized mid-flight so it can resume against persisted data
+     * after a crash — without generating a fresh, mismatched reveal-value preimage. initialize() must
+     * be called first (it deterministically recomputes unseal_condition_root and re-imports zkeddsa);
+     * this restores the random preimage bound to the earlier request and sets the phase.
+     *
+     * - phase PROCESSING_COMMITMENT (default): resume the local ZK proof against a persisted paid
+     *   response (process_seal_response).
+     * - phase GENERATING_SECRETS: resume the paid POST with the identical request (post_commitment_request),
+     *   for the narrow crash-during-POST window.
+     */
+    load_state(state: { reveal_value_preimage: bigint; phase?: ClientProcessorSealingPhase }): void {
+        this.reveal_value_preimage = state.reveal_value_preimage;
+        this.phase = state.phase ?? ClientProcessorSealingPhase.PROCESSING_COMMITMENT;
     }
 
     get_secret_throwaway_packages(): SecretThrowawayPackage[] {

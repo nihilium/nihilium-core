@@ -1,6 +1,6 @@
 {
   "name": "@nihilium/core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "TypeScript library for privacy-preserving computations using Circom",
   "private": true,
   "main": "dist/index.js",

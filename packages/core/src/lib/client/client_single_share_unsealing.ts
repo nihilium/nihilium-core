@@ -63,13 +63,14 @@ export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnse
     private seal: SingleSealStoragePackage;
     public dataStreams: IDualDataStream[] = [];
     public unsealingState: UnsealingState;
-    public unsealConditionCollection: UnsealConditionCollection;
+    // Retained for callers that supply it; the unseal flow itself does not use it, so it is optional.
+    public unsealConditionCollection?: UnsealConditionCollection;
     public unsealConditionTemplate: UnsealConditionTemplate;
     private storageKey: string;
     private awaiting_reveal_value_to_be_provable: boolean;
     constructor(
         processor: ProcessorEndpoint,
-        unsealConditionCollection: UnsealConditionCollection,
+        unsealConditionCollection: UnsealConditionCollection | undefined,
         unsealConditionTemplate: UnsealConditionTemplate,
         data_stream_mapping: {[address:string]:IDualDataStream},
         seal: SingleSealStoragePackage
@@ -106,7 +107,7 @@ export class ClientSingleShareUnsealingProcess implements IClientSingleShareUnse
      */
     static async create(opts: {
         processor: ProcessorEndpoint;
-        collection: UnsealConditionCollection;
+        collection?: UnsealConditionCollection;
         template: UnsealConditionTemplate;
         dataStreams: IDualDataStream[];
         seal: SingleSealStoragePackage;
@@ -420,8 +421,26 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
         // Save the unseal response to state and localStorage
         this.unsealingState.unseal_response = processor_response;
         this.update_state(UnsealingStatus.DONE);
-        
+
         return result;
+    }
+
+    /**
+     * Recover this processor's composite private scalar — the discrete log of the seal's
+     * constructed_public_key — from the unseal response. This is the same value process_unseal_response
+     * derives before decrypting the per-processor encrypted_secret, but returned raw so the threshold
+     * client can collect k of them and FDTDecrypt the combinatorial-threshold fdt_seal. Does not mutate
+     * phase (unlike process_unseal_response).
+     */
+    recover_composite_scalar(response?: SingleSealUnsealRequestResponse): bigint {
+        response = response ?? this.unsealingState.unseal_response;
+        if (!response) {
+            throw new Error("No unseal response to recover the composite scalar from");
+        }
+        const metadata_root_shrinked = cryptoTools.shrinkToBits(
+            BigInt(this.seal.private_package.metadata_root || "0"), 247,
+        );
+        return BigInt(response.unpacked_private_scalar) - metadata_root_shrinked;
     }
 
     async initialize(): Promise<void> {

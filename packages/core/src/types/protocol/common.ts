@@ -1,6 +1,6 @@
 import { IDualDataStream } from "../../lib/data_stream/types";
     import { CompiledCollectionExport, RequiredUserInput } from "../../lib/unseal_conditions/collections/types";
-    import { FDTSealedPackage } from "@nihilium/zkp-circuits/src/utils/dte_hard";
+    import { FDTSealedPackage } from "@nihilium/zkp-circuits";
 import { UnsealProofAction } from "../../lib/unseal_conditions/types";
 import { ProofPath } from "fixed-merkle-tree";
 

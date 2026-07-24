@@ -21,13 +21,36 @@ export type { IDataStream, IDualDataStream, ProofResult, LatestGlobalLeafProofRe
 //import * as Persistence from './lib/persistence/DataStreamFilePersistence';
 //Network selection
 export {NETWORK_IDS, deployedProtocolContracts, toAddressMap} from './static_contracts';
-//Protocol interaction interfaces
-export {ClientSingleShareSealingProcess} from './lib/client/client_single_share_sealing'
-export {ClientSingleShareUnsealingProcess} from './lib/client/client_single_share_unsealing'
-// Friendlier aliases for the sealing/unsealing process classes.
-export { ClientSingleShareSealingProcess as SealingProcess } from './lib/client/client_single_share_sealing'
-export { ClientSingleShareUnsealingProcess as UnsealingProcess } from './lib/client/client_single_share_unsealing'
-// Driver types for the unseal fork runner.
+// High-level threshold clients — the public sealing/unsealing API. The low-level single-share
+// process classes are intentionally NOT exported; they are internal building blocks of these clients.
+export { NihiliumSealingClient, NihiliumSealingStatus } from './lib/client/sealing_client'
+export { NihiliumUnsealingClient, NihiliumUnsealingStatus } from './lib/client/unsealing_client'
+export type { NihiliumUnsealingClientOptions, StartUnsealingOptions } from './lib/client/unsealing_client'
+// Sealing/unsealing options, phases and pluggable state persistence (resume support).
+export {
+    NihiliumEncryptionMode,
+    ProcessorSealPhase,
+    ProcessorUnsealPhase,
+    InMemorySealingStateStore,
+    LocalStorageSealingStateStore,
+    defaultSealingStateStore,
+    InMemoryUnsealingStateStore,
+    LocalStorageUnsealingStateStore,
+    defaultUnsealingStateStore,
+    InMemoryClientStateStore,
+    LocalStorageClientStateStore,
+    defaultClientStateStore,
+} from './lib/client/types'
+export type {
+    ProcessorSealRecord,
+    SerializedSealingState,
+    SealingStateStore,
+    ProcessorUnsealRecord,
+    SerializedUnsealingState,
+    UnsealingStateStore,
+    ClientStateStore,
+} from './lib/client/types'
+// Driver types for the unseal fork runner (used by StartUnsealingOptions.resolvers).
 export type { UnsealResolver, UnsealResolvers, UnsealModuleEvent } from './lib/client/client_single_share_unsealing'
 export { UnsealModuleError, UnsealModulePhase } from './lib/client/client_single_share_unsealing'
 export {NihiliumPaymentProvider, NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE} from './lib/client/payments';

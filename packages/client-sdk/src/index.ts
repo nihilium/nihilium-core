@@ -23,59 +23,72 @@ export async function check_if_reveal_value_is_published(datastream_url: string,
     return isProvable;
 }
 
+/**
+ * Convenience: a default k-of-n threshold sealing client using the reveal-only template and the
+ * registry's default processors/datastream. Selects `processorCount` (default = threshold)
+ * processors. Not started — call `start_sealing(secret, metadataRoot)` on the returned client.
+ */
+export async function getDefaultSealingClient(opts: {
+    threshold: number;
+    processorCount?: number;
+    searchWidth?: number;
+    chainId?: number;
+}): Promise<nhsdk.NihiliumSealingClient> {
+    const chainId = opts.chainId ?? nhsdk.NETWORK_IDS.ANVIL;
+    const count = opts.processorCount ?? opts.threshold;
+    if (count < opts.threshold) {
+        throw new Error(`processorCount (${count}) must be >= threshold (${opts.threshold})`);
+    }
 
+    const dataStreams = await getDatastreams();
+    const resolvedDataStream = new nhsdk.DataStreamClient(dataStreams[0].url);
+    await resolvedDataStream.initialize();
 
-// export async function getSealingProcessing(
-//     processorEndpoint: SelectableProcessor,
-//     dataStream: SelectableDataStream,
-//     chainedProofCollection:nhsdk.ChainedProofCollection) {
-//     const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint.url);
-//     const resolvedDataStream = new nhsdk.DataStreamClient(dataStream.url);
-    
-//     const proofCollection = chainedProofCollection;
-//     const sealingProcess = new nhsdk.ClientSingleShareSealingProcess(
-//         resolvedProcessorEndpoint,
-//         proofCollection);
-//     return sealingProcess;
-// }
+    const processors = await getProcessors();
+    const resolvedProcessors = await Promise.all(
+        processors.slice(0, count).map((p) => getProcessorEndpoint(p)),
+    );
 
-export async function getDefaultSealingProcess(chainId: number = nhsdk.NETWORK_IDS.ANVIL) {
-   var dataStreams = await getDatastreams();
-   var dataStream = dataStreams[0];
-   const resolvedDataStream = new nhsdk.DataStreamClient(dataStream.url);
-   await resolvedDataStream.initialize();
-   var processorEndpoints = await getProcessors();
-   var processorEndpoint = processorEndpoints[0];
-   const resolvedProcessorEndpoint = await getProcessorEndpoint(processorEndpoint);
-   const genanche = nhsdk.deployedProtocolContracts[chainId];
-   const proofCollection = nhsdk.createRevealOnlyCollection(chainId);
-     
-    
-        
-
-    const sealingProcess = new nhsdk.ClientSingleShareSealingProcess(resolvedProcessorEndpoint, 
-        [resolvedDataStream], proofCollection.template);
-         
-        
-    return sealingProcess;
+    const proofCollection = nhsdk.createRevealOnlyCollection(chainId);
+    return new nhsdk.NihiliumSealingClient(
+        resolvedProcessors,
+        [resolvedDataStream],
+        proofCollection.template,
+        opts.threshold,
+        undefined,
+        undefined,
+        opts.searchWidth,
+    );
 }
 
-export async function getDefaultUnsealingProcess(seal: nhsdk.types.SingleSealStoragePackage,
-    chainId: number = nhsdk.NETWORK_IDS.ANVIL
-) {
-    
-    const processorEndpoint = await getProcessorEndpoint({url: seal.public_package.processor_url, name: "Processor", ethAddress: "0x0000000000000000000000000000000000000000", is_tor: false, jurisdiction: "US", stake: BigInt(1000000000000000000)});
-    const dataStream = new nhsdk.DataStreamClient(seal.public_package.data_stream_urls[0]);
-    await dataStream.initialize();
-    
-    const proofCollectionClass = nhsdk.createRevealOnlyCollection(chainId)
-    // Spread the fields of reveal_collection_inputs as constructor arguments, then add [dataStream] as the last argument
-    proofCollectionClass.template = nhsdk.collection_from_json(seal.private_package.unseal_template,
-        nhsdk.proofLibrary, nhsdk.moduleLibrary);
-    var unsealingProcess = new nhsdk.ClientSingleShareUnsealingProcess(
-        processorEndpoint, proofCollectionClass.collection, proofCollectionClass.template,
-         {[dataStream.getAddress()]: dataStream}, seal);
-    return unsealingProcess;
+/**
+ * Convenience: a threshold unsealing client for a stored NihiliumSeal, resolving the processors and
+ * datastreams recorded in the seal. Not started — call `start_unsealing([...k indices])`.
+ */
+export async function getDefaultUnsealingClient(
+    seal: nhsdk.types.NihiliumSeal,
+    chainId: number = nhsdk.NETWORK_IDS.ANVIL,
+): Promise<nhsdk.NihiliumUnsealingClient> {
+    const processors = await Promise.all(
+        seal.packages.map((pkg) =>
+            getProcessorEndpoint({
+                url: pkg.public_package.processor_url,
+                name: "Processor",
+                ethAddress: "0x0000000000000000000000000000000000000000",
+                is_tor: false,
+                jurisdiction: "US",
+                stake: 0n,
+            }),
+        ),
+    );
+    const urls = Array.from(
+        new Set(seal.packages.flatMap((pkg) => pkg.public_package.data_stream_urls)),
+    );
+    const dataStreams = urls.map((url) => new nhsdk.DataStreamClient(url));
+    await Promise.all(dataStreams.map((d) => d.initialize()));
+
+    const collection = nhsdk.createRevealOnlyCollection(chainId).collection;
+    return new nhsdk.NihiliumUnsealingClient(seal, processors, dataStreams, { collection });
 }
 
 export async function preload_circuits() {

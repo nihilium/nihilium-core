@@ -73,61 +73,67 @@ export class NihiliumClient {
     }
 
     /**
-     * Build a sealing process for a template: selects one processor + datastream (by filter)
-     * and wires them via the core factory. `payment` is an optional per-operation strategy.
+     * Build a k-of-n threshold sealing client for a template: selects `processorCount` (default k)
+     * processors + one datastream (by filter) and wires them into a NihiliumSealingClient. The
+     * returned client is not started — call `start_sealing(secret, metadataRoot)` to produce the
+     * NihiliumSeal. `payment` is an optional per-operation strategy for authorized processors.
      */
-    async sealingProcess(opts: {
+    async sealingClient(opts: {
         template: nhsdk.types.UnsealConditionTemplate;
+        threshold: number;
+        processorCount?: number;
+        searchWidth?: number;
         filter?: EndpointFilter;
-        payment?: nhsdk.PaymentProvider | null;
-    }): Promise<nhsdk.ClientSingleShareSealingProcess> {
-        const [processor] = await this.selectProcessors(opts.filter, 1);
-        const dataStreams = await this.selectDataStreams(opts.filter, 1);
-        return nhsdk.SealingProcess.create({
-            processor,
-            dataStreams,
-            template: opts.template,
-            payment: opts.payment ?? null,
-        });
+        payment?: nhsdk.PaymentProvider;
+        encryptionMode?: nhsdk.NihiliumEncryptionMode;
+    }): Promise<nhsdk.NihiliumSealingClient> {
+        const count = opts.processorCount ?? opts.threshold;
+        if (count < opts.threshold) {
+            throw new Error(`processorCount (${count}) must be >= threshold (${opts.threshold})`);
+        }
+        const processors = await this.selectProcessors(opts.filter, count);
+        const [dataStream] = await this.selectDataStreams(opts.filter, 1);
+        return new nhsdk.NihiliumSealingClient(
+            processors,
+            [dataStream],
+            opts.template,
+            opts.threshold,
+            opts.payment,
+            opts.encryptionMode,
+            opts.searchWidth,
+        );
     }
 
     /**
-     * Build an unsealing process for a stored seal + collection. Resolves the processor and
-     * datastreams recorded in the seal, loads the template from the seal (or uses the one
-     * given), and returns an initialized process via the core factory.
+     * Build a threshold unsealing client for a stored NihiliumSeal. Resolves the processor for each
+     * of the seal's packages (in package order, since the unseal client maps packages[i] ->
+     * processors[i]) and the datastreams recorded in the seal. The returned client is not started —
+     * call `start_unsealing([...k processor indices])` to recover the secret. Unsealing is unpaid.
      */
-    async unsealingProcess(
-        seal: nhsdk.types.SingleSealStoragePackage,
-        opts: {
-            collection: nhsdk.types.UnsealConditionCollection;
-            template?: nhsdk.types.UnsealConditionTemplate;
-        },
-    ): Promise<nhsdk.ClientSingleShareUnsealingProcess> {
-        const processor = await getProcessorEndpoint({
-            url: seal.public_package.processor_url,
-            name: 'Processor',
-            ethAddress: '0x0000000000000000000000000000000000000000',
-            is_tor: false,
-            jurisdiction: 'US',
-            stake: 0n,
-        });
-        const dataStreams = seal.public_package.data_stream_urls.map(
-            (url) => new nhsdk.DataStreamClient(url),
+    async unsealingClient(
+        seal: nhsdk.types.NihiliumSeal,
+        opts: { collection?: nhsdk.types.UnsealConditionCollection } = {},
+    ): Promise<nhsdk.NihiliumUnsealingClient> {
+        const processors = await Promise.all(
+            seal.packages.map((pkg) =>
+                getProcessorEndpoint({
+                    url: pkg.public_package.processor_url,
+                    name: 'Processor',
+                    // Unseal is unpaid, so server_address is unused — a placeholder is fine.
+                    ethAddress: '0x0000000000000000000000000000000000000000',
+                    is_tor: false,
+                    jurisdiction: 'US',
+                    stake: 0n,
+                }),
+            ),
         );
+        const urls = Array.from(
+            new Set(seal.packages.flatMap((pkg) => pkg.public_package.data_stream_urls)),
+        );
+        const dataStreams = urls.map((url) => new nhsdk.DataStreamClient(url));
         await Promise.all(dataStreams.map((d) => d.initialize()));
-        const template =
-            opts.template ??
-            nhsdk.collection_from_json(
-                seal.private_package.unseal_template,
-                nhsdk.proofLibrary,
-                nhsdk.moduleLibrary,
-            );
-        return nhsdk.UnsealingProcess.create({
-            processor,
+        return new nhsdk.NihiliumUnsealingClient(seal, processors, dataStreams, {
             collection: opts.collection,
-            template,
-            dataStreams,
-            seal,
         });
     }
 }

@@ -12,7 +12,7 @@ Or a classic 5/10. = 252 resulting in equal amounts of ciphertexts
 Or for high availability you can do 3/20= 1140
 
 */
-export function FDTEncrypt(message, pubKeys, threshold) {
+export function FDTEncrypt(message, pubKeys, threshold, m = 1) {
     if (threshold > pubKeys.length) {
         throw new Error("Threshold is greater than the number of public keys");
     }

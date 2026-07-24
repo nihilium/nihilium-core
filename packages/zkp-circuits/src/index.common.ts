@@ -55,6 +55,10 @@ import {
     normalizeSigningKeyMaterial,
     hexToSkBuffer,
 } from "./utils/tools";
+// Combinatorial-threshold encryption (search-width m variant). Exposed on the package entry so the
+// client SDK consumes it without a forbidden deep import.
+import { FDTEncrypt, FDTDecrypt } from "./utils/dte_hard";
+import type { FDTSealedPackage, CombinationSeal, EccCiphertext } from "./utils/dte_hard";
 // import * as decodeCypherText from "./utils/decode";
 //import * as ec from "./ecelgamal";
 //import type { generic_adjacent_tree_proofInputType } from './tscircuits/generic_adjacent_tree_proof';
@@ -72,6 +76,11 @@ export {
     WrappedCircomCircuit,
     IPFSConfig,
     precompute,
+    FDTEncrypt,
+    FDTDecrypt,
+    FDTSealedPackage,
+    CombinationSeal,
+    EccCiphertext,
     // Canonical key-derivation helpers (used by @nihilium/registry)
     deriveHEKeyScalar,
     deriveHEPublicKey,

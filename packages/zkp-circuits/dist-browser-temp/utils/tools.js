@@ -675,7 +675,15 @@ export function normalizeSigningKeyMaterial(hexKey) {
  */
 export function hexToSkBuffer(hexKey) {
     const normalised = hexKey.startsWith("0x") ? hexKey : `0x${hexKey}`;
-    return Buffer.from(BigInt(normalised).toString(16), "hex");
+    // Pad odd-length hex to a whole number of bytes. Buffer.from(hex, "hex") silently drops a
+    // trailing half-byte, which would corrupt ~half of all keys and yield a public key that does
+    // not match the one the Processor signs with (it signs via bigInt2Buffer, which pads the same
+    // way). This keeps EdDSA signing and verification consistent for every key.
+    let hex = BigInt(normalised).toString(16);
+    if (hex.length % 2 === 1) {
+        hex = "0" + hex;
+    }
+    return Buffer.from(hex, "hex");
 }
 /**
  * Derive the scalar used inside the HE (ElGamal) key derivation.

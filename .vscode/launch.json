@@ -47,6 +47,27 @@
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
         {
+            "name": "Test Core sealing",
+            "type": "node",
+            "request": "launch",
+            "env": {
+                "TS_NODE_PROJECT": "${workspaceRoot}/packages/core/test/tsconfig.json"
+            },
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+            "args": [
+                "--timeout",
+                "5000000",
+                "--no-config",
+                "--require",
+                "mocha-suppress-logs",
+                "${workspaceRoot}/packages/core/test/sealing_client.test.ts",
+                "--exit"
+            ],
+            "cwd": "${workspaceRoot}/packages/core",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        },
+        {
             "name": "Test Core Integrated",
             "type": "node",
             "request": "launch",

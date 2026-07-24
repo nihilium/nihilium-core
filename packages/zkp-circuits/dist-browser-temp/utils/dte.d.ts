@@ -1,5 +1,5 @@
 import { PubKey, PrivKey } from "./types";
-export declare function FDTEncrypt(message: bigint, pubKeys: PubKey[], threshold: number): {
+export declare function FDTEncrypt(message: bigint, pubKeys: PubKey[], threshold: number, m?: number): {
     cipherTexts: {};
     empheralKey: {
         x: string;
