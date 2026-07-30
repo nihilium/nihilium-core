@@ -27,6 +27,7 @@ import { buildEddsa } from "circomlibjs";
 //import { EVMDataStream } from "../src/lib/data_stream/EVMDataStream";
 import { EVMDataStreamDualMerkleNonZK } from "../src/lib/data_stream/EVMDataStreamDualMerkleNonZK";
 import { ClientSingleShareUnsealingProcess } from "../src/lib/client/client_single_share_unsealing";
+import { UnsealPathProducer } from "../src/lib/unseal_conditions/UnsealPathProducer";
 import { ProcessorEndpoint } from "../src/types/protocol/common";
 import { DataStreamClient } from "../src/lib/data_stream/DataStreamClient";
 import { ethers } from "hardhat";
@@ -278,10 +279,16 @@ describe("Processor-Client intereaction", () => {
       
     }
 
-    // The fork driver runs the path's modules in template order. The reveal-only path is a
-    // single context-driven opening module, so no resolvers are needed.
+    // Proof production now lives on the UnsealPathProducer (a function of the template). The reveal-only
+    // path is a single context-driven opening module, so no resolvers are needed.
     const proof_index = 0;
-    const { proofs, public_inputs } = await unsealing_process.runPath(proof_index);
+    const producer = new UnsealPathProducer(revealOnlyTemplate.template);
+    const { proofs, public_inputs } = await producer.produce(proof_index, {
+      dataStreams: [data_stream],
+      processor: processor_endpoint,
+      seal: single_seal,
+      upstream: {},
+    });
     const unseal_request = await unsealing_process.get_unseal_request(proof_index, proofs, public_inputs);
     //await validatedSigHeAddCircuit.init()
     // var testtesta = await validatedSigHeAddCircuit.verifyProof(unseal_request.proof)

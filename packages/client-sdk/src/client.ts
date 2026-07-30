@@ -132,7 +132,9 @@ export class NihiliumClient {
         );
         const dataStreams = urls.map((url) => new nhsdk.DataStreamClient(url));
         await Promise.all(dataStreams.map((d) => d.initialize()));
-        return new nhsdk.NihiliumUnsealingClient(seal, processors, dataStreams, {
+        // The default (reveal-only) unseal scenario. For scenario-specific proving (e.g. ZKEmail),
+        // construct the corresponding subclass (nhsdk.ZKEmailUnsealingClient) directly.
+        return new nhsdk.DefaultUnsealingClient(seal, processors, dataStreams, {
             collection: opts.collection,
         });
     }

@@ -14,7 +14,8 @@ export interface PaymentProvider {
  * Must produce the same value as the processor's nihilium-jwt verifier.
  */
 export function hashRequestBody(body: unknown): string {
-  return sha256(toUtf8Bytes(JSON.stringify(body)));
+  // bigint values (e.g. field-element template inputs) are not JSON-serializable by default — stringify them.
+  return sha256(toUtf8Bytes(JSON.stringify(body, (_key, value) => (typeof value === "bigint" ? value.toString() : value))));
 }
 
 /**

@@ -1,5 +1,6 @@
 import { FDTSealedPackage } from "@nihilium/zkp-circuits";
 import { NihiliumSeal, SingleSealRequestResponse, SingleSealStoragePackage } from "../../types/protocol/common";
+import { ModuleProof } from "../unseal_conditions/modules";
 
 
 export enum NihiliumEncryptionMode  {
@@ -111,6 +112,14 @@ export type SerializedUnsealingState = {
     reveal_published: boolean;       // the batched reveal-value publication has been posted
     data_stream_id?: string;
     per_processor: ProcessorUnsealRecord[];
+    // Shared (produced-once) module proofs, keyed by module_id, reused across every processor. Persisted
+    // so a crash never re-runs the expensive shared proof (e.g. ZKEmail) — the unseal analogue of the
+    // seal client's never-recharge guarantee. Only modules NOT in perProcessorModuleIds land here.
+    shared_proofs?: { [module_id: string]: ModuleProof };
+    // Free-form, JSON-serializable state owned by a scenario subclass of NihiliumUnsealingClient (e.g. the
+    // ZKEmail client stores its hash-tie preimage / email subject here). Persisted so a resume reuses the
+    // same scenario setup instead of regenerating it. The base client never reads its contents.
+    scenario_state?: { [key: string]: any };
     secret?: string;                 // recovered secret, bigint as decimal string; cleared on Unsealed
 };
 

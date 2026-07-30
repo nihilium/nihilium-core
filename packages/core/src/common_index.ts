@@ -26,6 +26,10 @@ export {NETWORK_IDS, deployedProtocolContracts, toAddressMap} from './static_con
 export { NihiliumSealingClient, NihiliumSealingStatus } from './lib/client/sealing_client'
 export { NihiliumUnsealingClient, NihiliumUnsealingStatus } from './lib/client/unsealing_client'
 export type { NihiliumUnsealingClientOptions, StartUnsealingOptions } from './lib/client/unsealing_client'
+// Scenario-specific unsealing clients (subclasses that plug proof-production logic into the base).
+export { DefaultUnsealingClient } from './lib/client/scenarios/default_unsealing_client'
+// The ZKEmail scenario (use-case-focused) now lives in @nihilium/client-sdk, built on the
+// NihiliumUnsealingClient mechanism above.
 // Sealing/unsealing options, phases and pluggable state persistence (resume support).
 export {
     NihiliumEncryptionMode,
@@ -50,9 +54,11 @@ export type {
     UnsealingStateStore,
     ClientStateStore,
 } from './lib/client/types'
-// Driver types for the unseal fork runner (used by StartUnsealingOptions.resolvers).
-export type { UnsealResolver, UnsealResolvers, UnsealModuleEvent } from './lib/client/client_single_share_unsealing'
-export { UnsealModuleError, UnsealModulePhase } from './lib/client/client_single_share_unsealing'
+// Unseal proof-production: the producer owns the per-path proof mechanism (formerly runPath) and the
+// shared/per-processor routing; the resolver/event types describe its external-input contract.
+export { UnsealPathProducer } from './lib/unseal_conditions/UnsealPathProducer'
+export type { UnsealResolver, UnsealResolvers, UnsealModuleEvent } from './lib/unseal_conditions/UnsealPathProducer'
+export { UnsealModuleError, UnsealModulePhase } from './lib/unseal_conditions/UnsealPathProducer'
 export {NihiliumPaymentProvider, NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE} from './lib/client/payments';
 export type { PaymentProvider } from './lib/client/payments';
 export { createRevealOnlyCollection } from './lib/unseal_conditions/templates/reveal_only_template';

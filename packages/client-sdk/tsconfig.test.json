@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "moduleTypes": { "**/*.ts": "cjs" }
+  },
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["node", "mocha"]
+  },
+  "include": ["src/**/*", "test/**/*"]
+}

@@ -9,7 +9,10 @@ import { Processor } from "../src/lib/processor/processor";
 import { IDualDataStream } from "../src/lib/data_stream/types";
 import { EVMDataStreamDualMerkleNonZK } from "../src/lib/data_stream/EVMDataStreamDualMerkleNonZK";
 import { ClientSingleShareSealingProcess } from "../src/lib/client/client_single_share_sealing";
-import { ClientSingleShareUnsealingProcess } from "../src/lib/client/client_single_share_unsealing";
+import { UnsealPathProducer } from "../src/lib/unseal_conditions/UnsealPathProducer";
+import { ModuleProof, ProofProductionContext, UnsealConditionModule } from "../src/lib/unseal_conditions/modules";
+import { UnsealConditionTemplate as UCTemplate } from "../src/lib/unseal_conditions/collections/UnsealConditionTemplate";
+import { DefaultUnsealingClient } from "../src/lib/client/scenarios/default_unsealing_client";
 import {
     NihiliumSealingClient,
     NihiliumSealingStatus,
@@ -186,7 +189,13 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
         const client = makeClient();
         client.set_state_store(new InMemorySealingStateStore());
 
-        const seal = await client.start_sealing(secret, metadata_root, {}, { datastream: data_stream.getAddress() });
+        // Pass a bigint template input (field elements are bigints, e.g. email_address_hash) to exercise
+        // the state/storage-key serialization path — this used to throw "Do not know how to serialize a BigInt".
+        const seal = await client.start_sealing(
+            secret, metadata_root,
+            { debug_bigint_input: 987654321987654321987654321n },
+            { datastream: data_stream.getAddress() },
+        );
 
         expect(client.is_done()).to.equal(true);
         expect(client.get_status()).to.equal(NihiliumSealingStatus.Sealed);
@@ -255,8 +264,10 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
     });
 
     // ---- Unseal tests: seal once, reuse across them ----
+    // Uses DefaultUnsealingClient (the reveal-only scenario subclass) so the round-trip + crash-resume
+    // tests exercise the inheritance refactor end-to-end; it is behaviorally the base client.
     function makeUnsealingClient(seal: NihiliumSeal): NihiliumUnsealingClient {
-        return new NihiliumUnsealingClient(seal, endpoints, [data_stream], {
+        return new DefaultUnsealingClient(seal, endpoints, [data_stream], {
             collection: revealOnlyTemplate.collection,
         });
     }
@@ -287,14 +298,16 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
         const store = new InMemoryUnsealingStateStore(); // shared across both client instances
 
         // Fail the second processor's unseal proof exactly once (crash after the first is recovered).
-        const realRunPath = ClientSingleShareUnsealingProcess.prototype.runPath;
-        let runPathCalls = 0;
-        (ClientSingleShareUnsealingProcess.prototype as any).runPath = async function (proofIndex: number, resolvers?: any) {
-            runPathCalls++;
-            if (runPathCalls === 2) {
+        // Proof production now lives on UnsealPathProducer.produce (one producer per start_unsealing,
+        // called once per processor), so inject the crash there.
+        const realProduce = UnsealPathProducer.prototype.produce;
+        let produceCalls = 0;
+        (UnsealPathProducer.prototype as any).produce = async function (...args: any[]) {
+            produceCalls++;
+            if (produceCalls === 2) {
                 throw new Error("simulated unseal proof crash");
             }
-            return realRunPath.call(this, proofIndex, resolvers);
+            return (realProduce as any).apply(this, args);
         };
 
         try {
@@ -320,7 +333,7 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
             expect(clientB.is_done()).to.equal(true);
             expect(recovered).to.equal(sharedSecret);
         } finally {
-            (ClientSingleShareUnsealingProcess.prototype as any).runPath = realRunPath;
+            (UnsealPathProducer.prototype as any).produce = realProduce;
         }
     });
 
@@ -335,3 +348,118 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
         await expect(client.start_unsealing([0])).to.be.rejectedWith(/threshold/);
     });
 });
+
+// Lightweight, ZK-free unit tests of the producer's shared/per-processor routing, produce-once caching,
+// caller-preselected proofs, and the safety guard. Uses stub modules + a fake compiled template so it
+// needs no contracts or real proving.
+describe("UnsealPathProducer shared/per-processor routing", () => {
+    function stubModule(opts: {
+        unique: boolean;
+        requires?: string[];
+        produce: (ctx: ProofProductionContext, inputs: any) => ModuleProof;
+    }): UnsealConditionModule {
+        return {
+            requires_unique_proof_per_processor: opts.unique,
+            productionInputs: () =>
+                (opts.requires ?? []).reduce((m: any, k: string) => { m[k] = {}; return m; }, {}),
+            produce: async (ctx: ProofProductionContext, inputs: any) => opts.produce(ctx, inputs),
+        } as unknown as UnsealConditionModule;
+    }
+
+    // Path [opening (unique), email (shared)] — mirrors the real graph's per-processor-then-shared shape.
+    function makeProducer(moduleFor: (name: string) => UnsealConditionModule): UnsealPathProducer {
+        const template = {
+            isCompiled: () => true,
+            proof_library: {} as any,
+            module_library: { getModule: (name: string) => moduleFor(name) } as any,
+            compiled_collection: {
+                compiled_modules: [[
+                    { module_id: "opening", module_name: "opening" },
+                    { module_id: "email", module_name: "email" },
+                ]],
+            } as any,
+        } as unknown as UCTemplate;
+        return new UnsealPathProducer(template);
+    }
+
+    const ctx = (): ProofProductionContext =>
+        ({ dataStreams: [] as any, processor: {} as any, seal: {} as any, upstream: {} });
+
+    it("classifies only flagged modules as per-processor", () => {
+        const producer = makeProducer((name) =>
+            name === "opening"
+                ? stubModule({ unique: true, produce: () => ({ proofs: ["u"], public_inputs: [["u"]], outputs: {} }) })
+                : stubModule({ unique: false, produce: () => ({ proofs: ["s"], public_inputs: [["s"]], outputs: {} }) }),
+        );
+        const perProc = producer.perProcessorModuleIds(0);
+        expect([...perProc]).to.deep.equal(["opening"]);
+    });
+
+    it("produces shared modules once and per-processor modules per processor", async () => {
+        let uniqueCalls = 0;
+        let sharedCalls = 0;
+        const producer = makeProducer((name) =>
+            name === "opening"
+                ? stubModule({ unique: true, produce: () => { uniqueCalls++; return { proofs: ["u" + uniqueCalls], public_inputs: [["u"]], outputs: {} }; } })
+                : stubModule({ unique: false, produce: () => { sharedCalls++; return { proofs: ["s"], public_inputs: [["s"]], outputs: {} }; } }),
+        );
+        const perProc = producer.perProcessorModuleIds(0);
+        const sharedMemo: { [id: string]: ModuleProof } = {};
+
+        // Drive the same cross-processor loop the client runs.
+        const assembled: any[][] = [];
+        for (let i = 0; i < 2; i++) {
+            const callMemo: { [id: string]: ModuleProof } = { ...sharedMemo };
+            const { proofs } = await producer.produce(0, ctx(), {}, callMemo);
+            for (const [mid, mp] of Object.entries(callMemo)) {
+                if (!perProc.has(mid) && !sharedMemo[mid]) sharedMemo[mid] = mp;
+            }
+            assembled.push(proofs);
+        }
+
+        expect(uniqueCalls).to.equal(2);          // opening re-produced per processor
+        expect(sharedCalls).to.equal(1);          // email produced once, reused
+        expect(assembled[0]).to.deep.equal(["u1", "s"]);
+        expect(assembled[1]).to.deep.equal(["u2", "s"]); // same shared proof, order preserved
+    });
+
+    it("uses caller-preselected proofs in place of producing them", async () => {
+        let sharedCalls = 0;
+        const producer = makeProducer((name) =>
+            name === "opening"
+                ? stubModule({ unique: true, produce: () => ({ proofs: ["u1"], public_inputs: [["u"]], outputs: {} }) })
+                : stubModule({ unique: false, produce: () => { sharedCalls++; return { proofs: ["s"], public_inputs: [["s"]], outputs: {} }; } }),
+        );
+        const provided: ModuleProof = { proofs: ["provided"], public_inputs: [["p"]], outputs: {} };
+        const callMemo: { [id: string]: ModuleProof } = { email: provided };
+        const { proofs } = await producer.produce(0, ctx(), {}, callMemo);
+
+        expect(sharedCalls).to.equal(0);          // email never produced — the preselected proof was used
+        expect(proofs).to.deep.equal(["u1", "provided"]);
+    });
+
+    it("refuses to share a module that reads a per-processor upstream output", async () => {
+        const producer = makeProducer((name) =>
+            name === "opening"
+                ? stubModule({ unique: true, produce: () => ({ proofs: ["u"], public_inputs: [["u"]], outputs: {} }) })
+                // A shared (unflagged) module that illegally consumes the per-processor opening output.
+                : stubModule({ unique: false, produce: (c) => { void c.upstream["opening"]; return { proofs: ["s"], public_inputs: [["s"]], outputs: {} }; } }),
+        );
+        await expect(producer.produce(0, ctx(), {}, {})).to.be.rejectedWith(/per-processor module/);
+    });
+});
+
+// Regression: hashRequestBody (used for the seal storage key) must tolerate bigint field values.
+describe("hashRequestBody bigint-safety", () => {
+    it("hashes a body containing bigints without throwing", () => {
+        const withBigints = { metadata_root: "1", template_inputs: { email_address_hash: 123456789012345678901234567890n } };
+        const withStrings = { metadata_root: "1", template_inputs: { email_address_hash: "123456789012345678901234567890" } };
+        const hash = hashRequestBody(withBigints);
+        expect(hash).to.be.a("string");
+        // A bigint and its decimal-string form hash identically, so string-normalized state keeps a stable key.
+        expect(hash).to.equal(hashRequestBody(withStrings));
+    });
+});
+
+// The ZKEmail scenario moved to @nihilium/client-sdk; its wiring tests live alongside it there
+// (packages/client-sdk/test/zkemail_unsealing_client.test.ts).

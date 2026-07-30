@@ -27,7 +27,7 @@ import { cryptoTools } from "@nihilium/zkp-circuits";
 
 export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
 
-
+    override requires_unique_proof_per_processor: boolean = true;
     private opening_proof: UnsealConditionProof;
     private top_level_merkle_tree_proof: UnsealConditionProof;
     private sub_tree_merkle_tree_proof: UnsealConditionProof;

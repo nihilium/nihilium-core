@@ -1,10 +1,11 @@
 import { NihiliumSeal, ProcessorEndpoint } from "../../types/protocol/common";
 import { IDualDataStream } from "../data_stream/types";
-import { ClientSingleShareUnsealingProcess, UnsealResolvers } from "./client_single_share_unsealing";
+import { ClientSingleShareUnsealingProcess } from "./client_single_share_unsealing";
 import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
 import { from_json } from "../unseal_conditions/collections/UnsealConditionTemplate";
+import { UnsealPathProducer, UnsealResolvers, UnsealModuleEvent } from "../unseal_conditions/UnsealPathProducer";
 import { StandardProofLibrary, ProofLibraryType } from "../unseal_conditions/proofs";
-import { StandardModuleLibrary, ModuleLibraryType } from "../unseal_conditions/modules";
+import { StandardModuleLibrary, ModuleLibraryType, ModuleProof } from "../unseal_conditions/modules";
 import { hashRequestBody } from "./payments";
 import {
     NihiliumUnsealingStatus,
@@ -33,6 +34,12 @@ export type StartUnsealingOptions = {
     dataStreamId?: string;
     proofIndex?: number;
     resolvers?: UnsealResolvers;
+    /**
+     * Preselected, already-produced module proofs keyed by module_id, used in place of producing them
+     * (e.g. a shared ZKEmail proof the caller made ahead of time). Merged into the shared proof cache;
+     * per-processor modules should not be supplied here.
+     */
+    providedProofs?: { [module_id: string]: ModuleProof };
 };
 
 /**
@@ -47,16 +54,19 @@ export type StartUnsealingOptions = {
  */
 export class NihiliumUnsealingClient {
 
-    private seal: NihiliumSeal;
-    private processors: ProcessorEndpoint[];
-    private dataStreams: IDualDataStream[];
-    private collection?: UnsealConditionCollection;
-    private proofLibrary: ProofLibraryType;
-    private moduleLibrary: ModuleLibraryType;
-    private store: UnsealingStateStore;
-    private status: NihiliumUnsealingStatus;
-    private state?: SerializedUnsealingState;
-    private storage_key?: string;
+    // Protected so scenario subclasses (DefaultUnsealingClient, ZKEmailUnsealingClient, ...) can read the
+    // seal/endpoints and the persisted state when supplying scenario-specific proof inputs.
+    protected seal: NihiliumSeal;
+    protected processors: ProcessorEndpoint[];
+    protected dataStreams: IDualDataStream[];
+    protected collection?: UnsealConditionCollection;
+    protected proofLibrary: ProofLibraryType;
+    protected moduleLibrary: ModuleLibraryType;
+    protected store: UnsealingStateStore;
+    protected status: NihiliumUnsealingStatus;
+    protected state?: SerializedUnsealingState;
+    protected storage_key?: string;
+    private moduleListeners: ((event: UnsealModuleEvent) => void)[] = [];
 
     constructor(
         seal: NihiliumSeal,
@@ -155,10 +165,32 @@ export class NihiliumUnsealingClient {
             // Phase 1: publish the k reveal values directly to the data stream, batched into one round.
             await this.publish_reveal_values(dataStreamId);
 
-            // Phase 2: recover each chosen processor's composite private scalar.
+            // Scenario hook: any setup a subclass needs before producing proofs (e.g. the ZKEmail client
+            // generates its hash-tie preimage and drives the recovery-email exchange here). No-op by default.
+            await this.prepareProofProduction(processorIndices);
+
+            // Phase 2: recover each chosen processor's composite private scalar. Build one producer (all
+            // packages carry identical unseal conditions) and a shared proof cache reused across
+            // processors — seeded from persisted shared_proofs (resume) and any caller-preselected proofs.
+            // Resolvers/providedProofs come from the scenario (buildResolvers/buildProvidedProofs), with
+            // per-call opts taking precedence.
             this.set_status(NihiliumUnsealingStatus.Recovering_scalars);
+            const producer = new UnsealPathProducer(
+                from_json(
+                    this.seal.packages[processorIndices[0]].private_package.unseal_template!,
+                    this.proofLibrary, this.moduleLibrary,
+                ),
+            );
+            for (const listener of this.moduleListeners) producer.on(listener);
+            const resolvers: UnsealResolvers = { ...this.buildResolvers(), ...(opts.resolvers ?? {}) };
+            const perProcessorIds = producer.perProcessorModuleIds(proofIndex);
+            const sharedMemo: { [module_id: string]: ModuleProof } = {
+                ...(this.state.shared_proofs ?? {}),
+                ...this.buildProvidedProofs(),
+                ...(opts.providedProofs ?? {}),
+            };
             for (const rec of this.state.per_processor) {
-                await this.unseal_one_processor(rec, proofIndex, opts.resolvers);
+                await this.unseal_one_processor(rec, proofIndex, producer, perProcessorIds, sharedMemo, resolvers);
             }
 
             // Phase 3: FDTDecrypt the combinatorial-threshold package with the k scalars.
@@ -188,6 +220,49 @@ export class NihiliumUnsealingClient {
             return BigInt(this.state.secret);
         }
         return this.start_unsealing(this.state.processor_indices, { dataStreamId: this.state.data_stream_id });
+    }
+
+    /**
+     * Subscribe to per-module proof-production lifecycle events (Producing / Produced / Failed). Attached
+     * to the producer built in start_unsealing, so a scenario or caller can surface progress.
+     */
+    on(listener: (event: UnsealModuleEvent) => void): void {
+        this.moduleListeners.push(listener);
+    }
+
+    // ---- Scenario extension surface --------------------------------------------------------------
+    // Override these in a subclass to build a specific unseal scenario / proving system. The base is the
+    // "no external proofs" case (reveal-only), so all three default to empty.
+
+    /**
+     * One-time setup before proofs are produced, run after the reveal values are published. A scenario
+     * puts any interactive / out-of-band work here (e.g. requesting a ZKEmail recovery proof) and may
+     * persist inputs via getScenarioState/setScenarioState so a resume reuses them. No-op by default.
+     */
+    protected async prepareProofProduction(_processorIndices: number[]): Promise<void> {
+        // no-op
+    }
+
+    /** The scenario's resolvers (module external inputs), keyed by module_id or module_name. */
+    protected buildResolvers(): UnsealResolvers {
+        return {};
+    }
+
+    /** Scenario-supplied, already-produced module proofs to reuse in place of producing them. */
+    protected buildProvidedProofs(): { [module_id: string]: ModuleProof } {
+        return {};
+    }
+
+    /** Read the scenario's persisted, JSON-serializable state (empty object if none yet). */
+    protected getScenarioState<T extends { [key: string]: any } = { [key: string]: any }>(): T {
+        return (this.state?.scenario_state ?? {}) as T;
+    }
+
+    /** Merge a patch into the scenario's persisted state and save it, so a resume reuses it. */
+    protected async setScenarioState(patch: { [key: string]: any }): Promise<void> {
+        if (!this.state) return;
+        this.state.scenario_state = { ...(this.state.scenario_state ?? {}), ...patch };
+        await this.persist();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -228,6 +303,9 @@ export class NihiliumUnsealingClient {
     private async unseal_one_processor(
         rec: ProcessorUnsealRecord,
         proofIndex: number,
+        producer: UnsealPathProducer,
+        perProcessorIds: Set<string>,
+        sharedMemo: { [module_id: string]: ModuleProof },
         resolvers?: UnsealResolvers,
     ): Promise<void> {
         if (rec.phase === ProcessorUnsealPhase.Unsealed && rec.composite_scalar) {
@@ -235,7 +313,9 @@ export class NihiliumUnsealingClient {
         }
         const pkg = this.seal.packages[rec.processor_index];
         const template = from_json(pkg.private_package.unseal_template!, this.proofLibrary, this.moduleLibrary);
-        const unseal = await ClientSingleShareUnsealingProcess.create({
+        // Transport only: builds/sends the unseal request and recovers the scalar. Proof production is
+        // the producer's job (shared modules once, per-processor modules per processor).
+        const transport = await ClientSingleShareUnsealingProcess.create({
             processor: this.processors[rec.processor_index],
             collection: this.collection,
             template,
@@ -244,10 +324,31 @@ export class NihiliumUnsealingClient {
         });
         // Reveal value already batch-published; poll until provable (advances the single-share to
         // REVEAL_VALUE_EXPOSED, which get_unseal_request requires) without going through publish_reveal_value.
-        await unseal.await_reveal_value_to_be_provable();
-        const { proofs, public_inputs } = await unseal.runPath(proofIndex, resolvers);
-        await unseal.unseal_request_to_processor(proofIndex, proofs, public_inputs); // unpaid POST /request_unseal
-        rec.composite_scalar = unseal.recover_composite_scalar().toString();
+        await transport.await_reveal_value_to_be_provable();
+
+        // Produce this processor's path: shared modules hit the memo (produced once, on the first
+        // processor), per-processor modules produce fresh. Newly-produced shared modules are harvested
+        // into the cross-processor cache and persisted so a resume never re-runs them.
+        const callMemo: { [module_id: string]: ModuleProof } = { ...sharedMemo };
+        const { proofs, public_inputs } = await producer.produce(
+            proofIndex,
+            { dataStreams: this.dataStreams, processor: this.processors[rec.processor_index], seal: pkg, upstream: {} },
+            resolvers ?? {},
+            callMemo,
+        );
+        let sharedChanged = false;
+        for (const [module_id, moduleProof] of Object.entries(callMemo)) {
+            if (!perProcessorIds.has(module_id) && !sharedMemo[module_id]) {
+                sharedMemo[module_id] = moduleProof;
+                sharedChanged = true;
+            }
+        }
+        if (sharedChanged && this.state) {
+            this.state.shared_proofs = { ...sharedMemo };
+        }
+
+        await transport.unseal_request_to_processor(proofIndex, proofs, public_inputs); // unpaid POST /request_unseal
+        rec.composite_scalar = transport.recover_composite_scalar().toString();
         rec.phase = ProcessorUnsealPhase.Unsealed;
         await this.persist();
     }

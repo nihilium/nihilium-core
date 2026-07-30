@@ -309,6 +309,13 @@ export type ProofProductionContext = {
 }
 
 export abstract class UnsealConditionModule {
+    /**
+     * A signal for the proving system if this module must be executed for each processor separately
+     * or not. It defaults to false because most modules can be directly re-used. A notable example
+     * is the default anchored opening module, which must be executed for each processor separately
+     * because each processor has a different reveal value
+     */    
+    public requires_unique_proof_per_processor: boolean = false;
     public name: string = "";
     public short_description: string = "";
     public description: string = "";

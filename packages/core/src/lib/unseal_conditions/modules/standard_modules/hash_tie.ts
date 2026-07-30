@@ -30,9 +30,12 @@ import { circomHashTie, cryptoTools } from "@nihilium/zkp-circuits";
  */
 
 export class HashTieModule extends UnsealConditionModule {
-    
-    
-    
+
+    // The produced proof binds the per-processor reveal_value into tied_value (see produce below), so it
+    // cannot be reused across processors — each processor's package has a different reveal_value.
+    override requires_unique_proof_per_processor: boolean = true;
+
+
 
     constructor(
         proofLibrary: ProofLibraryType,

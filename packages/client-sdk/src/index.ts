@@ -10,6 +10,10 @@ export { getProcessorEndpoint, setApiEndpoint } from './lib/endpoint-selection';
 export { NihiliumClient } from './client';
 export type { EndpointFilter, NihiliumClientOptions } from './client';
 
+// Use-case-focused unseal scenarios (built on @nihilium/core's NihiliumUnsealingClient mechanism).
+export { ZKEmailUnsealingClient, ZKEmailRecoveryStatus } from './scenarios/zkemail_unsealing_client';
+export type { ZKEmailUnsealingOptions, FetchLike } from './scenarios/zkemail_unsealing_client';
+
 export const cryptoTools = nhsdk.cryptoTools;
 
 // export const devProcessorUrl:string = "https://processor1.nihilium.io";
@@ -88,7 +92,8 @@ export async function getDefaultUnsealingClient(
     await Promise.all(dataStreams.map((d) => d.initialize()));
 
     const collection = nhsdk.createRevealOnlyCollection(chainId).collection;
-    return new nhsdk.NihiliumUnsealingClient(seal, processors, dataStreams, { collection });
+    // The default (reveal-only) unseal scenario.
+    return new nhsdk.DefaultUnsealingClient(seal, processors, dataStreams, { collection });
 }
 
 export async function preload_circuits() {

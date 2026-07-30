@@ -1,6 +1,6 @@
 {
   "name": "@nihilium/client-sdk",
-  "version": "0.4.0",
+  "version": "0.5.2",
   "description": "Browser SDK for privacy-accounts, using privacy-lib.",
   "type": "module",
   "main": "dist/index.mjs",
@@ -27,7 +27,8 @@
     "build:js": "NODE_OPTIONS='--max-old-space-size=18192' vite build --config vite.config.mjs",
     "build:types": "NODE_OPTIONS='--max-old-space-size=18192' rollup -c rollup.dts.config.mjs",
     "clean": "rm -rf dist",
-    "dev": "vite build --config vite.config.mjs --watch"
+    "dev": "vite build --config vite.config.mjs --watch",
+    "test": "TS_NODE_PROJECT=./tsconfig.test.json ts-mocha --exit"
   },
   "dependencies": {
     "poseidon-lite": "^0.3.0"

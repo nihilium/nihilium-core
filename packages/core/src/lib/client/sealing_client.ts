@@ -25,6 +25,27 @@ export { NihiliumSealingStatus } from "./types";
 const SEALING_STATE_VERSION = 1;
 
 /**
+ * Template inputs are field elements (usually bigints), but the persisted seal state and its storage-key
+ * hash must be JSON-serializable. Normalize to decimal strings for storage, and back to bigints for the
+ * template compile. Accepts bigint / number / decimal- or hex-string values.
+ */
+function normalize_template_inputs(inputs: { [key: string]: any }): { [key: string]: string } {
+    const out: { [key: string]: string } = {};
+    for (const [key, value] of Object.entries(inputs)) {
+        out[key] = typeof value === "bigint" ? value.toString() : String(value);
+    }
+    return out;
+}
+
+function to_bigint_template_inputs(inputs: { [key: string]: any }): { [key: string]: bigint } {
+    const out: { [key: string]: bigint } = {};
+    for (const [key, value] of Object.entries(inputs)) {
+        out[key] = BigInt(value);
+    }
+    return out;
+}
+
+/**
  * Primary entry point for Nihilium sealing.
  *
  * Drives one single-share seal per processor, collects each processor's composite
@@ -129,7 +150,12 @@ export class NihiliumSealingClient {
         if (Object.keys(data_stream_mapping).length === 0) {
             data_stream_mapping = this.derive_data_stream_mapping();
         }
-        this.storage_key = this.compute_storage_key(metadata_root, template_inputs, data_stream_mapping);
+        // Template inputs are field elements, typically bigints. The persisted state and its storage-key
+        // hash must be JSON-serializable, so keep them as decimal strings here; they are converted back to
+        // bigints when the template is compiled (see seal_one_processor). Without this, a bigint input
+        // (e.g. email_address_hash) throws "Do not know how to serialize a BigInt".
+        const normalized_inputs = normalize_template_inputs(template_inputs);
+        this.storage_key = this.compute_storage_key(metadata_root, normalized_inputs, data_stream_mapping);
 
         // Pick up persisted state (resume) unless we already hold in-memory state for this seal.
         if (!this.state) {
@@ -145,7 +171,7 @@ export class NihiliumSealingClient {
                 status: NihiliumSealingStatus.Ready_to_seal,
                 secret: secret.toString(),
                 metadata_root: metadata_root.toString(),
-                template_inputs,
+                template_inputs: normalized_inputs,
                 data_stream_mapping,
                 shared_threshold: this.threshold,
                 shared_search_width: this.search_width,
@@ -237,7 +263,8 @@ export class NihiliumSealingClient {
         await proc.initialize(
             secret,
             BigInt(this.state!.metadata_root),
-            this.state!.template_inputs,
+            // Stored as strings for JSON-safety; the template compile needs bigint field elements.
+            to_bigint_template_inputs(this.state!.template_inputs),
             this.state!.data_stream_mapping,
         );
 
