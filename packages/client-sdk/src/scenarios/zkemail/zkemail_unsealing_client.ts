@@ -1,4 +1,5 @@
 import * as nhsdk from "@nihilium/core";
+import { AddressMap } from "@nihilium/core/types";
 
 /** Status values the recovery-email proving service reports (external API contract). */
 export const ZKEmailRecoveryStatus = {
@@ -49,16 +50,18 @@ export class ZKEmailUnsealingClient extends nhsdk.NihiliumUnsealingClient {
     private email?: string;
     private onProgress: (message: string) => void;
     private fetchFn: FetchLike;
-
+    private address_map: AddressMap;
     constructor(
         seal: nhsdk.types.NihiliumSeal,
         processors: nhsdk.types.ProcessorEndpoint[],
         dataStreams: nhsdk.IDualDataStream[],
+        address_map: AddressMap,
         opts: ZKEmailUnsealingOptions,
     ) {
         super(seal, processors, dataStreams, opts);
         this.emailServiceUrl = opts.emailServiceUrl.replace(/\/+$/, "");
         this.email = opts.email ?? seal.packages[0]?.private_package?.proving_hints?.email;
+        this.address_map = address_map;
         this.onProgress = opts.onProgress ?? (() => { /* noop */ });
         // Call fetch through globalThis so the browser keeps its `this` binding — assigning the bare global
         // fetch to an instance field and invoking it as a method throws "Illegal invocation".
@@ -131,7 +134,7 @@ export class ZKEmailUnsealingClient extends nhsdk.NihiliumUnsealingClient {
         }
     }
 
-    private async awaitEmailProof(emailSubject: string): Promise<{ proof: string; publicSignals: any[] }> {
+    private async awaitEmailProof(emailSubject: string): Promise<{ proof: string; publicSignals: any[], proofType: string }> {
         this.onProgress("Awaiting ZKEmail proof...");
         while (true) {
             try {
@@ -142,7 +145,8 @@ export class ZKEmailUnsealingClient extends nhsdk.NihiliumUnsealingClient {
                 if (data.status === ZKEmailRecoveryStatus.Finished) {
                     let proof = data.proof.hex as string;
                     if (proof.slice(0, 2) !== "0x") proof = "0x" + proof;
-                    return { proof, publicSignals: data.publicSignals };
+                    //Proof Type is RSA2048 or RSA1024
+                    return { proof, publicSignals: data.publicSignals, proofType: data.proofType };
                 }
                 if (data.status === ZKEmailRecoveryStatus.Queued) {
                     this.onProgress("Email proving queued. Position in queue: " + data.queuePosition);

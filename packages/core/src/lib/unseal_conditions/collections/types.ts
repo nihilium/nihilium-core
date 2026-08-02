@@ -227,6 +227,7 @@ export type ChangedCallback = (changes: {
     data_streams?: CollectionDataStream[],
     starting_node?: CollectionNode|undefined,
     comments?: {[key: string]: string},
+    named_forks?: {[key: string]: number},
 }) => void;
 
 
@@ -268,6 +269,7 @@ export type DataStreamInput = {
 
 export type CompiledCollectionExport = {
     // 256 bits, a 1 represents a proof must be true, a 0 represents a proof must be false
+    named_forks: {[key: string]: number};
     compiled_modules: CompiledModule[][];
     user_inputs: RequiredUserInput[][];
     data_stream_inputs: DataStreamInput[][];

@@ -3,12 +3,17 @@
 /* eslint-disable */
 import type * as emailSendVerifierSol from "./EmailSendVerifier.sol";
 export type { emailSendVerifierSol };
+import type * as fixedCallProxySol from "./FixedCallProxy.sol";
+export type { fixedCallProxySol };
 import type * as poseidon2Sol from "./Poseidon2.sol";
 export type { poseidon2Sol };
 import type * as encryptProofSol from "./encrypt_proof.sol";
 export type { encryptProofSol };
+import type * as interfaces from "./interfaces";
+export type { interfaces };
 export type { AdditionProof } from "./AdditionProof";
 export type { Between } from "./Between";
+export type { DKIMRegistry } from "./DKIMRegistry";
 export type { GreaterOrEqualThen } from "./GreaterOrEqualThen";
 export type { IVerifier } from "./IVerifier";
 export type { KeccakPreImage } from "./KeccakPreImage";
@@ -22,5 +27,6 @@ export type { TopLevelMerkleProof } from "./TopLevelMerkleProof";
 export type { ValueInjection } from "./ValueInjection";
 export type { VerifyECDSA } from "./VerifyECDSA";
 export type { VerifyEDDSA } from "./VerifyEDDSA";
+export type { ZKEmailProof } from "./ZKEmailProof";
 export type { Hash_tie } from "./Hash_tie";
 export type { Opening_proof } from "./Opening_proof";

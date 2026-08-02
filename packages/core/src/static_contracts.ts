@@ -30,28 +30,28 @@ export var deployedProtocolContracts = {
   [NETWORK_IDS.CUSTOM]: {},
 }
 
-//TODO Ugly hardcode, contract is part of the nihilium-zk-email repo
-deployedProtocolContracts[NETWORK_IDS.AVAX_TESTNET]["zk_email_proof"] = {
-  address: "0x23d1CAfCBD490450176532A9437761f8A503Ff27",
-  name: "ZKEmailProof",
-  version: "1.0.0",
-  description: "A proof that a ZK Email is valid.",
-}
+// //TODO Ugly hardcode, contract is part of the nihilium-zk-email repo
+// deployedProtocolContracts[NETWORK_IDS.AVAX_TESTNET]["zk_email_proof"] = {
+//   address: "0x23d1CAfCBD490450176532A9437761f8A503Ff27",
+//   name: "ZKEmailProof",
+//   version: "1.0.0",
+//   description: "A proof that a ZK Email is valid.",
+// }
 
-deployedProtocolContracts[NETWORK_IDS.SEPOLIA]["zk_email_proof"] = {
-  address: "0xc573f97Edc6c74728d6F1596ed1412c34e2E9fF3",
-  name: "ZKEmailProof",
-  version: "1.0.0",
-  description: "A proof that a ZK Email is valid.",
-}
+// deployedProtocolContracts[NETWORK_IDS.SEPOLIA]["zk_email_proof"] = {
+//   address: "0xc573f97Edc6c74728d6F1596ed1412c34e2E9fF3",
+//   name: "ZKEmailProof",
+//   version: "1.0.0",
+//   description: "A proof that a ZK Email is valid.",
+// }
 
 
-deployedProtocolContracts[NETWORK_IDS.ANVIL]["zk_email_proof"] = {
-  address: "0x10Bbfc8340BE6eFa09753741d6b838CB495aAd4b",
-  name: "ZKEmailProof",
-  version: "1.0.0",
-  description: "A proof that a ZK Email is valid.",
-}
+// deployedProtocolContracts[NETWORK_IDS.ANVIL]["zk_email_proof"] = {
+//   address: "0x10Bbfc8340BE6eFa09753741d6b838CB495aAd4b",
+//   name: "ZKEmailProof",
+//   version: "1.0.0",
+//   description: "A proof that a ZK Email is valid.",
+// }
 
 export function toAddressMap(networkId: number): AddressMap {
   if (!deployedProtocolContracts[networkId]) {

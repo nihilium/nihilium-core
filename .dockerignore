@@ -21,7 +21,7 @@ apps/test-ui
 # IDE files (optional)
 .vscode
 .idea
-
+**/typechain-types/*
 # OS generated files
 .DS_Store
 Thumbs.db 

@@ -70,6 +70,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Between__factory>;
     getContractFactory(
+      name: "DKIMRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.DKIMRegistry__factory>;
+    getContractFactory(
       name: "BaseHonkVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseHonkVerifier__factory>;
@@ -94,6 +98,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IVerifier__factory>;
     getContractFactory(
+      name: "FixedCallProxyProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedCallProxyProof__factory>;
+    getContractFactory(
       name: "GreaterOrEqualThen",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GreaterOrEqualThen__factory>;
@@ -101,6 +109,10 @@ declare module "hardhat/types/runtime" {
       name: "Hash_tie",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Hash_tie__factory>;
+    getContractFactory(
+      name: "IDKIMRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IDKIMRegistry__factory>;
     getContractFactory(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -157,6 +169,10 @@ declare module "hardhat/types/runtime" {
       name: "VerifyEDDSA",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.VerifyEDDSA__factory>;
+    getContractFactory(
+      name: "ZKEmailProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ZKEmailProof__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -229,6 +245,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Between>;
     getContractAt(
+      name: "DKIMRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.DKIMRegistry>;
+    getContractAt(
       name: "BaseHonkVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -259,6 +280,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IVerifier>;
     getContractAt(
+      name: "FixedCallProxyProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedCallProxyProof>;
+    getContractAt(
       name: "GreaterOrEqualThen",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -268,6 +294,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Hash_tie>;
+    getContractAt(
+      name: "IDKIMRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IDKIMRegistry>;
     getContractAt(
       name: "IVerifier",
       address: string | ethers.Addressable,
@@ -338,6 +369,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.VerifyEDDSA>;
+    getContractAt(
+      name: "ZKEmailProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ZKEmailProof>;
 
     deployContract(
       name: "Ownable",
@@ -396,6 +432,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Between>;
     deployContract(
+      name: "DKIMRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.DKIMRegistry>;
+    deployContract(
       name: "BaseHonkVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseHonkVerifier>;
@@ -420,6 +460,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "FixedCallProxyProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedCallProxyProof>;
+    deployContract(
       name: "GreaterOrEqualThen",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GreaterOrEqualThen>;
@@ -427,6 +471,10 @@ declare module "hardhat/types/runtime" {
       name: "Hash_tie",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Hash_tie>;
+    deployContract(
+      name: "IDKIMRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDKIMRegistry>;
     deployContract(
       name: "IVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -483,6 +531,10 @@ declare module "hardhat/types/runtime" {
       name: "VerifyEDDSA",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.VerifyEDDSA>;
+    deployContract(
+      name: "ZKEmailProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ZKEmailProof>;
 
     deployContract(
       name: "Ownable",
@@ -555,6 +607,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Between>;
     deployContract(
+      name: "DKIMRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.DKIMRegistry>;
+    deployContract(
       name: "BaseHonkVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -585,6 +642,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IVerifier>;
     deployContract(
+      name: "FixedCallProxyProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedCallProxyProof>;
+    deployContract(
       name: "GreaterOrEqualThen",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -594,6 +656,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Hash_tie>;
+    deployContract(
+      name: "IDKIMRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDKIMRegistry>;
     deployContract(
       name: "IVerifier",
       args: any[],
@@ -664,6 +731,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.VerifyEDDSA>;
+    deployContract(
+      name: "ZKEmailProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ZKEmailProof>;
 
     // default types
     getContractFactory(

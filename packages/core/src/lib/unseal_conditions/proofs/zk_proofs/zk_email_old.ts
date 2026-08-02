@@ -9,16 +9,13 @@ import {  UnsealConditionProof } from "../types";
  */
 export const ZKEmailProof = new UnsealConditionProof({
     name: "ZKEmailProof",
-    addressMapKey: "ZKEmailProof",
-    description: "A proof that a ZK Email is valid. Calls a fixed proxy contract that host both, 1024 and 2048 bit verifiers",
+    addressMapKey: "zk_email_proof",
+    description: "A proof that a ZK Email is valid.",
     version: "1.0.0",
     public_signals: {
-        timestamp: [0, 1],
-        proof_contract: [1, 1],
-        dkim_key_hash: [2, 1],
-        domain: [3, 4],
-        from_address_hash: [7, 1],
-        subject_value: [8, 1],
+        dkim_key_hash: [0, 1],
+        subject_value: [1, 1],
+        from_address_hash: [2, 1],
     },
     complexity_score: 250_000,
 });

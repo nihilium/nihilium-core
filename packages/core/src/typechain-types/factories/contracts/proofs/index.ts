@@ -2,10 +2,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as emailSendVerifierSol from "./EmailSendVerifier.sol";
+export * as fixedCallProxySol from "./FixedCallProxy.sol";
 export * as poseidon2Sol from "./Poseidon2.sol";
 export * as encryptProofSol from "./encrypt_proof.sol";
+export * as interfaces from "./interfaces";
 export { AdditionProof__factory } from "./AdditionProof__factory";
 export { Between__factory } from "./Between__factory";
+export { DKIMRegistry__factory } from "./DKIMRegistry__factory";
 export { GreaterOrEqualThen__factory } from "./GreaterOrEqualThen__factory";
 export { IVerifier__factory } from "./IVerifier__factory";
 export { KeccakPreImage__factory } from "./KeccakPreImage__factory";
@@ -19,5 +22,6 @@ export { TopLevelMerkleProof__factory } from "./TopLevelMerkleProof__factory";
 export { ValueInjection__factory } from "./ValueInjection__factory";
 export { VerifyECDSA__factory } from "./VerifyECDSA__factory";
 export { VerifyEDDSA__factory } from "./VerifyEDDSA__factory";
+export { ZKEmailProof__factory } from "./ZKEmailProof__factory";
 export { Hash_tie__factory } from "./Hash_tie__factory";
 export { Opening_proof__factory } from "./Opening_proof__factory";

@@ -14,6 +14,10 @@ interface DeploymentData {
     [contractName: string]: DeploymentEntry;
 }
 
+interface KnownDeployedContracts {
+    [contractName: string]: string;
+}
+
 /**
  * Same contract set as deploy_static.ts. `contract` is the Hardhat FQN used for verification.
  */
@@ -24,7 +28,8 @@ const CONTRACTS: {
     getConstructorArgs?: (
         address: string,
         deployments: DeploymentData,
-        provider: ethersjs.Provider
+        provider: ethersjs.Provider,
+        getKnownDeployedContracts: () => KnownDeployedContracts
     ) => Promise<any[]>;
 }[] = [
     { name: "TopLevelMerkleProof", contract: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
@@ -41,7 +46,28 @@ const CONTRACTS: {
     { name: "Poseidon2Verifier", contract: "contracts/proofs/Poseidon2.sol:Poseidon2Verifier" },
     { name: "opening_proof", contract: "contracts/proofs/opening_proof.sol:opening_proof" },
     { name: "hash_tie", contract: "contracts/proofs/hash_tie.sol:hash_tie" },
-    { name: "zk_email_proof", contract: "contracts/proofs/EmailSendVerifier.sol:email_send_no_body" },
+    {
+        name: "ZKEmailProof",
+        contract: "contracts/proofs/ZKEmailProof.sol:ZKEmailProof",
+        // Mirrors deploy_static.ts `fixedCallProxyConfigs`: the constructor addresses are
+        // resolved from known_deployed_contracts-<chainId>.json by name.
+        // constructor(address[] _contracts, DKIMRegistry _registry)
+        getConstructorArgs: async (_address, _deployments, _provider, getKnownDeployedContracts) => {
+            const known = getKnownDeployedContracts();
+            const resolve = (contractName: string): string => {
+                const addr = known[contractName];
+                if (!addr) {
+                    throw new Error(
+                        `Contract ${contractName} not found in known_deployed_contracts JSON`
+                    );
+                }
+                return addr;
+            };
+            const contracts = [resolve("zk_email_proof_1024"), resolve("zk_email_proof_2048")];
+            const registry = resolve("zk_email_registry");
+            return [contracts, registry];
+        },
+    },
     {
         name: "EmpheralDualMerkleTreeKeccak",
         contract: "contracts/EmpheralDualMerkleTreeKeccak.sol:EmpheralDualMerkleTreeKeccak",
@@ -114,6 +140,14 @@ function loadDeployments(chainId: string): DeploymentData {
     return JSON.parse(fs.readFileSync(deploymentPath, "utf-8"));
 }
 
+function loadKnownDeployedContracts(chainId: string): KnownDeployedContracts {
+    const knownPath = path.join(__dirname, `known_deployed_contracts-${chainId}.json`);
+    if (!fs.existsSync(knownPath)) {
+        throw new Error(`Known deployed contracts file not found: ${knownPath}`);
+    }
+    return JSON.parse(fs.readFileSync(knownPath, "utf-8"));
+}
+
 function isAlreadyVerified(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     return /already verified/i.test(message);
@@ -176,6 +210,16 @@ async function main() {
     const deployments = loadDeployments(String(expectedChainId));
     const provider = new ethersjs.JsonRpcProvider(networkConfig.url, expectedChainId);
 
+    // Lazily loaded so the known-contracts file is only required when a contract
+    // (e.g. ZKEmailProof) actually needs it to resolve constructor args.
+    let knownDeployedContractsCache: KnownDeployedContracts | null = null;
+    const getKnownDeployedContracts = (): KnownDeployedContracts => {
+        if (!knownDeployedContractsCache) {
+            knownDeployedContractsCache = loadKnownDeployedContracts(String(expectedChainId));
+        }
+        return knownDeployedContractsCache;
+    };
+
     // Optional filter: VERIFY_ONLY=ChainedProofV2,opening_proof
     const onlyFilter = process.env.VERIFY_ONLY
         ? new Set(process.env.VERIFY_ONLY.split(",").map((s) => s.trim()).filter(Boolean))
@@ -196,7 +240,7 @@ async function main() {
         }
 
         const constructorArguments = config.getConstructorArgs
-            ? await config.getConstructorArgs(entry.address, deployments, provider)
+            ? await config.getConstructorArgs(entry.address, deployments, provider, getKnownDeployedContracts)
             : [];
 
         if (constructorArguments.length > 0) {

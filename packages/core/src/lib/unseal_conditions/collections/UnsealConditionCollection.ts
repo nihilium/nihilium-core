@@ -20,7 +20,8 @@ export class UnsealConditionCollection {
     public starting_node: CollectionNode|undefined = undefined;
     public proofLibrary: ProofLibraryType;
     public moduleLibrary: ModuleLibraryType;
-    public forks: {[key: string]: string[]} = {};//NodeID -> ForkedNodeIDs
+    public forks: {[key: string]: string[]} = {};//ForkID -> Name
+    public named_forks: {[key: string]: number} = {};//ForkName -> ForkID
     public fork_list: string[] = [];
     private node_to_fork_map: {[key: string]: string} = {};
     private index_counter = 0;
@@ -351,6 +352,24 @@ It then returns the list
         });
     }
 
+    set_named_fork(fork_id: number, fork_name: string): void {
+        this.named_forks[fork_name] = fork_id;
+        this.changed_callback({
+            action: ChangedType.added,
+            named_forks: {[fork_name]: fork_id},
+        });
+    }
+    get_named_fork(fork_name: string): number {
+        return this.named_forks[fork_name];
+    }
+    all_forks_named(): boolean {
+        return Object.keys(this.named_forks).length > 0;
+    }
+    all_named_forks(): string[] {
+        return Object.keys(this.named_forks);
+    }
+  
+
     export_to_json(): any {
         return {
             name: this.name,
@@ -364,6 +383,7 @@ It then returns the list
             node_to_fork_map: this.node_to_fork_map,
             index_counter: this.index_counter,
             comments: this.comments,
+            named_forks: this.named_forks,
         };
     }
 
@@ -371,7 +391,7 @@ It then returns the list
         
         this.name = data.name;
         this.description = data.description;
-        
+        this.named_forks = data.named_forks || {};
         for(var node of data.nodes) {
             this.nodes[node.node_id] = import_collectionnode_from_json(node, this.moduleLibrary, this.proofLibrary);
         }
@@ -386,6 +406,7 @@ It then returns the list
             var t_ds = new CollectionDataStream(data_stream.datastream_id, from_node, data_stream.field_name);
             this.data_streams.push(t_ds);
         }
+        this.named_forks = data.named_forks || {};
         this.forks = data.forks;
         this.fork_list = data.fork_list;
         this.node_to_fork_map = data.node_to_fork_map;
@@ -458,7 +479,9 @@ It then returns the list
         
     }
     createTemplate(address_map: AddressMap): UnsealConditionTemplate {
-        
+        if(this.fork_list.length > 1 && !this.all_forks_named()) {
+            throw new Error("All forks must be named, format is named_forks: {[fork_name: fork_nr]}");
+        }
         var compiled_modules: CompiledModule[][] = [];
         var user_inputs: RequiredUserInput[][] = [];
         var data_stream_inputs: DataStreamInput[][] = [];
@@ -474,6 +497,7 @@ It then returns the list
         }
       
         var toReturn = new UnsealConditionTemplate(this.name, this.description, this.proofLibrary, this.moduleLibrary, {
+            named_forks: this.named_forks,
             compiled_modules: compiled_modules,
             user_inputs: user_inputs,
             data_stream_inputs: data_stream_inputs,

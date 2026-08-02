@@ -273,7 +273,7 @@ export class NihiliumUnsealingClient {
      * merkle round for all k, so they all become provable together (only the first
      * await_reveal_value_to_be_provable pays the publishing-interval wait).
      */
-    private async publish_reveal_values(dataStreamId: string): Promise<void> {
+    protected async publish_reveal_values(dataStreamId: string): Promise<void> {
         if (this.state!.reveal_published) {
             return;
         }

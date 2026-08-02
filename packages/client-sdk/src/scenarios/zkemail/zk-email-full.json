@@ -1,0 +1,72 @@
+{
+  "name": "My Unseal Conditions",
+  "description": "Visual editor for unseal conditions",
+  "starting_node": "UnsealOpeningModule_0",
+  "nodes": [
+    {
+      "node_id": "UnsealOpeningModule_0",
+      "module_name": "UnsealOpeningModule",
+      "public_inputs": []
+    },
+    {
+      "node_id": "HashTieModule_1",
+      "module_name": "HashTieModule",
+      "public_inputs": []
+    },
+    {
+      "node_id": "ZKEmailModule_2",
+      "module_name": "ZKEmailModule",
+      "public_inputs": []
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "UnsealOpeningModule_0_ZKEmailModule_2_timestamp_timeStamp",
+      "from_node_id": "UnsealOpeningModule_0",
+      "to_node_id": "ZKEmailModule_2",
+      "mapping": [
+        "timestamp",
+        "timeStamp"
+      ],
+      "input_type": "signal_pass"
+    },
+    {
+      "edge_id": "UnsealOpeningModule_0_HashTieModule_1_reveal_value_tied_value",
+      "from_node_id": "UnsealOpeningModule_0",
+      "to_node_id": "HashTieModule_1",
+      "mapping": [
+        "reveal_value",
+        "tied_value"
+      ],
+      "input_type": "signal_pass"
+    },
+    {
+      "edge_id": "HashTieModule_1_ZKEmailModule_2_tied_hash_subject_value",
+      "from_node_id": "HashTieModule_1",
+      "to_node_id": "ZKEmailModule_2",
+      "mapping": [
+        "tied_hash",
+        "subject_value"
+      ],
+      "input_type": "signal_pass"
+    }
+  ],
+  "data_streams": [],
+  "forks": {
+    "root": [
+      "UnsealOpeningModule_0",
+      "HashTieModule_1",
+      "ZKEmailModule_2"
+    ]
+  },
+  "fork_list": [
+    "root"
+  ],
+  "node_to_fork_map": {
+    "UnsealOpeningModule_0": "root",
+    "HashTieModule_1": "root",
+    "ZKEmailModule_2": "root"
+  },
+  "index_counter": 3,
+  "comments": {}
+}

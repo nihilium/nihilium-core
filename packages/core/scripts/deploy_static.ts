@@ -34,6 +34,7 @@ async function deployContract(
     deployer: ethersjs.Wallet,
     gasPrice: bigint,
     nonce: number,
+    // Constructor arguments
     ...args: any[]
 ): Promise<DeployedContract> {
     console.log(`Deploying ${contractName}...`);
@@ -97,12 +98,14 @@ function getContractABI(contractPath: string): any[] {
 }
 
 // Helper to load existing deployment data
-function loadExistingDeployments(chainId: string): { deploymentData: DeploymentData; bytecodeMap: BytecodeMap } {
+function loadExistingDeployments(chainId: string): { deploymentData: DeploymentData; bytecodeMap: BytecodeMap; knownDeployedContracts: { [name: string]: string } } {
     const deploymentFilename = `deployed-contracts-${chainId}.json`;
     const deploymentByteCodeFilename = `deployed-contracts-bytecode-${chainId}.json`;
+    const knownDeployedContractsFilename = `known_deployed_contracts-${chainId}.json`;
     const deploymentPath = path.join(__dirname, deploymentFilename);
     const deploymentByteCodePath = path.join(__dirname, deploymentByteCodeFilename);
-
+    const knownDeployedContractsPath = path.join(__dirname, knownDeployedContractsFilename);
+    const knownDeployedContracts: { [name: string]: string } = JSON.parse(fs.readFileSync(knownDeployedContractsPath, "utf-8"));
     const deploymentData: DeploymentData = {};
     const bytecodeMap: BytecodeMap = {};
 
@@ -135,11 +138,11 @@ function loadExistingDeployments(chainId: string): { deploymentData: DeploymentD
         }
 
         console.log(`Loaded existing deployments for chain ${chainId}`);
-        return { deploymentData, bytecodeMap };
+        return { deploymentData, bytecodeMap, knownDeployedContracts };
     }
 
     console.log(`No existing deployments found for chain ${chainId}`);
-    return { deploymentData, bytecodeMap };
+    return { deploymentData, bytecodeMap, knownDeployedContracts };
 }
 
 // Helper to check if contract needs redeployment
@@ -232,7 +235,7 @@ async function main() {
     console.log("Compilation complete.");
 
     // Load existing deployments
-    const { deploymentData: existingDeployments, bytecodeMap: existingBytecodeMap } = loadExistingDeployments(chainId.toString());
+    const { deploymentData: existingDeployments, bytecodeMap: existingBytecodeMap, knownDeployedContracts } = loadExistingDeployments(chainId.toString());
     const deploymentData: DeploymentData = { ...existingDeployments };
     const bytecodeMap: BytecodeMap = { ...existingBytecodeMap };
     //TimeDelayProof
@@ -260,7 +263,19 @@ async function main() {
         // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
         { name: "opening_proof", artifactPath: "contracts/proofs/opening_proof.sol/opening_proof", contractPath: "contracts/proofs/opening_proof.sol:opening_proof" },
         { name: "hash_tie", artifactPath: "contracts/proofs/hash_tie.sol/hash_tie", contractPath: "contracts/proofs/hash_tie.sol:hash_tie" },
-        { name: "zk_email_proof", artifactPath: "contracts/proofs/EmailSendVerifier.sol/email_send_no_body", contractPath: "contracts/proofs/EmailSendVerifier.sol:email_send_no_body" },
+        //{ name: "zk_email_proof", artifactPath: "contracts/proofs/EmailSendVerifier.sol/email_send_no_body", contractPath: "contracts/proofs/EmailSendVerifier.sol:email_send_no_body" },
+        // { name: "IsInListProof", artifactPath: "contracts/proofs/IsInList.sol/IsInListProof", contractPath: "contracts/proofs/IsInList.sol:IsInListProof" },
+        // { name: "DynamicCallProxyProof", artifactPath: "contracts/proofs/DynamicCallProxy.sol/DynamicCallProxyProof", contractPath: "contracts/proofs/DynamicCallProxy.sol:DynamicCallProxyProof" },
+    ];
+
+    const fixedCallProxyConfigs = [
+        { name: "ZKEmailProof", 
+            artifactPath: "contracts/proofs/ZKEmailProof.sol/ZKEmailProof", 
+            contractPath: "contracts/proofs/ZKEmailProof.sol:ZKEmailProof",
+            //Todo name the contracts references from the known_deployed_contracts.json file.
+            //Or prefix SELECT:name from the list above
+        _contracts: ["zk_email_proof_1024", "zk_email_proof_2048"],
+        _registry: knownDeployedContracts["zk_email_registry"] },
     ];
 
     const verifierAddresses: { [name: string]: string } = {};
@@ -289,6 +304,40 @@ async function main() {
                 saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
             }
             verifierAddresses[config.name] = existing.address;
+        }
+    }
+//Little ugly, TODO this is now specific to ZKEmail, consider separting it out and leaving the generirc construct
+    for (const config of fixedCallProxyConfigs) {
+        const contracts: string[] = [];
+        for (const contract of config._contracts) {
+            if(contract.startsWith("SELECT:")) {
+                const contractName = contract.split(":")[1];
+                if(!verifierAddresses[contractName]) {
+                    throw new Error(`Contract ${contractName} not found in verifierAddresses`);
+                }
+                contracts.push(verifierAddresses[contractName]);
+            } else {
+                if(!knownDeployedContracts[contract]) {
+                    throw new Error(`Contract ${contract} not found in known_deployed_contracts.json`);
+                }
+                contracts.push(knownDeployedContracts[contract]);
+            }
+        }
+        config._contracts = contracts;
+
+        const contractBytecode = getContractBytecode(config.artifactPath);
+        if (needsRedeployment(config.name, contractBytecode, existingDeployments, existingBytecodeMap)) {
+            const fixedCallProxy = await deployContract(config.name, config.contractPath, wallet, gasPrice, nonce, 
+                config._contracts, config._registry);
+            deploymentData[fixedCallProxy.name] = {
+                address: fixedCallProxy.address,
+                abi: fixedCallProxy.abi
+            };
+            bytecodeMap[fixedCallProxy.name] = fixedCallProxy.bytecode;
+            verifierAddresses[config.name] = fixedCallProxy.address;
+            nonce++;
+            // Save state after successful deployment
+            saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
         }
     }
 

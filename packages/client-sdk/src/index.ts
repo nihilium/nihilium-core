@@ -11,8 +11,8 @@ export { NihiliumClient } from './client';
 export type { EndpointFilter, NihiliumClientOptions } from './client';
 
 // Use-case-focused unseal scenarios (built on @nihilium/core's NihiliumUnsealingClient mechanism).
-export { ZKEmailUnsealingClient, ZKEmailRecoveryStatus } from './scenarios/zkemail_unsealing_client';
-export type { ZKEmailUnsealingOptions, FetchLike } from './scenarios/zkemail_unsealing_client';
+export { ZKEmailUnsealingClient, ZKEmailRecoveryStatus } from './scenarios/zkemail/zkemail_unsealing_client';
+export type { ZKEmailUnsealingOptions, FetchLike } from './scenarios/zkemail/zkemail_unsealing_client';
 
 export const cryptoTools = nhsdk.cryptoTools;
 

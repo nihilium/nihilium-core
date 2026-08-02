@@ -17,8 +17,6 @@ import { ProofLibraryType } from "../../proofs";
 import { SmallerThanProof } from "../../proofs/lib/004_smaller_than";
 import { GreaterOrEqualThenProof } from "../../proofs/lib/005_greater_or_equal";
 import { TimeDelayProof } from "../../proofs/lib/006_time_delay";
-import { timeStamp } from "console";
-import { AddressMap } from "../../collections/types";
 
 
 
@@ -43,8 +41,6 @@ export class ZKEmailModule extends UnsealConditionModule {
             this.description = `
                 This module is used to validate a ZK Email.
                 This module validates an email address and the content of the email header.
-                Supports both 1024-bit and 2048-bit RSA DKIM keys.
-                And on-chain verification of the hash of the DKIM key.
                 
             `;
         this.inputs = {
@@ -55,12 +51,12 @@ export class ZKEmailModule extends UnsealConditionModule {
             //     description: "A simple link to define ordering",
             //     required: true
             // },
-            timeStamp: {
-                type_order: ["Timestamp"],
-                user_input: false,
-                description: "The timestamp to check against the registry",
-                required: true
-            },
+            // dkim_key_hash: {
+            //     type_order: ["String"],
+            //     user_input: false,
+            //     description: "The hash of the public key",
+            //     required: false
+            // },
             email_address_hash: {
                 type_order: ["String"],
                 user_input: true,
@@ -78,10 +74,9 @@ export class ZKEmailModule extends UnsealConditionModule {
         
         
         
-        var zk_email_proof = proofLibrary.getProof("ZKEmailProof");
+        var zk_email_proof = proofLibrary.getProof("zk_email_proof");
         
         var zk_email_proof_id = this.addProof(zk_email_proof);
-        this.addSignalEdge(undefined, zk_email_proof_id, ["timestamp", "timestamp"], ModuleEdgeInput.external_input);      
         this.addSignalEdge(undefined, zk_email_proof_id, ["email_address_hash", "from_address_hash"], ModuleEdgeInput.user_input);      
         this.addSignalEdge(undefined, zk_email_proof_id, ["subject_value", "subject_value"], ModuleEdgeInput.external_input);      
     
@@ -111,14 +106,9 @@ export class ZKEmailModule extends UnsealConditionModule {
     }
   
 
-    async produce_proofs(inputs: ZKEmailIntegratedInputs): Promise<ModuleProof> {
-        var return_proofs = [inputs.proof];
-        
-        var proof_address = inputs.address_map.getAddress(inputs.proof_type === "RSA1024" ? "zk_email_proof_1024" : "zk_email_proof_2048");
-        var timestamp_and_proof_address = [toPaddedHex(BigInt(inputs.timestamp)), proof_address];
-        var hexed_inputs = inputs.publicSignals.map(input => toPaddedHex(BigInt(input)));
-
-        var return_public_inputs = [[...timestamp_and_proof_address, ...hexed_inputs]];
+    async produce_proofs(proof_hex: string, public_inputs: any[]): Promise<ModuleProof> {
+        var return_proofs = [proof_hex];
+        var return_public_inputs = [public_inputs.map(input => toPaddedHex(BigInt(input)))];
 
         return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: this.obtain_outputs(return_public_inputs)}
 
@@ -137,19 +127,11 @@ export class ZKEmailModule extends UnsealConditionModule {
         };
     }
 
-    override async produce(_ctx: ProofProductionContext, inputs: ZKEmailIntegratedInputs): Promise<ModuleProof> {
-        return this.produce_proofs(inputs);
+    override async produce(_ctx: ProofProductionContext, inputs: { proof: string; publicSignals: any[] }): Promise<ModuleProof> {
+        return this.produce_proofs(inputs.proof, inputs.publicSignals);
     }
 
     
 
     
-}
-
-type ZKEmailIntegratedInputs = {
-    proof: string;
-    publicSignals: any[];
-    address_map: AddressMap;
-    timestamp: number;
-    proof_type: String;
 }
