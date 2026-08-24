@@ -1,7 +1,10 @@
-import { NihiliumSeal, ProcessorEndpoint } from "../../types/protocol/common";
+import { NihiliumSeal, ProcessorEndpoint, VaultEncryptedBlob } from "../../types/protocol/common";
+import { decryptFromVault, decryptFromVaultToString } from "../vault/vault_crypto";
 import { IDualDataStream } from "../data_stream/types";
 import { ClientSingleShareUnsealingProcess } from "./client_single_share_unsealing";
 import { UnsealConditionCollection } from "../unseal_conditions/collections/UnsealConditionCollection";
+import { AddressMap } from "../unseal_conditions/collections/types";
+import { toAddressMap } from "../../static_contracts";
 import { from_json } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { UnsealPathProducer, UnsealResolvers, UnsealModuleEvent } from "../unseal_conditions/UnsealPathProducer";
 import { StandardProofLibrary, ProofLibraryType } from "../unseal_conditions/proofs";
@@ -22,18 +25,35 @@ export { NihiliumUnsealingStatus } from "./types";
 
 const UNSEALING_STATE_VERSION = 1;
 
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export type NihiliumUnsealingClientOptions = {
     /** The collection used at seal time; functionally unused by the unseal flow, so optional. */
     collection?: UnsealConditionCollection;
     proofLibrary?: ProofLibraryType;
     moduleLibrary?: ModuleLibraryType;
     store?: UnsealingStateStore;
+    /**
+     * Contract addresses modules may need while producing proofs — e.g. ZKEmail names the RSA
+     * verifier it used in a public signal. Defaults to the deployed + known contracts of `network`.
+     */
+    address_map?: AddressMap;
+    /** Network to resolve `address_map` from when one is not passed explicitly. */
+    network?: number;
 };
 
 export type StartUnsealingOptions = {
     dataStreamId?: string;
     proofIndex?: number;
     resolvers?: UnsealResolvers;
+    /**
+     * Re-publish all k reveal values as one fresh batch before proving, and build every opening proof
+     * from that round. Use when the values were anchored in different rounds (so the k opening proofs
+     * disagree on "now") — waitForProvingTimestamp() does this by itself when it detects the split.
+     */
+    republish?: boolean;
     /**
      * Preselected, already-produced module proofs keyed by module_id, used in place of producing them
      * (e.g. a shared ZKEmail proof the caller made ahead of time). Merged into the shared proof cache;
@@ -63,6 +83,7 @@ export class NihiliumUnsealingClient {
     protected proofLibrary: ProofLibraryType;
     protected moduleLibrary: ModuleLibraryType;
     protected store: UnsealingStateStore;
+    protected address_map?: AddressMap;
     protected status: NihiliumUnsealingStatus;
     protected state?: SerializedUnsealingState;
     protected storage_key?: string;
@@ -81,6 +102,7 @@ export class NihiliumUnsealingClient {
         this.proofLibrary = opts.proofLibrary ?? new StandardProofLibrary();
         this.moduleLibrary = opts.moduleLibrary ?? new StandardModuleLibrary();
         this.store = opts.store ?? defaultUnsealingStateStore();
+        this.address_map = opts.address_map ?? (opts.network !== undefined ? toAddressMap(opts.network) : undefined);
         this.status = NihiliumUnsealingStatus.Ready_to_unseal;
     }
 
@@ -108,12 +130,30 @@ export class NihiliumUnsealingClient {
         return this.status === NihiliumUnsealingStatus.Unsealed;
     }
 
-    /** The recovered secret. Throws until unsealing is complete. */
+    /** The recovered secret — the vault private key. Throws until unsealing is complete. */
     get_secret(): bigint {
         if (this.status !== NihiliumUnsealingStatus.Unsealed || !this.state?.secret) {
             throw new Error("Secret is not recovered yet");
         }
         return BigInt(this.state.secret);
+    }
+
+    /**
+     * The recovered vault private key — the counterpart of the seal's vault_public_key, and what every
+     * blob encrypted to this vault needs. Same value as get_secret(), named for what it is.
+     */
+    get_vault_private_key(): bigint {
+        return this.get_secret();
+    }
+
+    /** Decrypt a blob that was encrypted to this seal's vault public key. Requires a finished unseal. */
+    async decrypt_vault_blob(blob: VaultEncryptedBlob): Promise<Uint8Array> {
+        return decryptFromVault(this.get_vault_private_key(), blob);
+    }
+
+    /** decrypt_vault_blob for data that was encrypted from a string. */
+    async decrypt_vault_blob_to_string(blob: VaultEncryptedBlob): Promise<string> {
+        return decryptFromVaultToString(this.get_vault_private_key(), blob);
     }
 
     /**
@@ -163,7 +203,11 @@ export class NihiliumUnsealingClient {
 
         try {
             // Phase 1: publish the k reveal values directly to the data stream, batched into one round.
-            await this.publish_reveal_values(dataStreamId);
+            if (opts.republish && !this.state.republished) {
+                await this.republish_reveal_values(dataStreamId);
+            } else {
+                await this.publish_reveal_values(dataStreamId);
+            }
 
             // Scenario hook: any setup a subclass needs before producing proofs (e.g. the ZKEmail client
             // generates its hash-tie preimage and drives the recovery-email exchange here). No-op by default.
@@ -278,12 +322,11 @@ export class NihiliumUnsealingClient {
             return;
         }
         this.set_status(NihiliumUnsealingStatus.Publishing_reveal_values);
-        const dataStream = this.dataStreams.find((ds) => ds.getAddress() === dataStreamId) ?? this.dataStreams[0];
+        const dataStream = this.resolve_data_stream(dataStreamId);
 
         const toPost: string[] = [];
         for (const rec of this.state!.per_processor) {
-            const pkg = this.seal.packages[rec.processor_index];
-            const revealValue = BigInt(pkg.public_package.reveal_value).toString();
+            const revealValue = this.reveal_value_of(rec);
             if (!(await dataStream.isProvable(revealValue))) {
                 toPost.push(revealValue);
             }
@@ -293,6 +336,108 @@ export class NihiliumUnsealingClient {
         }
         this.state!.reveal_published = true;
         await this.persist();
+    }
+
+    /**
+     * Post all k reveal values again as one batch and pin every subsequent proof to that round.
+     *
+     * Publishing a value twice is harmless — the data stream keeps returning the earliest publication
+     * to anyone who does not ask for a later one — so this only affects THIS unseal, via the
+     * `from_timestamp` watermark it records. The watermark comes from the stream's last anchored round
+     * rather than the local clock, because it is compared against block timestamps.
+     *
+     * Note the k opening proofs will now anchor at the re-batched time, which is later than the
+     * original publication: a time-delay condition in the same path measures from the newer round.
+     */
+    protected async republish_reveal_values(dataStreamId?: string): Promise<number> {
+        this.set_status(NihiliumUnsealingStatus.Publishing_reveal_values);
+        const dataStream = this.resolve_data_stream(dataStreamId ?? this.state!.data_stream_id);
+
+        let watermark = 0;
+        try {
+            watermark = parseInt((await dataStream.getLatestGlobalLeafProof()).timestamp) || 0;
+        } catch {
+            // A stream with no anchored round yet has nothing to exclude; 0 keeps every round eligible.
+        }
+        const from = watermark + 1;
+
+        const values = this.state!.per_processor.map((rec) => this.reveal_value_of(rec));
+        await dataStream.postData(values);
+        this.state!.from_timestamp = from;
+        this.state!.republished = true;
+        this.state!.reveal_published = true;
+        // Whatever "now" was before belonged to the old round.
+        this.state!.proving_timestamp = undefined;
+        await this.persist();
+
+        for (const value of values) {
+            while (!(await dataStream.isProvable(value, from))) {
+                await sleep(1000);
+            }
+        }
+        return from;
+    }
+
+    /**
+     * The single timestamp all k processors prove against — "now" from a proving perspective. Every
+     * timestamp a module writes into a public signal must be this value, because the chain substitutes
+     * the opening module's timestamp output into those signals at verify time.
+     *
+     * Waits for the reveal values to be provable, then reads the anchoring timestamp of each. If they
+     * disagree (the values were anchored in different rounds) the batch is re-published once so they
+     * share a round; a second disagreement throws rather than silently picking one.
+     *
+     * Resolved once and persisted, so a resume proves against the same instant.
+     */
+    async waitForProvingTimestamp(): Promise<number> {
+        if (!this.state) {
+            throw new Error("No unsealing state; call start_unsealing first");
+        }
+        if (this.state.proving_timestamp !== undefined) {
+            return this.state.proving_timestamp;
+        }
+
+        let timestamps = await this.collect_reveal_timestamps();
+        if (new Set(timestamps).size > 1 && !this.state.republished) {
+            await this.republish_reveal_values(this.state.data_stream_id);
+            timestamps = await this.collect_reveal_timestamps();
+        }
+        if (new Set(timestamps).size > 1) {
+            throw new Error(
+                `The reveal values are anchored at different timestamps (${timestamps.join(", ")}) even after ` +
+                `re-publishing them as one batch, so there is no single proving timestamp`,
+            );
+        }
+        if (timestamps.length === 0) {
+            throw new Error("No processors selected for this unseal, so there is no proving timestamp");
+        }
+
+        this.state.proving_timestamp = timestamps[0];
+        await this.persist();
+        return timestamps[0];
+    }
+
+    /** Anchoring timestamp of each chosen processor's reveal value, waiting for each to be provable. */
+    private async collect_reveal_timestamps(): Promise<number[]> {
+        const dataStream = this.resolve_data_stream(this.state!.data_stream_id);
+        const from = this.state!.from_timestamp ?? 0;
+        const timestamps: number[] = [];
+        for (const rec of this.state!.per_processor) {
+            const value = this.reveal_value_of(rec);
+            while (!(await dataStream.isProvable(value, from))) {
+                await sleep(1000);
+            }
+            timestamps.push(parseInt((await dataStream.getProof(value, from)).timestamp));
+        }
+        return timestamps;
+    }
+
+    private resolve_data_stream(dataStreamId?: string): IDualDataStream {
+        return this.dataStreams.find((ds) => ds.getAddress() === dataStreamId) ?? this.dataStreams[0];
+    }
+
+    private reveal_value_of(rec: ProcessorUnsealRecord): string {
+        return BigInt(this.seal.packages[rec.processor_index].public_package.reveal_value).toString();
     }
 
     /**
@@ -324,7 +469,9 @@ export class NihiliumUnsealingClient {
         });
         // Reveal value already batch-published; poll until provable (advances the single-share to
         // REVEAL_VALUE_EXPOSED, which get_unseal_request requires) without going through publish_reveal_value.
-        await transport.await_reveal_value_to_be_provable();
+        // Pinned to the same publication the proofs are built from, so a re-batched value is not
+        // reported provable off its older round.
+        await transport.await_reveal_value_to_be_provable(undefined, this.state?.from_timestamp ?? 0);
 
         // Produce this processor's path: shared modules hit the memo (produced once, on the first
         // processor), per-processor modules produce fresh. Newly-produced shared modules are harvested
@@ -332,7 +479,15 @@ export class NihiliumUnsealingClient {
         const callMemo: { [module_id: string]: ModuleProof } = { ...sharedMemo };
         const { proofs, public_inputs } = await producer.produce(
             proofIndex,
-            { dataStreams: this.dataStreams, processor: this.processors[rec.processor_index], seal: pkg, upstream: {} },
+            {
+                dataStreams: this.dataStreams,
+                processor: this.processors[rec.processor_index],
+                seal: pkg,
+                upstream: {},
+                timestamp: this.state?.proving_timestamp,
+                from_timestamp: this.state?.from_timestamp,
+                address_map: this.address_map,
+            },
             resolvers ?? {},
             callMemo,
         );

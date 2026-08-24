@@ -24,7 +24,8 @@ import {
     InMemoryUnsealingStateStore,
     hashRequestBody,
 } from "../src/lib/client";
-import { ProcessorEndpoint, PROTOCOL_PROCESSOR_PATHS, SingleSealRequest, SingleUnsealRequest } from "../src/types/protocol/common";
+import { ProcessorEndpoint, PROTOCOL_PROCESSOR_PATHS, SingleSealRequest, SingleUnsealRequest, VaultPublicKey } from "../src/types/protocol/common";
+import { encryptForVault, vaultPublicKeyFor } from "../src/lib/vault/vault_crypto";
 import { ethers } from "hardhat";
 import { Signer } from "ethers";
 import { IDataStreamPersistence } from "../src/lib/persistence/types";
@@ -54,7 +55,7 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
     let signers: Signer[];
 
     // A seal produced once and reused by the unseal tests (each seal is 3 real ZK proofs).
-    let sharedSecret: bigint;
+    let sharedVaultPublicKey: VaultPublicKey;
     let sharedSeal: NihiliumSeal;
 
     // Count of paid seal POSTs dispatched (proxy for processor charges).
@@ -183,7 +184,6 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
     }
 
     it("seals across N processors and produces one C(N,K) fdt_seal", async () => {
-        const secret = cryptoTools.generateRandom248BitNumber();
         const metadata_root = cryptoTools.generateRandom248BitNumber();
 
         const client = makeClient();
@@ -192,7 +192,7 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
         // Pass a bigint template input (field elements are bigints, e.g. email_address_hash) to exercise
         // the state/storage-key serialization path — this used to throw "Do not know how to serialize a BigInt".
         const seal = await client.start_sealing(
-            secret, metadata_root,
+            metadata_root,
             { debug_bigint_input: 987654321987654321987654321n },
             { datastream: data_stream.getAddress() },
         );
@@ -206,10 +206,14 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
         expect(seal.fdt_seal.threshold).to.equal(K);
         expect(seal.fdt_seal.m).to.equal(M);
         expect(Object.keys(seal.fdt_seal.combinations).length).to.equal(binomial(N, K));
+
+        // Sealing now yields a vault keypair: the public half is published on the seal and the private
+        // half is what the threshold protects (the unseal round-trip below proves they match).
+        expect(seal.vault_public_key).to.not.equal(undefined);
+        expect(client.get_vault_public_key()).to.deep.equal(seal.vault_public_key);
     });
 
     it("resumes after a crash during proving without re-charging the processor", async () => {
-        const secret = cryptoTools.generateRandom248BitNumber();
         const metadata_root = cryptoTools.generateRandom248BitNumber();
         const store = new InMemorySealingStateStore(); // shared across both client instances
         const mapping = { datastream: data_stream.getAddress() };
@@ -230,7 +234,7 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
         try {
             const clientA = makeClient();
             clientA.set_state_store(store);
-            await expect(clientA.start_sealing(secret, metadata_root, {}, mapping)).to.be.rejectedWith("simulated proof crash");
+            await expect(clientA.start_sealing(metadata_root, {}, mapping)).to.be.rejectedWith("simulated proof crash");
             expect(clientA.get_status()).to.equal(NihiliumSealingStatus.Failed);
 
             // The first processor was paid and its response persisted, awaiting the proof.
@@ -250,10 +254,13 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
             const postsAfterCrash = sealPostCount;
             const clientB = makeClient();
             clientB.set_state_store(store);
-            const seal = await clientB.start_sealing(secret, metadata_root, {}, mapping);
+            const seal = await clientB.start_sealing(metadata_root, {}, mapping);
 
             expect(clientB.is_done()).to.equal(true);
             expect(seal.packages.length).to.equal(N);
+            // The resume must seal the SAME vault key it started with — a regenerated one would leave
+            // the published public key pointing at a key nobody can recover.
+            expect(seal.vault_public_key).to.deep.equal(saved!.vault_public_key);
             // The already-responded processor is NOT re-POSTed: total POSTs == N (1 pre-crash + N-1 on resume).
             expect(sealPostCount - countBefore).to.equal(N);
             // and the resume itself only POSTed the N-1 not-yet-responded processors.
@@ -273,25 +280,41 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
     }
 
     before(async () => {
-        sharedSecret = cryptoTools.generateRandom248BitNumber();
         const metadata_root = cryptoTools.generateRandom248BitNumber();
         const sealingClient = makeClient();
         sealingClient.set_state_store(new InMemorySealingStateStore());
         // Omit the data-stream mapping to exercise auto-derivation (the reveal-only template has a
         // single datastream input); the unseal round-trip below verifies it end-to-end.
-        sharedSeal = await sealingClient.start_sealing(sharedSecret, metadata_root);
+        sharedSeal = await sealingClient.start_sealing(metadata_root);
+        // The vault private key is never handed back, so the expectation is derived from the published
+        // public key: whatever the unseal recovers must be the scalar behind it.
+        sharedVaultPublicKey = sealingClient.get_vault_public_key();
     });
 
-    it("recovers the secret via NihiliumUnsealingClient (K-of-N threshold, fdt_seal)", async () => {
+    it("recovers the vault key via NihiliumUnsealingClient (K-of-N threshold, fdt_seal)", async () => {
         const client = makeUnsealingClient(sharedSeal);
         client.set_state_store(new InMemoryUnsealingStateStore());
 
         const recovered = await client.start_unsealing([0, 1]);
 
-        expect(recovered).to.equal(sharedSecret);
+        // The recovered scalar is the vault private key: it must be the discrete log of the public key
+        // the seal published, which is what makes blobs encrypted to that key decryptable.
+        expect(vaultPublicKeyFor(recovered)).to.deep.equal(sharedVaultPublicKey);
+        expect(sharedSeal.vault_public_key).to.deep.equal(sharedVaultPublicKey);
         expect(client.is_done()).to.equal(true);
         expect(client.get_status()).to.equal(NihiliumUnsealingStatus.Unsealed);
-        expect(client.get_secret()).to.equal(sharedSecret);
+        expect(client.get_vault_private_key()).to.equal(recovered);
+    });
+
+    it("decrypts data encrypted to the vault public key with no unseal at encryption time", async () => {
+        // The property the vault design exists for: anyone holding the seal can add data to the vault.
+        const blob = await encryptForVault(sharedSeal.vault_public_key!, "added long after sealing");
+
+        const client = makeUnsealingClient(sharedSeal);
+        client.set_state_store(new InMemoryUnsealingStateStore());
+        await client.start_unsealing([0, 1]);
+
+        expect(await client.decrypt_vault_blob_to_string(blob)).to.equal("added long after sealing");
     });
 
     it("resumes an unseal after a crash during proving", async () => {
@@ -331,7 +354,7 @@ describe("NihiliumSealingClient + NihiliumUnsealingClient combinatorial-threshol
             const recovered = await clientB.start_unsealing([0, 1]);
 
             expect(clientB.is_done()).to.equal(true);
-            expect(recovered).to.equal(sharedSecret);
+            expect(vaultPublicKeyFor(recovered)).to.deep.equal(sharedVaultPublicKey);
         } finally {
             (UnsealPathProducer.prototype as any).produce = realProduce;
         }

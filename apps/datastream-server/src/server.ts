@@ -138,10 +138,17 @@ async function main() {
         }
     });
 
+    // Optional ?from=<unix seconds>: select the earliest publication of the value anchored at or after
+    // that time, instead of the earliest publication overall.
+    const parseFrom = (raw: unknown): number => {
+        const from = parseInt(String(raw ?? ""));
+        return Number.isFinite(from) && from > 0 ? from : 0;
+    };
+
     app.get('/proof/:value', async (req, res) => {
         try {
             const { value } = req.params;
-            const result = await dataStream.getProof(value);
+            const result = await dataStream.getProof(value, parseFrom(req.query.from));
             result.dualProof.pathElements   = result.dualProof.pathElements.map(e => e.toString());
             result.globalProof.pathElements = result.globalProof.pathElements.map(e => e.toString());
             result.localProof.pathElements  = result.localProof.pathElements.map(e => e.toString());
@@ -154,7 +161,7 @@ async function main() {
     app.get('/isProvable/:value', async (req, res) => {
         try {
             const { value } = req.params;
-            const result = await dataStream.isProvable(value);
+            const result = await dataStream.isProvable(value, parseFrom(req.query.from));
             res.json({ result });
         } catch (error: any) {
             res.status(500).json({ error: error.message });

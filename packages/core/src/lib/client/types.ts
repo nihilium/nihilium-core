@@ -1,5 +1,5 @@
 import { FDTSealedPackage } from "@nihilium/zkp-circuits";
-import { NihiliumSeal, SingleSealRequestResponse, SingleSealStoragePackage } from "../../types/protocol/common";
+import { NihiliumSeal, SingleSealRequestResponse, SingleSealStoragePackage, VaultPublicKey } from "../../types/protocol/common";
 import { ModuleProof } from "../unseal_conditions/modules";
 
 
@@ -37,6 +37,42 @@ export enum ProcessorSealPhase {
     Failed = "failed",
 }
 
+/**
+ * Where a seal has got to, for callers that want to show progress. Sealing does the heavy ZK work —
+ * one opening proof per processor — so a k-of-n seal is n multi-second proofs, and a caller with only
+ * the top-level status has nothing to show for it.
+ */
+export enum SealProgressStage {
+    /** About to make the paid POST for one processor. */
+    RequestingCommitment = "requesting_commitment",
+    /** About to produce that processor's opening proof — the slow step. */
+    ProvingShare = "proving_share",
+    /** That processor's share is complete. */
+    ShareSealed = "share_sealed",
+    /** About to run the combinatorial threshold encryption over every k-subset. */
+    ThresholdExpansion = "threshold_expansion",
+    /** Shares and threshold package done; building the NihiliumSeal. */
+    Assembling = "assembling",
+    Sealed = "sealed",
+}
+
+export type SealProgressEvent = {
+    stage: SealProgressStage;
+    /** Which processor this concerns; set on the per-share stages only. */
+    processor_index?: number;
+    /** n — how many processors this seal covers. */
+    processor_count: number;
+    /**
+     * Steps finished out of `total`. Counted, not time-weighted: the paid POST is fast and the proof is
+     * seconds, so the bar advances unevenly. `stage` + `processor_index` carry the real signal.
+     */
+    completed: number;
+    /** 2n + 2 — a request and a proof per share, then the threshold expansion and the assembly. */
+    total: number;
+    /** C(n, k) — how many combinations the threshold expansion covers. Set on ThresholdExpansion. */
+    combinations?: number;
+};
+
 export type ProcessorSealRecord = {
     processor_index: number;
     phase: ProcessorSealPhase;
@@ -59,7 +95,14 @@ export type ProcessorSealRecord = {
 export type SerializedSealingState = {
     version: number;
     status: NihiliumSealingStatus;
-    secret?: string;                       // bigint as decimal string; cleared on Sealed
+    // The vault private scalar, as a decimal string. Held only while sealing — a resume must seal the
+    // SAME key, or the published vault public key would stop matching — and cleared on Sealed.
+    secret?: string;
+    // Published half of the vault keypair; kept after Sealed, since it is what the seal carries.
+    vault_public_key?: VaultPublicKey;
+    // Free-form, JSON-serializable state owned by a scenario subclass (e.g. the ZKEmail sealing client
+    // stores the blob it encrypted to the vault, so a resume re-embeds it instead of re-encrypting).
+    scenario_state?: { [key: string]: any };
     metadata_root: string;                 // bigint as decimal string
     template_inputs: { [key: string]: any };
     data_stream_mapping: { [key: string]: string };
@@ -111,6 +154,16 @@ export type SerializedUnsealingState = {
     processor_indices: number[];
     reveal_published: boolean;       // the batched reveal-value publication has been posted
     data_stream_id?: string;
+    // Lower bound on the anchoring timestamp of the publication every opening proof in this unseal is
+    // built from. Set when the reveal values are re-batched; unset means the earliest publication.
+    // Persisted so a resume keeps producing proofs against the same round.
+    from_timestamp?: number;
+    // "Now" from a proving perspective, shared by all k processors: the block timestamp anchoring the
+    // reveal values selected by `from_timestamp`. Resolved once, by waitForProvingTimestamp().
+    proving_timestamp?: number;
+    // Whether the reveal values have been re-batched already; bounds the automatic re-batch to one
+    // attempt per unseal.
+    republished?: boolean;
     per_processor: ProcessorUnsealRecord[];
     // Shared (produced-once) module proofs, keyed by module_id, reused across every processor. Persisted
     // so a crash never re-runs the expensive shared proof (e.g. ZKEmail) — the unseal analogue of the

@@ -75,7 +75,7 @@ export class NihiliumClient {
     /**
      * Build a k-of-n threshold sealing client for a template: selects `processorCount` (default k)
      * processors + one datastream (by filter) and wires them into a NihiliumSealingClient. The
-     * returned client is not started — call `start_sealing(secret, metadataRoot)` to produce the
+     * returned client is not started — call `start_sealing(metadataRoot)` to produce the
      * NihiliumSeal. `payment` is an optional per-operation strategy for authorized processors.
      */
     async sealingClient(opts: {

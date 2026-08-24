@@ -81,7 +81,10 @@ export class ZKEmailModule extends UnsealConditionModule {
         var zk_email_proof = proofLibrary.getProof("ZKEmailProof");
         
         var zk_email_proof_id = this.addProof(zk_email_proof);
-        this.addSignalEdge(undefined, zk_email_proof_id, ["timestamp", "timestamp"], ModuleEdgeInput.external_input);      
+        // mapping[0] is this module's declared input, mapping[1] the proof's public signal. The input is
+        // "timeStamp" (as the collection's edge targets it), so naming it "timestamp" here left the
+        // signal-pass looking up an input mapping that does not exist and the template never compiled.
+        this.addSignalEdge(undefined, zk_email_proof_id, ["timeStamp", "timestamp"], ModuleEdgeInput.external_input);
         this.addSignalEdge(undefined, zk_email_proof_id, ["email_address_hash", "from_address_hash"], ModuleEdgeInput.user_input);      
         this.addSignalEdge(undefined, zk_email_proof_id, ["subject_value", "subject_value"], ModuleEdgeInput.external_input);      
     
@@ -114,8 +117,14 @@ export class ZKEmailModule extends UnsealConditionModule {
     async produce_proofs(inputs: ZKEmailIntegratedInputs): Promise<ModuleProof> {
         var return_proofs = [inputs.proof];
         
-        var proof_address = inputs.address_map.getAddress(inputs.proof_type === "RSA1024" ? "zk_email_proof_1024" : "zk_email_proof_2048");
-        var timestamp_and_proof_address = [toPaddedHex(BigInt(inputs.timestamp)), proof_address];
+        var proof_key = inputs.proof_type === "RSA1024" ? "zk_email_proof_1024" : "zk_email_proof_2048";
+        var proof_address = inputs.address_map.getAddress(proof_key);
+        if (!proof_address) {
+            throw new Error(`ZKEmailModule: the address map has no ${proof_key} address`);
+        }
+        // Every public signal is a bytes32, so the 20-byte address has to be left-padded like the rest —
+        // the contract reads it back as address(uint160(uint256(publicSignals[1]))).
+        var timestamp_and_proof_address = [toPaddedHex(BigInt(inputs.timestamp)), toPaddedHex(BigInt(proof_address))];
         var hexed_inputs = inputs.publicSignals.map(input => toPaddedHex(BigInt(input)));
 
         var return_public_inputs = [[...timestamp_and_proof_address, ...hexed_inputs]];
@@ -125,8 +134,9 @@ export class ZKEmailModule extends UnsealConditionModule {
     }
 
     /**
-     * The ZKEmail proof and its public signals come entirely from the external email flow
-     * (the app produces them out of band), so both are application-supplied inputs.
+     * The ZKEmail proof, its public signals and which RSA key size produced it all come from the
+     * external email flow (the app produces them out of band), so they are application-supplied.
+     * The timestamp and the address map come from the protocol context instead.
      */
     override productionInputs(): IOMap {
         return {
@@ -134,11 +144,31 @@ export class ZKEmailModule extends UnsealConditionModule {
                 description: "The ZKEmail proof (hex) produced by the email verification service" },
             publicSignals: { type_order: [["String"]], user_input: true, required: true,
                 description: "The ZKEmail proof public signals" },
+            proof_type: { type_order: ["String"], user_input: true, required: true,
+                description: "Which verifier produced the proof: RSA1024 or RSA2048" },
         };
     }
 
-    override async produce(_ctx: ProofProductionContext, inputs: ZKEmailIntegratedInputs): Promise<ModuleProof> {
-        return this.produce_proofs(inputs);
+    /**
+     * `timestamp` and `address_map` are protocol context, not application input: the timestamp has to
+     * be the opening proof's anchoring time (the chain substitutes that value into public signal 0 at
+     * verify time), and the address map names the RSA verifier the proxy dispatches to. Both can still
+     * be overridden through the resolver.
+     */
+    override async produce(ctx: ProofProductionContext, inputs: ZKEmailProductionInputs): Promise<ModuleProof> {
+        const timestamp = inputs.timestamp ?? ctx.timestamp;
+        const address_map = inputs.address_map ?? ctx.address_map;
+        if (timestamp === undefined) {
+            throw new Error(
+                "ZKEmailModule: no proving timestamp. It must equal the opening proof's anchoring " +
+                "timestamp — await the unsealing client's waitForProvingTimestamp() before producing.");
+        }
+        if (address_map === undefined) {
+            throw new Error(
+                "ZKEmailModule: no address map, so the RSA verifier address cannot be resolved. " +
+                "Pass address_map (or network) to the unsealing client.");
+        }
+        return this.produce_proofs({ ...inputs, timestamp, address_map });
     }
 
     
@@ -152,4 +182,13 @@ type ZKEmailIntegratedInputs = {
     address_map: AddressMap;
     timestamp: number;
     proof_type: String;
+}
+
+/**
+ * What a resolver actually has to supply: the timestamp and the address map are filled in from the
+ * production context when omitted, which is the normal case.
+ */
+type ZKEmailProductionInputs = Omit<ZKEmailIntegratedInputs, "timestamp" | "address_map"> & {
+    timestamp?: number;
+    address_map?: AddressMap;
 }

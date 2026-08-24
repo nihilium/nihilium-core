@@ -28,6 +28,17 @@ export { NihiliumUnsealingClient, NihiliumUnsealingStatus } from './lib/client/u
 export type { NihiliumUnsealingClientOptions, StartUnsealingOptions } from './lib/client/unsealing_client'
 // Scenario-specific unsealing clients (subclasses that plug proof-production logic into the base).
 export { DefaultUnsealingClient } from './lib/client/scenarios/default_unsealing_client'
+// The vault: sealing yields a keypair whose private half the threshold protects. These take only the
+// public key, so data can be encrypted into a vault at any time without unsealing it.
+export {
+    generateVaultKeypair,
+    vaultPublicKeyFor,
+    encryptForVault,
+    decryptFromVault,
+    decryptFromVaultToString,
+    VAULT_BLOB_ALG,
+} from './lib/vault/vault_crypto'
+export type { VaultPublicKey, VaultEncryptedBlob } from './lib/vault/vault_crypto'
 // The ZKEmail scenario (use-case-focused) now lives in @nihilium/client-sdk, built on the
 // NihiliumUnsealingClient mechanism above.
 // Sealing/unsealing options, phases and pluggable state persistence (resume support).
@@ -35,6 +46,7 @@ export {
     NihiliumEncryptionMode,
     ProcessorSealPhase,
     ProcessorUnsealPhase,
+    SealProgressStage,
     InMemorySealingStateStore,
     LocalStorageSealingStateStore,
     defaultSealingStateStore,
@@ -47,6 +59,7 @@ export {
 } from './lib/client/types'
 export type {
     ProcessorSealRecord,
+    SealProgressEvent,
     SerializedSealingState,
     SealingStateStore,
     ProcessorUnsealRecord,

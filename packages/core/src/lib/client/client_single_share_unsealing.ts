@@ -154,11 +154,16 @@ async stop_awaiting_reveal_value_to_be_provable(): Promise<void> {
     this.awaiting_reveal_value_to_be_provable = false;
 }
 
-async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
+/**
+ * `from` restricts the wait to a publication anchored at or after that timestamp. Without it a
+ * re-published reveal value reports provable off its ORIGINAL round, and the proof produced right
+ * after — which asks for the newer round — would find nothing.
+ */
+async await_reveal_value_to_be_provable(callback?: () => void, from: number = 0): Promise<void> {
     this.awaiting_reveal_value_to_be_provable = true;
     while(this.awaiting_reveal_value_to_be_provable) {
         await new Promise(resolve => setTimeout(resolve, 500));
-        var isProvable = await this.reveal_value_published();
+        var isProvable = await this.reveal_value_published(from);
         if(isProvable) {
             if(callback) {
                 callback();
@@ -168,10 +173,10 @@ async await_reveal_value_to_be_provable(callback?: () => void): Promise<void> {
     }
 }
 
-    async reveal_value_published(): Promise<boolean> {
+    async reveal_value_published(from: number = 0): Promise<boolean> {
         //if(this.phase == UnsealingStatus.REVEAL_VALUE_SENT){
             //TODO check other reveal conditions
-            var isProvable = await this.dataStreams[0].isProvable(BigInt(this.seal.public_package.reveal_value).toString())
+            var isProvable = await this.dataStreams[0].isProvable(BigInt(this.seal.public_package.reveal_value).toString(), from)
             if(isProvable) {
                 this.update_state(UnsealingStatus.REVEAL_VALUE_EXPOSED)
             }

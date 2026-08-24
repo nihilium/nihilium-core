@@ -306,6 +306,22 @@ export type ProofProductionContext = {
     seal: SingleSealStoragePackage;
     // outputs of modules already produced earlier in this path, keyed by CompiledModule.module_id
     upstream: { [module_id: string]: ModuleProof };
+    /**
+     * "Now" from a proving perspective: the block timestamp anchoring the opening proof's reveal
+     * value. Every timestamp a module puts in a public signal has to be this one, because the chain
+     * substitutes the opening module's timestamp output into those signals at verify time.
+     * Supplied here rather than read from `upstream` because the opening module is per-processor
+     * while most timestamp consumers are shared, and the producer's guard (rightly) refuses to let a
+     * shared module read a per-processor output.
+     */
+    timestamp?: number;
+    /**
+     * Which publication of the reveal value to build the opening proof from — a lower bound on its
+     * anchoring timestamp. Unset means the earliest publication.
+     */
+    from_timestamp?: number;
+    /** Contract addresses a module needs at production time, e.g. a verifier named in a public signal. */
+    address_map?: AddressMap;
 }
 
 export abstract class UnsealConditionModule {

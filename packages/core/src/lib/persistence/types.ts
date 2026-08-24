@@ -11,7 +11,18 @@ import MerkleTree from "fixed-merkle-tree";
 export type OnChainPublishingState = {
     processing_local_tree: number;
     local_trees_to_process: number[];
-    
+
+}
+
+/**
+ * One anchored publication round, in round order: entry i describes global tree leaf i. Keeps the
+ * round -> timestamp lookup positional instead of keyed by the subtree root, which two rounds can
+ * share if they happen to contain the same leaves.
+ */
+export type GlobalLeafEntry = {
+    root: string;
+    timestamp: number;
+    blockHash: string;
 }
 
 
@@ -27,6 +38,7 @@ export interface IDataStreamPersistence {
     resetContractTrees(): Promise<void>;
     getGlobalLeafTimestamps(): Promise<Map<string, number>>;
     getGlobalLeafBlockHashes(): Promise<Map<string, string>>;
+    getGlobalLeafEntries(): Promise<GlobalLeafEntry[]>;
     storeGlobalDualTreeLeaf(value_tree_root: string): Promise<void>;
     getGlobalDualTree(): Promise<MerkleTree>;
     resetDualTree(): Promise<void>;

@@ -10,6 +10,8 @@ import deployedContractsAnvil from "../scripts/deployed-contracts-31337.json";
 import deployedContractsAbritrum from "../scripts/deployed-contracts-42161.json"
 // @ts-ignore
 import deployedContractsSepolia from "../scripts/deployed-contracts-11155111.json";
+// @ts-ignore
+import knownDeployedContractsSepolia from "../scripts/known_deployed_contracts-11155111.json";
 import { AddressMap, BasicAddressMap } from "./lib/unseal_conditions/collections/types";
 
 export var NETWORK_IDS = {
@@ -27,6 +29,20 @@ export var deployedProtocolContracts = {
   [NETWORK_IDS.AVAX_TESTNET]: deployedContracts43113,
   [NETWORK_IDS.SEPOLIA]: deployedContractsSepolia,
   [NETWORK_IDS.ARBITRUM]: deployedContractsAbritrum,
+  [NETWORK_IDS.CUSTOM]: {},
+}
+
+/**
+ * Contracts this repo does not deploy but still has to address by key — today the ZKEmail RSA
+ * verifiers and DKIM registry, which ZKEmailProof proxies to. Deployed via
+ * known_deployed_contracts-<chainId>.json, whose values are bare address strings rather than the
+ * {address, name, ...} objects the deploy script writes. Networks without such a file get {}.
+ */
+export var knownDeployedContracts: { [networkId: number]: { [key: string]: string } } = {
+  [NETWORK_IDS.ANVIL]: {},
+  [NETWORK_IDS.AVAX_TESTNET]: {},
+  [NETWORK_IDS.SEPOLIA]: knownDeployedContractsSepolia,
+  [NETWORK_IDS.ARBITRUM]: {},
   [NETWORK_IDS.CUSTOM]: {},
 }
 
@@ -66,7 +82,13 @@ export function toAddressMap(networkId: number): AddressMap {
     //if(key){
       addressMap.addAddress(key, deployedProtocolContracts[networkId][key].address);
     //}
-    
+
+  }
+  // Externally deployed contracts (bare address strings) referenced by key, e.g. the ZKEmail
+  // zk_email_proof_1024 / zk_email_proof_2048 verifiers a proof's public signals must point at.
+  var known = knownDeployedContracts[networkId] || {};
+  for (var known_key of Object.keys(known)) {
+    addressMap.addAddress(known_key, known[known_key]);
   }
   return addressMap;
   // return new BasicAddressMap({

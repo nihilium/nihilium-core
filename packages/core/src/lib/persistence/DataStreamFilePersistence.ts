@@ -2,7 +2,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import MerkleTree from 'fixed-merkle-tree';
-import { IDataStreamPersistence, OnChainPublishingState } from './types';
+import { GlobalLeafEntry, IDataStreamPersistence, OnChainPublishingState } from './types';
 import { createMimcMerkelTree, treeHasher, keccakTreeHasher } from '../utils';
 import { Level } from 'level';
 const defaultDepth = 24;
@@ -117,6 +117,28 @@ export class DataStreamFilePersistence implements IDataStreamPersistence {
             return blockHashes;
         }
         return blockHashes;
+    }
+
+    /**
+     * The same global_value.txt, read positionally: line i is round i. Used to answer "which round is
+     * this occurrence in, and when was it anchored" without going through the root-keyed maps.
+     */
+    async getGlobalLeafEntries(): Promise<GlobalLeafEntry[]> {
+        const entries: GlobalLeafEntry[] = [];
+        try {
+            const filePath = this.getGlobalValuePath();
+            const content = await fs.readFile(filePath, 'utf-8');
+            const lines = content.split('\n');
+            for (const line of lines) {
+                if (line) {
+                    const [root, timestamp, blockHash] = line.split(',');
+                    entries.push({ root, timestamp: Number(timestamp), blockHash });
+                }
+            }
+        } catch {
+            return entries;
+        }
+        return entries;
     }
 
     async storeGlobalDualTreeLeaf(valueTreeRoot: string): Promise<void> {

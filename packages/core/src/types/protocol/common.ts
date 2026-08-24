@@ -272,6 +272,31 @@ export type NihiliumSeal = {
     shared_unseal_condition_root?: HexString,
     shared_metadata_root?: HexString,
     shared_proving_hints?: any,
+    /**
+     * The vault's public key. Sealing generates a BabyJubJub keypair, seals the private key across the
+     * threshold paths and keeps only this half, so anyone holding the seal can encrypt more data into
+     * the vault without unsealing it. The matching private key exists again only after a successful
+     * unseal.
+     */
+    vault_public_key?: VaultPublicKey,
+}
+
+/** A vault's public key: a BabyJubJub point, hex-encoded so it survives the seal's JSON round trip. */
+export type VaultPublicKey = {
+    x: HexString;
+    y: HexString;
+}
+
+/**
+ * Data encrypted to a vault public key (ECIES over BabyJubJub with AES-256-GCM). `R` is the ephemeral
+ * public key the recipient needs to re-derive the shared secret, which is what makes each blob
+ * independently decryptable with nothing but the vault private key.
+ */
+export type VaultEncryptedBlob = {
+    alg: "ECIES-BJJ-AES256GCM";
+    R: VaultPublicKey;
+    iv: HexString;
+    ciphertext: HexString;
 }
 
 /**

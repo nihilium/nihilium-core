@@ -10,9 +10,10 @@ export { getProcessorEndpoint, setApiEndpoint } from './lib/endpoint-selection';
 export { NihiliumClient } from './client';
 export type { EndpointFilter, NihiliumClientOptions } from './client';
 
-// Use-case-focused unseal scenarios (built on @nihilium/core's NihiliumUnsealingClient mechanism).
-export { ZKEmailUnsealingClient, ZKEmailRecoveryStatus } from './scenarios/zkemail/zkemail_unsealing_client';
-export type { ZKEmailUnsealingOptions, FetchLike } from './scenarios/zkemail/zkemail_unsealing_client';
+// Use-case-focused seal/unseal scenarios (built on @nihilium/core's client mechanism).
+// The canonical import path is the subpath -- `@nihilium/client-sdk/scenarios/zkemail`. Re-exported
+// here for compatibility; `export *` (rather than a name list) so the root cannot drift from the barrel.
+export * from './scenarios/zkemail';
 
 export const cryptoTools = nhsdk.cryptoTools;
 
@@ -30,7 +31,8 @@ export async function check_if_reveal_value_is_published(datastream_url: string,
 /**
  * Convenience: a default k-of-n threshold sealing client using the reveal-only template and the
  * registry's default processors/datastream. Selects `processorCount` (default = threshold)
- * processors. Not started — call `start_sealing(secret, metadataRoot)` on the returned client.
+ * processors. Not started — call `start_sealing(metadataRoot)` on the returned client, which
+ * generates the vault keypair and returns the seal carrying its public half.
  */
 export async function getDefaultSealingClient(opts: {
     threshold: number;

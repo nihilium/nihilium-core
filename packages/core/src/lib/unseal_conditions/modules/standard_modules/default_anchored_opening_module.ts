@@ -152,13 +152,13 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
      * @param opening_public_inputs 
      * @returns 
      */
-    async produce_proofs(dataStream: IDualDataStream, processor: ProcessorEndpoint, opening_proof: any, opening_public_inputs: any[]): Promise<ModuleProof> {
+    async produce_proofs(dataStream: IDualDataStream, processor: ProcessorEndpoint, opening_proof: any, opening_public_inputs: any[], from_timestamp: number = 0): Promise<ModuleProof> {
         var return_proofs = [opening_proof];
         var return_public_inputs = [opening_public_inputs];
         var reveal_value = opening_public_inputs[this.opening_proof.getSignalIndex("reveal_value")[0]];
 
         const { dualProof, globalProof, localProof, timestamp, globalIndex, localIndex, blockHash, dualLeafValue }
-            = await dataStream.getProof(reveal_value);
+            = await dataStream.getProof(reveal_value, from_timestamp);
 
         var reveal_value_hash = keccakTreeHasher(reveal_value, 0n);
 
@@ -213,6 +213,7 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
             ctx.processor,
             ctx.seal.private_package.proof,
             ctx.seal.private_package.public_signals,
+            ctx.from_timestamp,
         );
     }
 }

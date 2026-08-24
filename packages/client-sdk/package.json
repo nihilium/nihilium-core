@@ -1,6 +1,6 @@
 {
   "name": "@nihilium/client-sdk",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Browser SDK for privacy-accounts, using privacy-lib.",
   "type": "module",
   "main": "dist/index.mjs",
@@ -14,6 +14,20 @@
     "./types": {
       "types": "./dist/types.d.ts",
       "default": "./dist/types.mjs"
+    },
+    "./scenarios/*": {
+      "types": "./dist/scenarios/*.d.ts",
+      "default": "./dist/scenarios/*.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "./dist/types.d.ts"
+      ],
+      "scenarios/*": [
+        "./dist/scenarios/*.d.ts"
+      ]
     }
   },
   "files": [
@@ -23,9 +37,10 @@
   ],
   "scripts": {
     "publish-script": "npm run build && npm publish --access public",
-    "build": "npm run build:js && npm run build:types",
+    "build": "npm run build:js && npm run build:types && npm run build:subpaths",
     "build:js": "NODE_OPTIONS='--max-old-space-size=18192' vite build --config vite.config.mjs",
     "build:types": "NODE_OPTIONS='--max-old-space-size=18192' rollup -c rollup.dts.config.mjs",
+    "build:subpaths": "node scripts/emit-subpath-facades.mjs",
     "clean": "rm -rf dist",
     "dev": "vite build --config vite.config.mjs --watch",
     "test": "TS_NODE_PROJECT=./tsconfig.test.json ts-mocha --exit"

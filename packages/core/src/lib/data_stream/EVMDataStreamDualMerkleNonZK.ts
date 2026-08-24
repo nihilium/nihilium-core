@@ -4,7 +4,7 @@ import process from 'node:process';
 import { IDualDataStream, DualProofResult, DualLatestGlobalLeafProofResult } from "./types";
 import { toPaddedHex, keccakTreeHasher, createKeccakMerkelTree, signDataInsertRequestJWT, ZERO_KECCAK } from "../utils";
 
-import { IDataStreamPersistence, OnChainPublishingState } from "../persistence/types";
+import { GlobalLeafEntry, IDataStreamPersistence, OnChainPublishingState } from "../persistence/types";
 import { Signer } from "ethers";
 
 import { cryptoTools } from "@nihilium/zkp-circuits";
@@ -30,6 +30,9 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
     private globalDualTree: MerkleTree;
     private globalLeafTimestamps: Map<string, number>;
     private globalLeafBlockHashes: Map<string, string>;
+    // Same data as the two maps above, but positional: entry i is round i. Needed to answer "when was
+    // round i anchored" for a specific occurrence of a value.
+    private globalLeafEntries: GlobalLeafEntry[];
     private depth: number;
     private signer: Signer;
     private persistence: IDataStreamPersistence;
@@ -64,6 +67,7 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         this.globalDualTree = new MerkleTree(depth, [])
         this.globalLeafTimestamps = new Map<string, number>()
         this.globalLeafBlockHashes = new Map<string, string>()
+        this.globalLeafEntries = []
         this.max_local_tree_elements = max_local_tree_elements > 0 ? max_local_tree_elements : (2 ** depth - 1) - 1000
         this.signer = signer
         this.global_evm_merkle_tree = new EmpheralDualMerkleTreeWrapper(signer)
@@ -93,6 +97,7 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         this.globalDualTree = await this.persistence.getGlobalDualTree()
         this.globalLeafTimestamps = await this.persistence.getGlobalLeafTimestamps()
         this.globalLeafBlockHashes = await this.persistence.getGlobalLeafBlockHashes()
+        this.globalLeafEntries = await this.persistence.getGlobalLeafEntries()
     }
 
     async initialize(): Promise<void> {
@@ -169,20 +174,67 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
 
         this.globalValueTree = await this.persistence.getGlobalValueTree()
         this.globalDualTree = await this.persistence.getGlobalDualTree()
+        // A resync can rewrite global_value.txt wholesale, so the round/timestamp views loaded before it
+        // ran are stale from here on.
+        this.globalLeafTimestamps = await this.persistence.getGlobalLeafTimestamps()
+        this.globalLeafBlockHashes = await this.persistence.getGlobalLeafBlockHashes()
+        this.globalLeafEntries = await this.persistence.getGlobalLeafEntries()
     }
 
     getGlobalTreeIndex(): number {
         return this.globalValueTree.elements.length
     }
 
-    async isProvable(value: HexString): Promise<boolean> {
-        var indexes = (await this.persistence.getIndexedLocalLeaf(keccakTreeHasher(BigInt(value), 0n)))
-        if (indexes.length === 0) return false
-        if (indexes[0][0] >= this.getGlobalTreeIndex()) return false
-        var localTree = await this.persistence.getLocalTree(indexes[0][0])
-        if (!localTree) return false
-        if (!localTree.elements[indexes[0][1]]) return false
-        return true
+    /**
+     * Pick WHICH publication of a value a proof is built from. The same value can be posted any number
+     * of times — by its owner or by anyone else — so occurrences are scanned in publication order and
+     * the earliest one that is both anchored on chain and anchored at or after `from` wins.
+     *
+     * `from` defaults to 0, i.e. the earliest occurrence, which is what keeps an unpinned proof stable:
+     * a later republication by a third party can never move it forward.
+     */
+    private async selectOccurrence(value: HexString, from: number = 0): Promise<{
+        globalIndex: number, localIndex: number, entry: GlobalLeafEntry
+    } | undefined> {
+        const occurrences = await this.persistence.getIndexedLocalLeaf(keccakTreeHasher(BigInt(value), 0n))
+        for (const [globalIndex, localIndex] of occurrences) {
+            // Rounds at or beyond the current global index are posted but not yet anchored on chain.
+            if (globalIndex >= this.getGlobalTreeIndex()) continue
+            const localTree = await this.persistence.getLocalTree(globalIndex)
+            if (!localTree) continue
+            if (!localTree.elements[localIndex]) continue
+            const entry = await this.leafEntryFor(globalIndex, localTree)
+            // An unknown anchoring time (0) cannot be shown to satisfy a lower bound, so it is only
+            // selectable unfiltered — which is exactly how this behaved before `from` existed.
+            if (from > 0 && entry.timestamp < from) continue
+            return { globalIndex, localIndex, entry }
+        }
+        return undefined
+    }
+
+    /**
+     * When a round was anchored: the positional view first, then a reload (a resync rewrites
+     * global_value.txt wholesale, so the cached array can lag the value tree), and finally the
+     * root-keyed maps this used to be resolved from. The last fallback keeps the unfiltered selection
+     * working even when the round data is missing, with the same 0 / "0x0" placeholders as before.
+     */
+    private async leafEntryFor(globalIndex: number, localTree: MerkleTree): Promise<GlobalLeafEntry> {
+        let entry = this.globalLeafEntries[globalIndex]
+        if (!entry) {
+            this.globalLeafEntries = await this.persistence.getGlobalLeafEntries()
+            entry = this.globalLeafEntries[globalIndex]
+        }
+        if (entry) return entry
+        const rootKey = toPaddedHex(BigInt(localTree.root))
+        return {
+            root: rootKey,
+            timestamp: this.globalLeafTimestamps.get(rootKey) || 0,
+            blockHash: this.globalLeafBlockHashes.get(rootKey) || "0x0",
+        }
+    }
+
+    async isProvable(value: HexString, from: number = 0): Promise<boolean> {
+        return (await this.selectOccurrence(value, from)) !== undefined
     }
 
     private async closeLocalTree(force: boolean = false): Promise<void> {
@@ -243,6 +295,7 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
 
                 this.globalLeafTimestamps.set(newSubTreeRoot, timestamp)
                 this.globalLeafBlockHashes.set(newSubTreeRoot, blockHash)
+                this.globalLeafEntries.push({ root: newSubTreeRoot, timestamp, blockHash })
                 await this.persistence.storeGlobalValueTreeLeaf(newSubTreeRoot.toString(), timestamp, blockHash)
                 await this.persistence.storeGlobalDualTreeLeaf(toPaddedHex(BigInt(newValueRoot)))
 
@@ -296,23 +349,25 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         return { dualProof, globalProof, leafRoot: rootKey, timestamp: timestamp.toString(), globalIndex: this.getGlobalTreeIndex() - 1, blockHash }
     }
 
-    async getProof(value: HexString): Promise<DualProofResult> {
-        if (!(await this.isProvable(value))) {
-            throw new Error("Not provable")
+    async getProof(value: HexString, from: number = 0): Promise<DualProofResult> {
+        const occurrence = await this.selectOccurrence(value, from)
+        if (!occurrence) {
+            throw new Error(from > 0
+                ? `Not provable: ${value} has no publication anchored at or after ${from}`
+                : "Not provable")
         }
-        var indexes = (await this.persistence.getIndexedLocalLeaf(keccakTreeHasher(BigInt(value), 0n)))
-        var indexes2 = indexes[0]
-        var localTree = await this.persistence.getLocalTree(indexes2[0])
-        const localProof = localTree.path(indexes2[1])
-        const rootKey = toPaddedHex(BigInt(localTree.root))
-        const timestamp: string = (this.globalLeafTimestamps.get(rootKey) || 0).toString()
-        const blockHash: string = this.globalLeafBlockHashes.get(rootKey) || "0x0"
+        const { globalIndex, localIndex, entry } = occurrence
+        const localTree = await this.persistence.getLocalTree(globalIndex)
+        const localProof = localTree.path(localIndex)
+        // Timestamp and block hash come from the anchoring round itself, so they describe the
+        // publication that was selected rather than whichever round happens to share its subtree root.
+        const timestamp: string = entry.timestamp.toString()
+        const blockHash: string = entry.blockHash
 
         const globalProof = this.globalValueTree.proof(
             keccakTreeHasher(BigInt(localTree.root), keccakTreeHasher(BigInt(timestamp), BigInt(blockHash)))
         )
 
-        const globalIndex = indexes2[0]
         const dualLeafValue = this.globalDualTree.elements[globalIndex]
         const dualProof = this.globalDualTree.proof(dualLeafValue)
 
@@ -322,7 +377,7 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
             localProof,
             timestamp,
             globalIndex,
-            localIndex: indexes2[1],
+            localIndex,
             blockHash,
             dualLeafValue: toPaddedHex(BigInt(dualLeafValue.toString())),
         }

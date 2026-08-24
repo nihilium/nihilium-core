@@ -2,7 +2,9 @@ import {
     ClientProcessorSealingPhase,
     NihiliumSeal,
     ProcessorEndpoint,
+    VaultPublicKey,
 } from "../../types/protocol/common";
+import { generateVaultKeypair, vaultPublicKeyFor } from "../vault/vault_crypto";
 import { IDualDataStream } from "../data_stream/types";
 import { UnsealConditionTemplate } from "../unseal_conditions/collections/UnsealConditionTemplate";
 import { ClientSingleShareSealingProcess } from "./client_single_share_sealing";
@@ -11,6 +13,8 @@ import {
     NihiliumEncryptionMode,
     NihiliumSealingStatus,
     ProcessorSealPhase,
+    SealProgressEvent,
+    SealProgressStage,
     SealingStateStore,
     SerializedSealingState,
     defaultSealingStateStore,
@@ -46,6 +50,20 @@ function to_bigint_template_inputs(inputs: { [key: string]: any }): { [key: stri
 }
 
 /**
+ * C(n, k) — how many k-subsets the threshold expansion covers, for progress reporting. Computed rather
+ * than counted: FDTEncrypt's indexCombinations is internal to the primitive, and materializing every
+ * subset just to take its length would duplicate the expansion's own work.
+ */
+function binomial(n: number, k: number): number {
+    if (k < 0 || k > n) return 0;
+    let result = 1;
+    for (let i = 0; i < Math.min(k, n - k); i++) {
+        result = (result * (n - i)) / (i + 1);
+    }
+    return Math.round(result);
+}
+
+/**
  * Primary entry point for Nihilium sealing.
  *
  * Drives one single-share seal per processor, collects each processor's composite
@@ -58,17 +76,20 @@ function to_bigint_template_inputs(inputs: { [key: string]: any }): { [key: stri
  */
 export class NihiliumSealingClient {
 
-    private processors: ProcessorEndpoint[];
-    private dataStreams: IDualDataStream[];
-    private unsealConditionTemplate: UnsealConditionTemplate;
-    private threshold: number;
-    private search_width: number;
-    private status: NihiliumSealingStatus;
-    private encryption_mode: NihiliumEncryptionMode;
-    private paymentProvider: PaymentProvider;
-    private state?: SerializedSealingState;
-    private store: SealingStateStore = defaultSealingStateStore();
-    private storage_key?: string;
+    // Protected so scenario subclasses (e.g. ZKEmailSealingClient) can read the endpoints/template and
+    // the persisted state when they contribute proving hints or scenario state.
+    protected processors: ProcessorEndpoint[];
+    protected dataStreams: IDualDataStream[];
+    protected unsealConditionTemplate: UnsealConditionTemplate;
+    protected threshold: number;
+    protected search_width: number;
+    protected status: NihiliumSealingStatus;
+    protected encryption_mode: NihiliumEncryptionMode;
+    protected paymentProvider: PaymentProvider;
+    protected state?: SerializedSealingState;
+    protected store: SealingStateStore = defaultSealingStateStore();
+    protected storage_key?: string;
+    private progressListeners: ((event: SealProgressEvent) => void)[] = [];
 
     constructor(
         processors: ProcessorEndpoint[],
@@ -102,6 +123,44 @@ export class NihiliumSealingClient {
         this.store = store;
     }
 
+    /**
+     * Subscribe to sealing progress. The counterpart of the unsealing client's module events: sealing
+     * runs n opening proofs, and without this a caller has nothing to show for the minutes they take.
+     */
+    on(listener: (event: SealProgressEvent) => void): void {
+        this.progressListeners.push(listener);
+    }
+
+    /**
+     * `completed` is derived from the persisted records rather than a counter, so a resumed seal reports
+     * the work already done instead of restarting the count at zero.
+     */
+    private emitProgress(stage: SealProgressStage, extra: Partial<SealProgressEvent> = {}): void {
+        if (this.progressListeners.length === 0) {
+            return;
+        }
+        const records = this.state?.per_processor ?? [];
+        let completed = 0;
+        for (const rec of records) {
+            if (rec.phase === ProcessorSealPhase.Sealed) completed += 2;         // paid POST + proof
+            else if (rec.phase === ProcessorSealPhase.Responded) completed += 1; // paid POST only
+        }
+        if (this.state?.fdt_seal) completed += 1;
+        if (this.state?.seal) completed += 1;
+
+        const event: SealProgressEvent = {
+            stage,
+            processor_count: this.processors.length,
+            completed,
+            total: this.processors.length * 2 + 2,
+            ...extra,
+        };
+        for (const listener of this.progressListeners) {
+            // A listener that throws must not fail a seal the caller has already paid for.
+            try { listener(event); } catch { /* ignore */ }
+        }
+    }
+
     load_sealing_state(state: SerializedSealingState): void {
         this.state = state;
         this.status = state.status;
@@ -131,14 +190,17 @@ export class NihiliumSealingClient {
     }
 
     /**
-     * Seal `secret` under the k-of-n combinatorial threshold across the processors.
+     * Seal a freshly generated vault keypair under the k-of-n combinatorial threshold across the
+     * processors. The private key is what the threshold protects; the caller never sees it and it is
+     * dropped once the seal exists. Only its public half survives, on the seal, so data can be
+     * encrypted into the vault afterwards without unsealing (see encryptForVault).
      *
      * Idempotent and resumable: if state for the same inputs is already persisted (or loaded via
      * load_sealing_state), it is picked up and driven to completion — already-paid processors are not
-     * re-charged and already-proved processors are not re-proved. Returns the finished NihiliumSeal.
+     * re-charged and already-proved processors are not re-proved, and the resume seals the SAME vault
+     * key rather than generating a new one. Returns the finished NihiliumSeal.
      */
     async start_sealing(
-        secret: bigint,
         metadata_root: bigint,
         template_inputs: { [key: string]: any } = {},
         data_stream_mapping: { [key: string]: string } = {},
@@ -166,10 +228,15 @@ export class NihiliumSealingClient {
             }
         }
         if (!this.state) {
+            // The vault keypair is generated exactly once per seal and persisted immediately: an unseal
+            // recovers this scalar, so a resume that generated a new one would produce a seal whose
+            // published public key no longer matches what the threshold protects.
+            const vault = generateVaultKeypair();
             this.state = {
                 version: SEALING_STATE_VERSION,
                 status: NihiliumSealingStatus.Ready_to_seal,
-                secret: secret.toString(),
+                secret: vault.privateKey.toString(),
+                vault_public_key: vault.publicKey,
                 metadata_root: metadata_root.toString(),
                 template_inputs: normalized_inputs,
                 data_stream_mapping,
@@ -178,9 +245,6 @@ export class NihiliumSealingClient {
                 per_processor: this.processors.map((_, i) => ({ processor_index: i, phase: ProcessorSealPhase.Pending })),
             };
             await this.persist();
-        } else if (!this.state.secret) {
-            // Resuming state that still needs the secret (e.g. it was reloaded before completion).
-            this.state.secret = secret.toString();
         }
 
         // Already finished on a previous run.
@@ -189,7 +253,17 @@ export class NihiliumSealingClient {
             return this.state.seal;
         }
 
-        const active_secret = BigInt(this.state.secret!);
+        if (!this.state.secret) {
+            throw new Error(
+                "Persisted sealing state has no vault key but is not Sealed; it cannot be completed " +
+                "(the key an unseal would recover is gone). Start a new seal.",
+            );
+        }
+        const active_secret = BigInt(this.state.secret);
+        // Older state may predate the stored public key; derive it rather than regenerating the pair.
+        if (!this.state.vault_public_key) {
+            this.state.vault_public_key = vaultPublicKeyFor(active_secret);
+        }
 
         try {
             // ---- Phase 1: per-processor commitments (paid POST + local ZK proof) ----
@@ -201,12 +275,19 @@ export class NihiliumSealingClient {
             // ---- Phase 2: combinatorial threshold encryption over the composite public keys ----
             await this.produce_threshold_encryption(active_secret);
 
+            // Scenario hook: last chance to use the vault key before the seal is assembled (the ZKEmail
+            // client encrypts the caller's value to it here). Runs after the shares exist, so anything
+            // it persists is picked up by the hint builders below.
+            await this.prepareSeal();
+
             // ---- Phase 3: assemble + finalize ----
+            this.emitProgress(SealProgressStage.Assembling);
             const seal = this.assemble_seal();
             this.state.seal = seal;
             this.state.secret = undefined; // clear sensitive material now the seal exists
             this.set_status(NihiliumSealingStatus.Sealed);
             await this.persist();
+            this.emitProgress(SealProgressStage.Sealed);
             return seal;
         } catch (err) {
             this.set_status(NihiliumSealingStatus.Failed);
@@ -224,14 +305,65 @@ export class NihiliumSealingClient {
             if (this.state.status === NihiliumSealingStatus.Sealed && this.state.seal) {
                 return this.state.seal;
             }
-            throw new Error("Persisted state has no secret to resume with");
+            throw new Error("Persisted state has no vault key to resume with");
         }
         return this.start_sealing(
-            BigInt(this.state.secret),
             BigInt(this.state.metadata_root),
             this.state.template_inputs,
             this.state.data_stream_mapping,
         );
+    }
+
+    /**
+     * The vault's public key — available as soon as sealing starts, and the only half that outlives it.
+     * Anyone holding it can encrypt data into the vault (encryptForVault) with no unseal and no network.
+     */
+    get_vault_public_key(): VaultPublicKey {
+        if (!this.state?.vault_public_key) {
+            throw new Error("No vault key yet; call start_sealing first");
+        }
+        return this.state.vault_public_key;
+    }
+
+    // ---- Scenario extension surface --------------------------------------------------------------
+    // Override these in a subclass to build a specific sealing scenario. The base seals nothing beyond
+    // the vault key itself, so both hints default to empty.
+
+    /**
+     * Runs after every share is sealed and before the seal is assembled, with the vault public key
+     * available via get_vault_public_key(). Anything persisted here (see setScenarioState) is visible
+     * to buildProvingHints/buildSharedProvingHints. No-op by default.
+     */
+    protected async prepareSeal(): Promise<void> {
+        // no-op
+    }
+
+    /**
+     * Per-processor proving hints, stored on each package's private_package. Use for data an unseal
+     * scenario needs before it can prove (the ZKEmail scenario puts the recovery email here).
+     */
+    protected buildProvingHints(): any {
+        return {};
+    }
+
+    /**
+     * Seal-level proving hints, stored once on the seal. Use for data that is not per-processor — e.g.
+     * a blob encrypted to the vault public key that should travel with the seal.
+     */
+    protected buildSharedProvingHints(): any {
+        return {};
+    }
+
+    /** Read the scenario's persisted, JSON-serializable state (empty object if none yet). */
+    protected getScenarioState<T extends { [key: string]: any } = { [key: string]: any }>(): T {
+        return (this.state?.scenario_state ?? {}) as T;
+    }
+
+    /** Merge a patch into the scenario's persisted state and save it, so a resume reuses it. */
+    protected async setScenarioState(patch: { [key: string]: any }): Promise<void> {
+        if (!this.state) return;
+        this.state.scenario_state = { ...(this.state.scenario_state ?? {}), ...patch };
+        await this.persist();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -243,6 +375,8 @@ export class NihiliumSealingClient {
     private async seal_one_processor(i: number, secret: bigint): Promise<void> {
         const rec = this.state!.per_processor[i];
         if (rec.phase === ProcessorSealPhase.Sealed) {
+            // Still report it: a resume that skips finished shares must paint them, not start at zero.
+            this.emitProgress(SealProgressStage.ShareSealed, { processor_index: i });
             return; // already done — no re-pay, no re-proof
         }
 
@@ -254,7 +388,7 @@ export class NihiliumSealingClient {
             // processor for clarity; every clone compiles to the identical unseal_condition_root because
             // the metadata root and inputs are shared.
             template: this.clone_uncompiled_template(),
-            provingHints: {},
+            provingHints: this.buildProvingHints(),
             payment: this.paymentProvider,
         });
         // initialize() deterministically recomputes unseal_condition_root and re-imports zkeddsa, and
@@ -271,6 +405,7 @@ export class NihiliumSealingClient {
         // --- Step 1: obtain the paid response (skip entirely if already persisted) ---
         if (rec.phase !== ProcessorSealPhase.Responded) {
             this.set_status(NihiliumSealingStatus.Requesting_commitments);
+            this.emitProgress(SealProgressStage.RequestingCommitment, { processor_index: i });
             if (rec.phase === ProcessorSealPhase.Posting && rec.reveal_value_preimage) {
                 // Crash around the paid POST: response was never persisted. Re-POST the identical
                 // request (same preimage) so an idempotent processor won't double-charge. This is the
@@ -297,6 +432,7 @@ export class NihiliumSealingClient {
 
         // --- Step 2: local ZK proof — free to retry, never re-charges the processor ---
         this.set_status(NihiliumSealingStatus.Producing_proofs);
+        this.emitProgress(SealProgressStage.ProvingShare, { processor_index: i });
         const storage_package = await proc.process_seal_response(rec.raw_response!);
         rec.storage_package = storage_package;
         rec.phase = ProcessorSealPhase.Sealed;
@@ -304,6 +440,7 @@ export class NihiliumSealingClient {
             this.state!.unseal_condition_root = storage_package.private_package.unseal_condition_root;
         }
         await this.persist();
+        this.emitProgress(SealProgressStage.ShareSealed, { processor_index: i });
     }
 
     /**
@@ -319,6 +456,13 @@ export class NihiliumSealingClient {
             const cpk = r.storage_package!.private_package.constructed_public_key;
             return cryptoTools.coordinatesToExtPointBigint(BigInt(cpk[0]), BigInt(cpk[1]));
         });
+        this.emitProgress(SealProgressStage.ThresholdExpansion, {
+            combinations: binomial(pubKeys.length, this.threshold),
+        });
+        // FDTEncrypt is a synchronous loop over every k-subset, so without yielding first a browser
+        // never repaints and the event above is invisible. Milliseconds at the default search width;
+        // this is insurance for a larger m, where the expansion is the one blocking step in a seal.
+        await new Promise((resolve) => setTimeout(resolve, 0));
         this.state!.fdt_seal = FDTEncrypt(secret, pubKeys, this.threshold, this.search_width);
         await this.persist();
     }
@@ -337,7 +481,8 @@ export class NihiliumSealingClient {
             shared_unseal_template: first.unseal_template,
             shared_unseal_condition_root: first.unseal_condition_root,
             shared_metadata_root: this.state!.metadata_root,
-            shared_proving_hints: {},
+            shared_proving_hints: this.buildSharedProvingHints(),
+            vault_public_key: this.state!.vault_public_key,
         };
     }
 

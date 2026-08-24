@@ -38,18 +38,25 @@ export interface DualLatestGlobalLeafProofResult {
     blockHash: string;
 }
 
+/**
+ * A value may be published to the stream more than once, so a proof has to name WHICH publication it
+ * is built from. `from` is a lower bound on the anchoring block timestamp (unix seconds): the
+ * earliest occurrence anchored at or after it is selected. Omitting it (or 0) means "the earliest
+ * occurrence", which is the safe default — a third party republishing someone else's value can never
+ * move an unpinned proof forward onto a later round.
+ */
 export interface IDataStream {
     initialize: () => Promise<void>;
     getAddress: () => string;
     getUrl: () => string;
     getLatestGlobalLeafProof: () => Promise<LatestGlobalLeafProofResult>;
     postData: (data: HexString[]) => Promise<[number, number, string]>;
-    getProof: (value: HexString) => Promise<ProofResult>;
+    getProof: (value: HexString, from?: number) => Promise<ProofResult>;
     hasDataStreamRoot: (root: string) => Promise<boolean>;
-    isProvable: (value: HexString) => Promise<boolean>;
+    isProvable: (value: HexString, from?: number) => Promise<boolean>;
 }
 
 export interface IDualDataStream extends Omit<IDataStream, 'getProof' | 'getLatestGlobalLeafProof'> {
-    getProof(value: HexString): Promise<DualProofResult>;
+    getProof(value: HexString, from?: number): Promise<DualProofResult>;
     getLatestGlobalLeafProof(): Promise<DualLatestGlobalLeafProofResult>;
 }
