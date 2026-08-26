@@ -1,6 +1,6 @@
 {
   "name": "@nihilium/client-sdk",
-  "version": "0.6.0",
+  "version": "0.7.1",
   "description": "Browser SDK for privacy-accounts, using privacy-lib.",
   "type": "module",
   "main": "dist/index.mjs",
@@ -9,14 +9,24 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "node": "./dist/node/index.mjs",
+      "browser": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
     "./types": {
       "types": "./dist/types.d.ts",
+      "node": "./dist/node/types.mjs",
+      "browser": "./dist/types.mjs",
       "default": "./dist/types.mjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "node": "./dist/node/server.mjs"
     },
     "./scenarios/*": {
       "types": "./dist/scenarios/*.d.ts",
+      "node": "./dist/node/scenarios/*.mjs",
+      "browser": "./dist/scenarios/*.mjs",
       "default": "./dist/scenarios/*.mjs"
     }
   },
@@ -24,6 +34,9 @@
     "*": {
       "types": [
         "./dist/types.d.ts"
+      ],
+      "server": [
+        "./dist/server.d.ts"
       ],
       "scenarios/*": [
         "./dist/scenarios/*.d.ts"
@@ -37,21 +50,35 @@
   ],
   "scripts": {
     "publish-script": "npm run build && npm publish --access public",
-    "build": "npm run build:js && npm run build:types && npm run build:subpaths",
+    "build": "npm run build:js && npm run build:js:node && npm run build:types && npm run build:subpaths",
     "build:js": "NODE_OPTIONS='--max-old-space-size=18192' vite build --config vite.config.mjs",
     "build:types": "NODE_OPTIONS='--max-old-space-size=18192' rollup -c rollup.dts.config.mjs",
     "build:subpaths": "node scripts/emit-subpath-facades.mjs",
     "clean": "rm -rf dist",
     "dev": "vite build --config vite.config.mjs --watch",
-    "test": "TS_NODE_PROJECT=./tsconfig.test.json ts-mocha --exit"
+    "test": "TS_NODE_PROJECT=./tsconfig.test.json ts-mocha --exit",
+    "build:js:node": "vite build --config vite.config.node.mjs",
+    "deps:node": "node scripts/report-node-externals.mjs"
   },
   "dependencies": {
-    "poseidon-lite": "^0.3.0"
+    "@ethereumjs/common": "^10.0.0",
+    "@ethereumjs/evm": "^10.0.0",
+    "@ethereumjs/statemanager": "^10.0.0",
+    "@ethereumjs/util": "^10.0.0",
+    "@noble/curves": "^1.2.0",
+    "@noble/hashes": "^1.3.3",
+    "@zk-kit/baby-jubjub": "^1.0.3",
+    "@zk-kit/utils": "^1.4.1",
+    "axios": "^1.9.0",
+    "circomlibjs": "^0.1.7",
+    "ethers": "^6.14.0",
+    "ffjavascript": "^0.2.60",
+    "poseidon-lite": "^0.3.0",
+    "snarkjs": "^0.7.0"
   },
   "devDependencies": {
     "@nihilium/core": "*",
     "@nihilium/zkp-circuits": "*",
-    "axios": "^1.10.0",
     "typescript": "^5.3.3"
   }
 }

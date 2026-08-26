@@ -18,6 +18,45 @@ npm install @nihilium/client-sdk
 `types`, `cryptoTools`, `createRevealOnlyCollection`, `NETWORK_IDS`, the payment providers, and the
 state stores directly from it.
 
+## Browser and Node
+
+The package ships two builds, selected automatically by the `browser` / `node` export conditions.
+The client surface is identical; `default` resolves to the browser build, so existing consumers and
+bundlers are unaffected.
+
+|  | Browser (`default`) | Node |
+|---|---|---|
+| Entry | `src/index.ts` | `src/index.node.ts` |
+| Dependencies | all inlined — standalone | published deps external, `@nihilium/*` inlined |
+| Extra surface | — | `./server` (`NihiliumServerPayment`) |
+
+Both re-export `src/common_index.ts`, the shared surface, mirroring the layout of `@nihilium/core`.
+
+The split exists because a single browser bundle cannot run under Node: it resolves `snarkjs` to its
+browser entry, whose prover is created from a `blob:` URL that Node's `Worker` cannot load — a
+failure that appears only at `fullProve`, never at import. The Node build resolves the `node`
+condition instead and leaves published dependencies external so they run their own environment
+logic rather than being re-plumbed by a bundler.
+
+`./server` is node-only on purpose: `NihiliumServerPayment` holds an API key and must not be
+reachable from browser code.
+
+```ts
+import { NihiliumServerPayment } from "@nihilium/client-sdk/server";
+```
+
+### Maintaining the Node build
+
+Its externals are derived, not hand-listed. After changing dependencies:
+
+```bash
+npm run build:js:node && npm run deps:node
+```
+
+`deps:node` reports every external the bundle reaches for and fails if one is undeclared. A package
+whose ESM/CJS interop breaks under Node's resolver (verify with `node -e "import('pkg')"`) belongs
+in the `INLINE` list in `vite.config.node.mjs` instead.
+
 ## Concepts
 
 - **Seal** → produces a `NihiliumSeal`: one package per processor (each with its own

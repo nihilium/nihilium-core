@@ -1,9 +1,18 @@
 /**
- * Emit the subpath facades declared in subpaths.cjs into dist/.
+ * Emit the subpath facades declared in subpaths.cjs into dist/ and dist/node/.
  *
- * Runs after `build:js` -- vite.config.mjs sets emptyOutDir, so anything written before it is wiped.
- * Both files of a pair come from the same name lists, so the runtime surface and the type surface
- * cannot drift apart.
+ * Runs after `build:js` and `build:js:node` -- vite.config.mjs sets emptyOutDir, so anything
+ * written before it is wiped. Both files of a pair come from the same name lists, so the runtime
+ * surface and the type surface cannot drift apart.
+ *
+ * The .mjs facade is emitted once per build root, because it re-exports from `../index.mjs`
+ * *relative to itself*: the copy under dist/ resolves to the browser bundle and the copy under
+ * dist/node/ to the node bundle. Without the second copy the package's `node` condition for
+ * `./scenarios/*` would resolve to a file that re-exports the browser bundle, which is the exact
+ * failure the node build exists to prevent -- and it would be silent.
+ *
+ * The .d.ts is emitted only under dist/, because both builds expose the same surface and therefore
+ * share one set of declarations (see the exports map: `types` is not per-condition).
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -45,10 +54,18 @@ function facadeDts(subpath, values, types) {
     return lines.join("\n");
 }
 
+/** Build roots that carry a runtime bundle, and so need their own .mjs facade. */
+const JS_ROOTS = ["dist", "dist/node"];
+
 for (const { subpath, values, types = [] } of SUBPATHS) {
-    const target = resolve(packageRoot, "dist", subpath);
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(`${target}.mjs`, facadeJs(subpath, values));
-    await writeFile(`${target}.d.ts`, facadeDts(subpath, values, types));
-    console.log(`emitted dist/${subpath}.{mjs,d.ts} (${values.length} values, ${types.length} types)`);
+    for (const root of JS_ROOTS) {
+        const target = resolve(packageRoot, root, subpath);
+        await mkdir(dirname(target), { recursive: true });
+        await writeFile(`${target}.mjs`, facadeJs(subpath, values));
+        console.log(`emitted ${root}/${subpath}.mjs (${values.length} values)`);
+    }
+
+    const dtsTarget = resolve(packageRoot, "dist", subpath);
+    await writeFile(`${dtsTarget}.d.ts`, facadeDts(subpath, values, types));
+    console.log(`emitted dist/${subpath}.d.ts (${values.length} values, ${types.length} types)`);
 }

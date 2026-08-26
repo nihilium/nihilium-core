@@ -38,4 +38,8 @@ const shared = {
 export default [
   { input: 'src/index.ts', output: { file: 'dist/index.d.ts', format: 'es' }, ...shared },
   { input: 'src/types.ts', output: { file: 'dist/types.d.ts', format: 'es' }, ...shared },
+  // The server surface, published as the node-only `./server` subpath. The browser and node builds
+  // expose the same *client* surface and therefore share dist/index.d.ts (the exports map's `types`
+  // is not per-condition); this is the one declaration that belongs to Node alone.
+  { input: 'src/server/index.ts', output: { file: 'dist/server.d.ts', format: 'es' }, ...shared },
 ];
