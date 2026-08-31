@@ -15,6 +15,7 @@
     "./apps/test-ui"
   ],
   "overrides": {
+    "@swc/core": "1.12.14",
     "circomlibjs": "^0.1.7"
   },
   "scripts": {
