@@ -1,7 +1,7 @@
 //Tests that test hashing equilivance of actions.ts and the solidity contract using hardhat
 
 import { assert, expect } from "chai";
-import { ChainedProofV2 as ChainedProof } from "../src/lib/unseal_conditions/ChainedProofV2";
+import { ACTION_PASS_SIGNAL, ACTION_STATIC_INPUT_FROM_USER, ChainedProofV2 as ChainedProof } from "../src/lib/unseal_conditions/ChainedProofV2";
 import { DefaultAnchoredOpeningProofModule } from "../src/lib/unseal_conditions/modules";
 import {  StandardProofLibrary } from "../src/lib/unseal_conditions/proofs";
 import { StandardModuleLibrary } from "../src/lib/unseal_conditions/modules";
@@ -54,11 +54,30 @@ describe("ChainedProofs", () => {
         //     assert.deepEqual(compiledModule.actions[i].params, compiledModuleList.actions[i].params);
         // }
 
+        assert.equal(compiledModule.actions.length, 12);
+    });
+
+    it("should compile AfterTime user_input as pass_signal when mapped", async () => {
+        const proofLibrary = new StandardProofLibrary();
         const module2 = new AfterTimeModule(proofLibrary);
         const compiledModule2 = module2.compile("test_node_id", addressMap, {
             "timestamp": {output_proof_index: 0, output_signal_indexes: [0, 1]}}, 0);
         console.log(compiledModule2);
-        assert.equal(compiledModule.actions.length, 12);
+        const userInputActions = compiledModule2.actions.filter(a => a.action === ACTION_STATIC_INPUT_FROM_USER);
+        assert.equal(userInputActions.length, 1);
+        assert.equal(userInputActions[0].params.module_input_key, "threshold");
+
+        const compiledWithThresholdPass = module2.compile("test_node_id", addressMap, {
+            "timestamp": {output_proof_index: 0, output_signal_indexes: [0, 1]},
+            "threshold": {output_proof_index: 0, output_signal_indexes: [0, 1]},
+        }, 0);
+        assert.equal(compiledWithThresholdPass.actions.filter(a => a.action === ACTION_STATIC_INPUT_FROM_USER).length, 0);
+        const thresholdPass = compiledWithThresholdPass.actions.filter(a =>
+            a.action === ACTION_PASS_SIGNAL &&
+            a.params.public_input_indexes[0] === 1);
+        assert.equal(thresholdPass.length, 1);
+        assert.equal(thresholdPass[0].params.output_proof_index, 0);
+        assert.deepEqual(thresholdPass[0].params.output_signal_indexes, [0, 1]);
     });
 
     it("should compile and run collection", async () => {
@@ -95,6 +114,53 @@ describe("ChainedProofs", () => {
         var unsealRoot = await compiledTemplate.getUnsealRoot();
         var compiledTemplateJson = compiledTemplate.export_compiled_to_json();
         console.log(compiledTemplate);
+    });
+    it("should compile signal_pass into a declared user input", async () => {
+        const changedCallback = (changes: { action: ChangedType, nodes?: CollectionNode[], edges?: CollectionEdge[], starting_node?: CollectionNode | undefined }) => {
+            console.log(changes);
+        }
+        const collection = new UnsealConditionCollection("Test", "Test", new StandardProofLibrary(), new StandardModuleLibrary(), changedCallback);
+        const openingModule = new DefaultAnchoredOpeningProofModule(new StandardProofLibrary());
+        const afterTimeModule = new AfterTimeModule(new StandardProofLibrary());
+        const timeDelayModule = new TimeDelayModule(new StandardProofLibrary());
+
+        const openingNodeId = collection.add_node(openingModule);
+        const afterTimeNodeId = collection.add_node(afterTimeModule);
+        const timeDelayNodeId = collection.add_node(timeDelayModule);
+        collection.add_edge(openingNodeId, afterTimeNodeId, ["timestamp", "timestamp"],
+            CollectionEdgeInput.signal_pass);
+        collection.add_edge(openingNodeId, afterTimeNodeId, ["timestamp", "threshold"],
+            CollectionEdgeInput.signal_pass);
+        collection.add_edge(openingNodeId, timeDelayNodeId, ["timestamp", "timestamp"],
+            CollectionEdgeInput.signal_pass);
+        collection.add_edge(openingNodeId, timeDelayNodeId, ["top_level_merkle_root", "top_level_merkle_root"],
+                CollectionEdgeInput.signal_pass);
+        collection.add_edge(undefined, timeDelayNodeId, ["delay", "delay"],
+                CollectionEdgeInput.user_input);
+        collection.add_data_stream("test_data_stream", openingNodeId, "metadata_root_hash");
+        const compiledTemplate = collection.createTemplate(addressMap);
+        const userInputNames = compiledTemplate.user_inputs.flat().map(u => u.name);
+        assert.isFalse(userInputNames.includes("threshold"));
+        assert.isTrue(userInputNames.includes("delay"));
+        assert.isTrue(userInputNames.includes("metadata_root_hash"));
+
+        const afterTimeCompiled = compiledTemplate.compiled_collection.compiled_modules[0]
+            .find(m => m.module_name === "AfterTimeModule");
+        assert.isDefined(afterTimeCompiled);
+        assert.equal(afterTimeCompiled!.actions.filter(a => a.action === ACTION_STATIC_INPUT_FROM_USER).length, 0);
+        const thresholdPass = afterTimeCompiled!.actions.filter(a =>
+            a.action === ACTION_PASS_SIGNAL &&
+            a.params.public_input_indexes[0] === 1);
+        assert.equal(thresholdPass.length, 1);
+
+        compiledTemplate.compile({
+            "delay": 1234567890n,
+            "metadata_root_hash": 1234567890n,
+        }, {
+            "test_data_stream": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        });
+        var unsealRoot = await compiledTemplate.getUnsealRoot();
+        assert.isString(unsealRoot);
     });
     it("should hash equilivantly", async () => {
         const chainedProofLocal = new ChainedProof("0x1234", "0x4567", ethers.provider);

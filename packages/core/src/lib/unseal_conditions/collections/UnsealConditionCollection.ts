@@ -507,6 +507,50 @@ It then returns the list
            return toReturn;
     }
     
+    private resolveCollectionInputMapping(
+        node: CollectionNode,
+        input_key: string,
+        edges_to_node: CollectionEdge[],
+        compiled_modules: CompiledModule[],
+        options: {
+            required: boolean,
+            accepted_edge_types?: CollectionEdgeInput[],
+        }
+    ): {
+        output_proof_index: number;
+        output_signal_indexes: number[];
+    } | undefined {
+        var found_edge: CollectionEdge | undefined = undefined;
+        for(var edge of edges_to_node) {
+            if(edge.mapping[1] !== input_key) {
+                continue;
+            }
+            if(options.accepted_edge_types !== undefined &&
+                !options.accepted_edge_types.includes(edge.input_type)) {
+                continue;
+            }
+            found_edge = edge;
+            break;
+        }
+        if(!found_edge) {
+            if(options.required) {
+                throw new Error("Failed to compile module " + node.module.name + ": Input key not found for input " + input_key);
+            }
+            return undefined;
+        }
+        var compiled_from_node = compiled_modules.find(module => module.module_id === found_edge?.from?.node_id);
+        if(compiled_from_node === undefined) {
+            throw new Error("Failed to compile module " + node.module.name + ": From node not found for input " + input_key);
+        }
+        if(compiled_from_node.outputs[found_edge.mapping[0]] === undefined) {
+            throw new Error("Failed to compile module " + node.module.name + ": Output not found for input " + input_key);
+        }
+        return {
+            output_proof_index: compiled_from_node.outputs[found_edge.mapping[0]].output_proof_index,
+            output_signal_indexes: compiled_from_node.outputs[found_edge.mapping[0]].output_signal_index,
+        };
+    }
+
     createTemplatePerFork(address_map: AddressMap, sorted_nodes: string[], forking:string[]): {
         compiled_modules: CompiledModule[], user_inputs: RequiredUserInput[], data_stream_inputs: DataStreamInput[]} {
 
@@ -529,33 +573,19 @@ It then returns the list
             for(var input_key of Object.keys(node.module.getUserInputs())) {
                 var input = node.module.getUserInputs()[input_key];
                 if(input.user_input){
-                    //We don't need to do anything here
-                    //Will be handled by the module compile function
-                   
+                    var mapped = this.resolveCollectionInputMapping(
+                        node, input_key, edges_to_node, compiled_modules,
+                        { required: false, accepted_edge_types: [CollectionEdgeInput.signal_pass] }
+                    );
+                    if(mapped) {
+                        input_mapping[input_key] = mapped;
+                    }
                 }else {
-                    var found_edge: CollectionEdge | undefined = undefined;
-                    for(var edge of edges_to_node) {
-                        if(edge.mapping[1] === input_key) {
-                            found_edge = edge;
-                            break;
-                        }
-                    }
-                    if(!found_edge) {
-                        throw new Error("Failed to compile module " + node.module.name + ": Input key not found for input " + input_key);
-                    }
-                    var compiled_from_node = compiled_modules.find(module => module.module_id === found_edge?.from?.node_id);
-                    if(compiled_from_node === undefined) {
-                        throw new Error("Failed to compile module " + node.module.name + ": From node not found for input " + input_key);
-                    }
-                    if(compiled_from_node.outputs[found_edge?.mapping[0]] === undefined) {
-                        throw new Error("Failed to compile module " + node.module.name + ": Output not found for input " + input_key);
-                    }
-                    input_mapping[input_key] = {
-                        output_proof_index: compiled_from_node.outputs[found_edge?.mapping[0]].output_proof_index,
-                        output_signal_indexes: compiled_from_node.outputs[found_edge?.mapping[0]].output_signal_index,
-                    };
-
-
+                    var mapped = this.resolveCollectionInputMapping(
+                        node, input_key, edges_to_node, compiled_modules,
+                        { required: true }
+                    );
+                    input_mapping[input_key] = mapped!;
                 }
             }
             var depth = compiled_modules.length == 0 ? 0 : compiled_modules[compiled_modules.length - 1].new_depth;

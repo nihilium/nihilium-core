@@ -488,6 +488,10 @@ export abstract class UnsealConditionModule {
                         throw new Error("Failed to compile module " + this.name + ": Input mapping for input " + input + " has " + input_mapping[input].output_signal_indexes.length + " output signal indexes, expected 1");
                     }
                 }
+            } else if (input_mapping[input] !== undefined) {
+                if (input_mapping[input].output_signal_indexes.length !== 2) {
+                    throw new Error("Failed to compile module " + this.name + ": Input mapping for input " + input + " has " + input_mapping[input].output_signal_indexes.length + " output signal indexes, expected 1");
+                }
             }
         }
         var nodes = this.proofList;
@@ -520,14 +524,25 @@ export abstract class UnsealConditionModule {
                     throw new Error("Failed to compile module " + this.name + ": Public input index not found for input " + module_input_key + " for proof " + node.proof.data.name);
                 }
                 if (input_edge.input_type === ModuleEdgeInput.user_input) {
-                    return_actions.push({
-                        action: ACTION_STATIC_INPUT_FROM_USER,
-                        params: {
-                            module_input_key: module_input_key,
-                            output_proof_index: current_proof_depth + new_node_index,
-                            public_input_index: public_input_index,
-                        }
-                    });
+                    if (input_mapping[module_input_key] !== undefined) {
+                        return_actions.push({
+                            action: ACTION_PASS_SIGNAL,
+                            params: {
+                                public_input_indexes: node.proof.getSignalIndex(input_edge.mapping[1]),
+                                output_proof_index: input_mapping[module_input_key].output_proof_index,
+                                output_signal_indexes: input_mapping[module_input_key].output_signal_indexes,
+                            }
+                        });
+                    } else {
+                        return_actions.push({
+                            action: ACTION_STATIC_INPUT_FROM_USER,
+                            params: {
+                                module_input_key: module_input_key,
+                                output_proof_index: current_proof_depth + new_node_index,
+                                public_input_index: public_input_index,
+                            }
+                        });
+                    }
                 }
                 if (input_edge.input_type === ModuleEdgeInput.static_input) {
                     return_actions.push({
