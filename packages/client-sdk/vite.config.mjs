@@ -45,7 +45,7 @@ export default defineConfig({
     rollupOptions: {
       // poseidon-lite stays external (a declared runtime dep) so cryptoTools.poseidonTools
       // keeps its value namespace; everything else is inlined for a standalone tarball.
-      external: ['poseidon-lite'],
+      external: ['poseidon-lite', '@zkpassport/utils'],
     },
     chunkSizeWarningLimit: 100000,
   },

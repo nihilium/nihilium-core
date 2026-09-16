@@ -3,6 +3,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as hre from "hardhat";
 import * as dotenv from "dotenv";
+import {
+    VERIFIER_CONFIGS, PROXY_CONFIGS, ALIAS_NAMES, ProxyArgRef,
+} from "./static_contracts";
 dotenv.config();
 
 interface DeploymentEntry {
@@ -19,97 +22,123 @@ interface KnownDeployedContracts {
 }
 
 /**
- * Same contract set as deploy_static.ts. `contract` is the Hardhat FQN used for verification.
+ * Contracts whose constructor arguments cannot be written down, because they are only knowable
+ * from on-chain state. Everything else is derived from static_contracts.ts below, so the verified
+ * set cannot drift from the deployed set.
  */
-const CONTRACTS: {
+const INTROSPECTED_ARGS: {
+    [name: string]: (
+        address: string,
+        deployments: DeploymentData,
+        provider: ethersjs.Provider,
+    ) => Promise<any[]>;
+} = {
+    EmpheralDualMerkleTreeKeccak: async (address, _deployments, provider) => {
+        const c = new ethersjs.Contract(
+            address,
+            ["function owner() view returns (address)", "function levels() view returns (uint32)"],
+            provider,
+        );
+        const [owner, levels] = await Promise.all([c.owner(), c.levels()]);
+        // ethers returns uint32 as bigint; hardhat verify expects a number/string
+        return [owner, Number(levels)];
+    },
+    ChainedProofV2: async (address, deployments, provider) => {
+        const c = new ethersjs.Contract(
+            address,
+            [
+                "function public_proof_verifier() view returns (address)",
+                "function forced_opening_verifier() view returns (address)",
+            ],
+            provider,
+        );
+        try {
+            const [publicVerifier, forcedOpening] = await Promise.all([
+                c.public_proof_verifier(),
+                c.forced_opening_verifier(),
+            ]);
+            return [publicVerifier, forcedOpening];
+        } catch {
+            // Fallback to deployment file (deploy_static used opening_proof for both)
+            const opening = deployments["opening_proof"]?.address;
+            if (!opening) {
+                throw new Error("Could not resolve ChainedProofV2 constructor args");
+            }
+            return [opening, opening];
+        }
+    },
+};
+
+/** Hardhat FQNs for the introspected contracts, which are not in the shared config. */
+const INTROSPECTED_CONTRACT_PATHS: { [name: string]: string } = {
+    EmpheralDualMerkleTreeKeccak: "contracts/EmpheralDualMerkleTreeKeccak.sol:EmpheralDualMerkleTreeKeccak",
+    ChainedProofV2: "contracts/ChainedProofV2.sol:ChainedProofV2",
+};
+
+type VerifyTarget = {
     name: string;
     contract: string;
-    /** Optional: resolve constructor args from on-chain state / deployment JSON */
     getConstructorArgs?: (
         address: string,
         deployments: DeploymentData,
         provider: ethersjs.Provider,
-        getKnownDeployedContracts: () => KnownDeployedContracts
+        getKnownDeployedContracts: () => KnownDeployedContracts,
     ) => Promise<any[]>;
-}[] = [
-    { name: "TopLevelMerkleProof", contract: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
-    { name: "MerkleTreeProof", contract: "contracts/proofs/MerkleTreeProof.sol:MerkleTreeProof" },
-    { name: "KeccakTreeEntry", contract: "contracts/proofs/KeccakTreeEntry.sol:KeccakTreeEntry" },
-    { name: "GreaterOrEqualThen", contract: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
-    { name: "SmallerThan", contract: "contracts/proofs/SmallerThan.sol:SmallerThan" },
-    { name: "TimeDelayProof", contract: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
-    { name: "VerifyEDDSA", contract: "contracts/proofs/VerifyEDDSA.sol:VerifyEDDSA" },
-    { name: "VerifyECDSA", contract: "contracts/proofs/VerifyECDSA.sol:VerifyECDSA" },
-    { name: "AdditionProof", contract: "contracts/proofs/AdditionProof.sol:AdditionProof" },
-    { name: "ManualChoice", contract: "contracts/proofs/ManualChoice.sol:ManualChoice" },
-    { name: "ValueInjection", contract: "contracts/proofs/ValueInjection.sol:ValueInjection" },
-    { name: "Poseidon2Verifier", contract: "contracts/proofs/Poseidon2.sol:Poseidon2Verifier" },
-    { name: "opening_proof", contract: "contracts/proofs/opening_proof.sol:opening_proof" },
-    { name: "hash_tie", contract: "contracts/proofs/hash_tie.sol:hash_tie" },
-    {
-        name: "ZKEmailProof",
-        contract: "contracts/proofs/ZKEmailProof.sol:ZKEmailProof",
-        // Mirrors deploy_static.ts `fixedCallProxyConfigs`: the constructor addresses are
-        // resolved from known_deployed_contracts-<chainId>.json by name.
-        // constructor(address[] _contracts, DKIMRegistry _registry)
-        getConstructorArgs: async (_address, _deployments, _provider, getKnownDeployedContracts) => {
-            const known = getKnownDeployedContracts();
-            const resolve = (contractName: string): string => {
-                const addr = known[contractName];
-                if (!addr) {
-                    throw new Error(
-                        `Contract ${contractName} not found in known_deployed_contracts JSON`
-                    );
-                }
-                return addr;
-            };
-            const contracts = [resolve("zk_email_proof_1024"), resolve("zk_email_proof_2048")];
-            const registry = resolve("zk_email_registry");
-            return [contracts, registry];
-        },
-    },
-    {
-        name: "EmpheralDualMerkleTreeKeccak",
-        contract: "contracts/EmpheralDualMerkleTreeKeccak.sol:EmpheralDualMerkleTreeKeccak",
-        getConstructorArgs: async (address, _deployments, provider) => {
-            const c = new ethersjs.Contract(
-                address,
-                ["function owner() view returns (address)", "function levels() view returns (uint32)"],
-                provider
-            );
-            const [owner, levels] = await Promise.all([c.owner(), c.levels()]);
-            // ethers returns uint32 as bigint; hardhat verify expects a number/string
-            return [owner, Number(levels)];
-        },
-    },
-    {
-        name: "ChainedProofV2",
-        contract: "contracts/ChainedProofV2.sol:ChainedProofV2",
-        getConstructorArgs: async (address, deployments, provider) => {
-            const c = new ethersjs.Contract(
-                address,
-                [
-                    "function public_proof_verifier() view returns (address)",
-                    "function forced_opening_verifier() view returns (address)",
-                ],
-                provider
-            );
-            try {
-                const [publicVerifier, forcedOpening] = await Promise.all([
-                    c.public_proof_verifier(),
-                    c.forced_opening_verifier(),
-                ]);
-                return [publicVerifier, forcedOpening];
-            } catch {
-                // Fallback to deployment file (deploy_static used opening_proof for both)
-                const opening = deployments["opening_proof"]?.address;
-                if (!opening) {
-                    throw new Error("Could not resolve ChainedProofV2 constructor args");
-                }
-                return [opening, opening];
+};
+
+/**
+ * Resolve a proxy's constructor arguments the same way deploy_static.ts did when it deployed them.
+ *
+ * Mirrors its resolveRef: "SELECT:<name>" is something this repo deployed, anything else is an
+ * externally deployed address from known_deployed_contracts, and a nested array is an address[]
+ * argument. Getting this wrong does not fail loudly -- Etherscan just reports a bytecode mismatch.
+ */
+function resolveProxyArgs(
+    args: ProxyArgRef[],
+    deployments: DeploymentData,
+    getKnownDeployedContracts: () => KnownDeployedContracts,
+): any[] {
+    const resolveOne = (ref: string): string => {
+        if (ref.startsWith("SELECT:")) {
+            const name = ref.slice("SELECT:".length);
+            const address = deployments[name]?.address;
+            if (!address) {
+                throw new Error(`Contract ${name} not found in the deployment file`);
             }
-        },
-    },
+            return address;
+        }
+        const address = getKnownDeployedContracts()[ref];
+        if (!address) {
+            throw new Error(`Contract ${ref} not found in known_deployed_contracts JSON`);
+        }
+        return address;
+    };
+    return args.map((arg) => (Array.isArray(arg) ? arg.map(resolveOne) : resolveOne(arg)));
+}
+
+/**
+ * The full verification set, built from the same config deploy_static.ts deploys from.
+ *
+ * Aliases are deliberately absent: they are extra names for one deployment, so verifying them
+ * would re-submit the same address under a contract name Etherscan has already accepted.
+ */
+const CONTRACTS: VerifyTarget[] = [
+    ...VERIFIER_CONFIGS.map((config): VerifyTarget => ({
+        name: config.name,
+        contract: config.contractPath,
+    })),
+    ...PROXY_CONFIGS.map((config): VerifyTarget => ({
+        name: config.name,
+        contract: config.contractPath,
+        getConstructorArgs: async (_address, deployments, _provider, getKnownDeployedContracts) =>
+            resolveProxyArgs(config.args, deployments, getKnownDeployedContracts),
+    })),
+    ...Object.keys(INTROSPECTED_ARGS).map((name): VerifyTarget => ({
+        name,
+        contract: INTROSPECTED_CONTRACT_PATHS[name],
+        getConstructorArgs: async (address, deployments, provider) =>
+            INTROSPECTED_ARGS[name](address, deployments, provider),
+    })),
 ];
 
 function resolveNetworkName(): string {
@@ -253,6 +282,19 @@ async function main() {
 
         const result = await verifyOne(config.name, entry.address, config.contract, constructorArguments);
         summary[result === "already" ? "already" : result]++;
+    }
+
+    // The drift guard. CONTRACTS is derived from static_contracts.ts, so anything sitting in the
+    // deployment file that is neither verifiable nor a known alias means the two have diverged --
+    // usually a contract added to the deploy without being added to the shared config.
+    const covered = new Set(CONTRACTS.map((c) => c.name));
+    const unaccounted = Object.keys(deployments)
+        .filter((name) => !covered.has(name) && !ALIAS_NAMES.has(name));
+    if (unaccounted.length > 0) {
+        console.warn(
+            `\nWarning: ${unaccounted.length} deployed contract(s) are not in static_contracts.ts ` +
+            `and will never be verified:\n  ${unaccounted.join("\n  ")}\n` +
+            `Add them to VERIFIER_CONFIGS / PROXY_CONFIGS, or to ALIAS_NAMES if they share an address.`);
     }
 
     console.log("\n--- Verification summary ---");

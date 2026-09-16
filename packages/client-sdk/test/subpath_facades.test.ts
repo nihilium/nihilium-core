@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { SUBPATHS } from "../subpaths.cjs";
 import * as root from "../src/index";
 import * as zkemailBarrel from "../src/scenarios/zkemail";
+import * as zkpassportBarrel from "../src/zkpassport";
 
 // The published subpaths (`@nihilium/client-sdk/scenarios/zkemail`) are generated from subpaths.cjs,
 // not from the barrel itself, so a name added to a scenario without being added to the manifest would
@@ -11,9 +12,10 @@ import * as zkemailBarrel from "../src/scenarios/zkemail";
 // together. Type-only exports are erased at runtime and cannot be checked here -- a wrong name there
 // surfaces as a compile error in any consumer importing through the subpath.
 describe("subpath facades", () => {
-    // One line per scenario, keyed by the manifest's `source`.
+    // One line per subpath, keyed by the manifest's `source`.
     const BARRELS: Record<string, Record<string, unknown>> = {
         "src/scenarios/zkemail/index.ts": zkemailBarrel,
+        "src/zkpassport/index.ts": zkpassportBarrel,
     };
 
     it("lists exactly the runtime exports of each scenario barrel", () => {

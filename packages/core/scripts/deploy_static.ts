@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as hre from "hardhat";
 import * as dotenv from "dotenv";
+import { VERIFIER_CONFIGS, PROXY_CONFIGS } from "./static_contracts";
 dotenv.config();
 
 // Interface for deployed contract data
@@ -241,42 +242,13 @@ async function main() {
     //TimeDelayProof
     var nonce = (await wallet.provider?.getTransactionCount(wallet.address, "pending")) || 0;
     // --- DEPLOY VERIFIERS ---
-    const verifierConfigs = [
-        { name: "TopLevelMerkleProof", artifactPath: "contracts/proofs/TopLevelMerkleProof.sol/TopLevelMerkleProof", contractPath: "contracts/proofs/TopLevelMerkleProof.sol:TopLevelMerkleProof" },
-        { name: "MerkleTreeProof", artifactPath: "contracts/proofs/MerkleTreeProof.sol/MerkleTreeProof", contractPath: "contracts/proofs/MerkleTreeProof.sol:MerkleTreeProof" },
-        { name: "KeccakTreeEntry", artifactPath: "contracts/proofs/KeccakTreeEntry.sol/KeccakTreeEntry", contractPath: "contracts/proofs/KeccakTreeEntry.sol:KeccakTreeEntry" },
-        { name: "GreaterOrEqualThen", artifactPath: "contracts/proofs/GreaterOrEqualThen.sol/GreaterOrEqualThen", contractPath: "contracts/proofs/GreaterOrEqualThen.sol:GreaterOrEqualThen" },
-        { name: "SmallerThan", artifactPath: "contracts/proofs/SmallerThan.sol/SmallerThan", contractPath: "contracts/proofs/SmallerThan.sol:SmallerThan" },
-        { name: "TimeDelayProof", artifactPath: "contracts/proofs/TimeDelayProof.sol/TimeDelayProof", contractPath: "contracts/proofs/TimeDelayProof.sol:TimeDelayProof" },
-        { name: "VerifyEDDSA", artifactPath: "contracts/proofs/VerifyEDDSA.sol/VerifyEDDSA", contractPath: "contracts/proofs/VerifyEDDSA.sol:VerifyEDDSA" },
-        { name: "VerifyECDSA", artifactPath: "contracts/proofs/VerifyECDSA.sol/VerifyECDSA", contractPath: "contracts/proofs/VerifyECDSA.sol:VerifyECDSA" },
+    // The contract set lives in static_contracts.ts so verify_static.ts sees exactly the same
+    // list. Add contracts there, not here.
+    const verifierConfigs = VERIFIER_CONFIGS;
 
-        { name: "AdditionProof", artifactPath: "contracts/proofs/AdditionProof.sol/AdditionProof", contractPath: "contracts/proofs/AdditionProof.sol:AdditionProof" },
-        //ManualChoiceProof
-        { name: "ManualChoice", artifactPath: "contracts/proofs/ManualChoice.sol/ManualChoice", contractPath: "contracts/proofs/ManualChoice.sol:ManualChoice" },
-        { name: "ValueInjection", artifactPath: "contracts/proofs/ValueInjection.sol/ValueInjection", contractPath: "contracts/proofs/ValueInjection.sol:ValueInjection" },
-        { name: "Poseidon2Verifier", artifactPath: "contracts/proofs/Poseidon2.sol/Poseidon2Verifier", contractPath: "contracts/proofs/Poseidon2.sol:Poseidon2Verifier" },
-        //{ name: "ZKPassport_7", artifactPath: "contracts/proofs/ZKPassport_7.sol/ZKPassport_7", contractPath: "contracts/proofs/ZKPassport_7.sol:ZKPassport_7" },
-        // { name: "generic_adjacent_tree_proof", artifactPath: "contracts/generic_adjacent_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_adjacent_tree_proof.sol:BaseHonkVerifier" },
-        //{ name: "generic_tree_proof", artifactPath: "contracts/generic_tree_proof.sol/BaseHonkVerifier", contractPath: "contracts/generic_tree_proof.sol:BaseHonkVerifier" },
-        // { name: "sub_tree_merkle_proof", artifactPath: "contracts/decomissioned/sub_tree_merkle_proof.sol/sub_tree_merkle_proof", contractPath: "contracts/decomissioned/sub_tree_merkle_proof.sol:sub_tree_merkle_proof" },
-        // { name: "top_level_merkle_proof", artifactPath: "contracts/decomissioned/top_level_merkle_proof.sol/top_level_merkle_proof", contractPath: "contracts/decomissioned/top_level_merkle_proof.sol:top_level_merkle_proof" },
-        { name: "opening_proof", artifactPath: "contracts/proofs/opening_proof.sol/opening_proof", contractPath: "contracts/proofs/opening_proof.sol:opening_proof" },
-        { name: "hash_tie", artifactPath: "contracts/proofs/hash_tie.sol/hash_tie", contractPath: "contracts/proofs/hash_tie.sol:hash_tie" },
-        //{ name: "zk_email_proof", artifactPath: "contracts/proofs/EmailSendVerifier.sol/email_send_no_body", contractPath: "contracts/proofs/EmailSendVerifier.sol:email_send_no_body" },
-        // { name: "IsInListProof", artifactPath: "contracts/proofs/IsInList.sol/IsInListProof", contractPath: "contracts/proofs/IsInList.sol:IsInListProof" },
-        // { name: "DynamicCallProxyProof", artifactPath: "contracts/proofs/DynamicCallProxy.sol/DynamicCallProxyProof", contractPath: "contracts/proofs/DynamicCallProxy.sol:DynamicCallProxyProof" },
-    ];
-
-    const fixedCallProxyConfigs = [
-        { name: "ZKEmailProof", 
-            artifactPath: "contracts/proofs/ZKEmailProof.sol/ZKEmailProof", 
-            contractPath: "contracts/proofs/ZKEmailProof.sol:ZKEmailProof",
-            //Todo name the contracts references from the known_deployed_contracts.json file.
-            //Or prefix SELECT:name from the list above
-        _contracts: ["zk_email_proof_1024", "zk_email_proof_2048"],
-        _registry: knownDeployedContracts["zk_email_registry"] },
-    ];
+    // Proxy verifiers -- contracts that take other verifiers' addresses as constructor
+    // arguments. Shared with verify_static.ts; see static_contracts.ts for the arg-ref grammar.
+    const proxyConfigs = PROXY_CONFIGS;
 
     const verifierAddresses: { [name: string]: string } = {};
 
@@ -306,37 +278,68 @@ async function main() {
             verifierAddresses[config.name] = existing.address;
         }
     }
-//Little ugly, TODO this is now specific to ZKEmail, consider separting it out and leaving the generirc construct
-    for (const config of fixedCallProxyConfigs) {
-        const contracts: string[] = [];
-        for (const contract of config._contracts) {
-            if(contract.startsWith("SELECT:")) {
-                const contractName = contract.split(":")[1];
-                if(!verifierAddresses[contractName]) {
-                    throw new Error(`Contract ${contractName} not found in verifierAddresses`);
+    /**
+     * Record an alias as its own entry pointing at the same address. The bytecode is carried too,
+     * because needsRedeployment looks up both deploymentData and bytecodeMap by name -- an alias
+     * without it would look like a fresh contract and be "redeployed" on the next run.
+     */
+    const registerAliases = (aliases: string[] | undefined, address: string, abi: any, bytecode: string) => {
+        for (const alias of aliases ?? []) {
+            deploymentData[alias] = { address, abi };
+            bytecodeMap[alias] = bytecode;
+            verifierAddresses[alias] = address;
+        }
+    };
+
+    /** Resolve one reference to an address, or undefined when this chain does not have it. */
+    const resolveRef = (ref: string): string | undefined =>
+        ref.startsWith("SELECT:")
+            ? verifierAddresses[ref.slice("SELECT:".length)]
+            : knownDeployedContracts[ref];
+
+    for (const config of proxyConfigs) {
+        const resolved: (string | string[])[] = [];
+        let missing: string | undefined;
+
+        for (const arg of config.args) {
+            if (Array.isArray(arg)) {
+                const addresses: string[] = [];
+                for (const ref of arg) {
+                    const address = resolveRef(ref);
+                    if (!address) { missing = ref; break; }
+                    addresses.push(address);
                 }
-                contracts.push(verifierAddresses[contractName]);
+                if (missing) break;
+                resolved.push(addresses);
             } else {
-                if(!knownDeployedContracts[contract]) {
-                    throw new Error(`Contract ${contract} not found in known_deployed_contracts.json`);
-                }
-                contracts.push(knownDeployedContracts[contract]);
+                const address = resolveRef(arg);
+                if (!address) { missing = arg; break; }
+                resolved.push(address);
             }
         }
-        config._contracts = contracts;
+
+        if (missing) {
+            console.log(
+                `Skipping ${config.name}: "${missing}" is not deployed on chain ${chainId}. ` +
+                `Add it to known_deployed_contracts-${chainId}.json once it exists there.`);
+            continue;
+        }
 
         const contractBytecode = getContractBytecode(config.artifactPath);
         if (needsRedeployment(config.name, contractBytecode, existingDeployments, existingBytecodeMap)) {
-            const fixedCallProxy = await deployContract(config.name, config.contractPath, wallet, gasPrice, nonce, 
-                config._contracts, config._registry);
-            deploymentData[fixedCallProxy.name] = {
-                address: fixedCallProxy.address,
-                abi: fixedCallProxy.abi
-            };
-            bytecodeMap[fixedCallProxy.name] = fixedCallProxy.bytecode;
-            verifierAddresses[config.name] = fixedCallProxy.address;
+            const proxy = await deployContract(
+                config.name, config.contractPath, wallet, gasPrice, nonce, ...resolved);
+            deploymentData[proxy.name] = { address: proxy.address, abi: proxy.abi };
+            bytecodeMap[proxy.name] = proxy.bytecode;
+            verifierAddresses[config.name] = proxy.address;
+            registerAliases(config.aliases, proxy.address, proxy.abi, proxy.bytecode);
             nonce++;
             // Save state after successful deployment
+            saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
+        } else {
+            // Nothing redeployed, but an alias added since the last run still needs recording.
+            const existing = existingDeployments[config.name];
+            registerAliases(config.aliases, existing.address, existing.abi, contractBytecode);
             saveDeploymentState(chainId.toString(), deploymentData, bytecodeMap);
         }
     }

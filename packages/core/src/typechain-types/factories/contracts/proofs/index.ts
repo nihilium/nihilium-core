@@ -3,12 +3,16 @@
 /* eslint-disable */
 export * as emailSendVerifierSol from "./EmailSendVerifier.sol";
 export * as fixedCallProxySol from "./FixedCallProxy.sol";
+export * as learnedCallProxySol from "./LearnedCallProxy.sol";
 export * as poseidon2Sol from "./Poseidon2.sol";
+export * as testZkPassportUpstreamSol from "./TestZKPassportUpstream.sol";
+export * as zkPassportProofSol from "./ZKPassportProof.sol";
 export * as encryptProofSol from "./encrypt_proof.sol";
 export * as interfaces from "./interfaces";
 export { AdditionProof__factory } from "./AdditionProof__factory";
 export { Between__factory } from "./Between__factory";
 export { DKIMRegistry__factory } from "./DKIMRegistry__factory";
+export { FormatBoundData__factory } from "./FormatBoundData__factory";
 export { GreaterOrEqualThen__factory } from "./GreaterOrEqualThen__factory";
 export { IVerifier__factory } from "./IVerifier__factory";
 export { KeccakPreImage__factory } from "./KeccakPreImage__factory";

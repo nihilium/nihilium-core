@@ -17,6 +17,9 @@ import { ValueInjection } from "./lib/011_value_injection";
 import { Poseidon2Verifier } from "./lib/012_poseidon2";
 import { ZKEmailProof } from "./zk_proofs/zk_email";
 import { HashTieProof } from "./zk_proofs/hash_tie";
+import { ZKPassportAgeProof } from "./zk_proofs/zkpassport_age";
+import { ZKPassportBirthdateProof } from "./zk_proofs/zkpassport_birthdate";
+import { ZkPassportCustomDataFormatProof } from "./zk_proofs/zkpassport_bound_data";
 
 export abstract class ProofLibraryType {
     standard: {
@@ -75,5 +78,8 @@ export const standardProofs = {
     ValueInjection,
     Poseidon2Verifier,
     ZKEmailProof,
-    HashTieProof
+    HashTieProof,
+    ZKPassportAgeProof,
+    ZKPassportBirthdateProof,
+    ZkPassportCustomDataFormatProof
 }

@@ -19,6 +19,12 @@
       "browser": "./dist/types.mjs",
       "default": "./dist/types.mjs"
     },
+    "./zkpassport": {
+      "types": "./dist/zkpassport.d.ts",
+      "node": "./dist/node/zkpassport.mjs",
+      "browser": "./dist/zkpassport.mjs",
+      "default": "./dist/zkpassport.mjs"
+    },
     "./server": {
       "types": "./dist/server.d.ts",
       "node": "./dist/node/server.mjs"
@@ -34,6 +40,9 @@
     "*": {
       "types": [
         "./dist/types.d.ts"
+      ],
+      "zkpassport": [
+        "./dist/zkpassport.d.ts"
       ],
       "server": [
         "./dist/server.d.ts"
@@ -69,6 +78,7 @@
     "@noble/hashes": "^1.3.3",
     "@zk-kit/baby-jubjub": "^1.0.3",
     "@zk-kit/utils": "^1.4.1",
+    "@zkpassport/utils": "^0.37.5",
     "axios": "^1.9.0",
     "circomlibjs": "^0.1.7",
     "ethers": "^6.14.0",

@@ -4493,5 +4493,1294 @@
         "gas": null
       }
     ]
+  },
+  "ZkPassportCustomDataFormatProof": {
+    "address": "0xb1696cF05c2f9c3B1c743E16aB51e83998780653",
+    "abi": [
+      {
+        "type": "error",
+        "inputs": [
+          {
+            "name": "length",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "DataTooLong"
+      },
+      {
+        "type": "error",
+        "inputs": [],
+        "name": "EmptyCustomData"
+      },
+      {
+        "type": "error",
+        "inputs": [
+          {
+            "name": "length",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "maxLength",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "InputTooLong"
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "BOUND_DATA_IDENTIFIER_CUSTOM_DATA",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint8",
+            "baseType": "uint8",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "MAX_DATA_LENGTH",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "MAX_FIELD_SIZE",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "PROOF_TYPE_BIND",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint8",
+            "baseType": "uint8",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "PROOF_TYPE_LENGTH_BIND_EVM",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "bytes32ToHexString",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "hexString",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "computeSha256",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "hash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "formatBytes32Data",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "formattedData",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "customData",
+            "type": "string",
+            "baseType": "string",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "formatCustomData",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "formattedData",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "customData",
+            "type": "string",
+            "baseType": "string",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "formatCustomDataAsUint8Array",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "formattedData",
+            "type": "uint8[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "uint8",
+              "baseType": "uint8",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "getBindEVMParameterCommitment",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "commitment",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "maxLength",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "getBindEVMParameterCommitment",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "commitment",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "n",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "len",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "numberToBytesBE",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "result",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "x",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "maxFieldSize",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "packBeBytesIntoField",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "result",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "data",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "maxLength",
+            "type": "uint256",
+            "baseType": "uint256",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "rightPadArrayWithZeros",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "paddedData",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "pure",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ZKPassportProof": {
+    "address": "0x9B2513c860E477e996a4Ed5cB2Bafac79D517D1F",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "_rootVerifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "at",
+            "type": "uint64",
+            "baseType": "uint64",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "BanRecorded",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "verifier",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "VerifierLearned",
+        "anonymous": false
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "bannedAt",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint64",
+            "baseType": "uint64",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "version",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "vkeyHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "learnVerifier",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "vkeyHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "recordBan",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "rootVerifier",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "verifiers",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "versionOf",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ZKPassportAgeProof": {
+    "address": "0x9B2513c860E477e996a4Ed5cB2Bafac79D517D1F",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "_rootVerifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "at",
+            "type": "uint64",
+            "baseType": "uint64",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "BanRecorded",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "verifier",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "VerifierLearned",
+        "anonymous": false
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "bannedAt",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint64",
+            "baseType": "uint64",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "version",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "vkeyHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "learnVerifier",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "vkeyHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "recordBan",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "rootVerifier",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "verifiers",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "versionOf",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
+  },
+  "ZKPassportBirthdateProof": {
+    "address": "0x9B2513c860E477e996a4Ed5cB2Bafac79D517D1F",
+    "abi": [
+      {
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "_rootVerifier",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "at",
+            "type": "uint64",
+            "baseType": "uint64",
+            "indexed": false,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "BanRecorded",
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "inputs": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "verifier",
+            "type": "address",
+            "baseType": "address",
+            "indexed": true,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "VerifierLearned",
+        "anonymous": false
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "bannedAt",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint64",
+            "baseType": "uint64",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "version",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "vkeyHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "learnVerifier",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "vkeyHash",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "recordBan",
+        "constant": false,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [],
+        "name": "rootVerifier",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "verifiers",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "address",
+            "baseType": "address",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "_proof",
+            "type": "bytes",
+            "baseType": "bytes",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          },
+          {
+            "name": "_publicInputs",
+            "type": "bytes32[]",
+            "baseType": "array",
+            "components": null,
+            "arrayLength": -1,
+            "arrayChildren": {
+              "name": "",
+              "type": "bytes32",
+              "baseType": "bytes32",
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null
+            }
+          }
+        ],
+        "name": "verify",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "baseType": "bool",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      },
+      {
+        "type": "function",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "name": "versionOf",
+        "constant": true,
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32",
+            "baseType": "bytes32",
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null
+          }
+        ],
+        "stateMutability": "view",
+        "payable": false,
+        "gas": null
+      }
+    ]
   }
 }

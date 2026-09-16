@@ -102,6 +102,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.FixedCallProxyProof__factory>;
     getContractFactory(
+      name: "FormatBoundData",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FormatBoundData__factory>;
+    getContractFactory(
       name: "GreaterOrEqualThen",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GreaterOrEqualThen__factory>;
@@ -125,6 +129,10 @@ declare module "hardhat/types/runtime" {
       name: "KeccakTreeEntry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.KeccakTreeEntry__factory>;
+    getContractFactory(
+      name: "LearnedCallProxyProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.LearnedCallProxyProof__factory>;
     getContractFactory(
       name: "ManualChoice",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -150,6 +158,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue__factory>;
     getContractFactory(
+      name: "TestExpectInputs",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TestExpectInputs__factory>;
+    getContractFactory(
+      name: "TestZKPassportRoot",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TestZKPassportRoot__factory>;
+    getContractFactory(
+      name: "TestZKPassportSubVerifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TestZKPassportSubVerifier__factory>;
+    getContractFactory(
       name: "TimeDelayProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TimeDelayProof__factory>;
@@ -173,6 +193,14 @@ declare module "hardhat/types/runtime" {
       name: "ZKEmailProof",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZKEmailProof__factory>;
+    getContractFactory(
+      name: "IZKPassportRootVerifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IZKPassportRootVerifier__factory>;
+    getContractFactory(
+      name: "ZKPassportProof",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ZKPassportProof__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -285,6 +313,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.FixedCallProxyProof>;
     getContractAt(
+      name: "FormatBoundData",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FormatBoundData>;
+    getContractAt(
       name: "GreaterOrEqualThen",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -314,6 +347,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.KeccakTreeEntry>;
+    getContractAt(
+      name: "LearnedCallProxyProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.LearnedCallProxyProof>;
     getContractAt(
       name: "ManualChoice",
       address: string | ethers.Addressable,
@@ -345,6 +383,21 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     getContractAt(
+      name: "TestExpectInputs",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TestExpectInputs>;
+    getContractAt(
+      name: "TestZKPassportRoot",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TestZKPassportRoot>;
+    getContractAt(
+      name: "TestZKPassportSubVerifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TestZKPassportSubVerifier>;
+    getContractAt(
       name: "TimeDelayProof",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -374,6 +427,16 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ZKEmailProof>;
+    getContractAt(
+      name: "IZKPassportRootVerifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IZKPassportRootVerifier>;
+    getContractAt(
+      name: "ZKPassportProof",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ZKPassportProof>;
 
     deployContract(
       name: "Ownable",
@@ -464,6 +527,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.FixedCallProxyProof>;
     deployContract(
+      name: "FormatBoundData",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FormatBoundData>;
+    deployContract(
       name: "GreaterOrEqualThen",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GreaterOrEqualThen>;
@@ -487,6 +554,10 @@ declare module "hardhat/types/runtime" {
       name: "KeccakTreeEntry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KeccakTreeEntry>;
+    deployContract(
+      name: "LearnedCallProxyProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.LearnedCallProxyProof>;
     deployContract(
       name: "ManualChoice",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -512,6 +583,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     deployContract(
+      name: "TestExpectInputs",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TestExpectInputs>;
+    deployContract(
+      name: "TestZKPassportRoot",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TestZKPassportRoot>;
+    deployContract(
+      name: "TestZKPassportSubVerifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TestZKPassportSubVerifier>;
+    deployContract(
       name: "TimeDelayProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TimeDelayProof>;
@@ -535,6 +618,14 @@ declare module "hardhat/types/runtime" {
       name: "ZKEmailProof",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZKEmailProof>;
+    deployContract(
+      name: "IZKPassportRootVerifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IZKPassportRootVerifier>;
+    deployContract(
+      name: "ZKPassportProof",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ZKPassportProof>;
 
     deployContract(
       name: "Ownable",
@@ -647,6 +738,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.FixedCallProxyProof>;
     deployContract(
+      name: "FormatBoundData",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FormatBoundData>;
+    deployContract(
       name: "GreaterOrEqualThen",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -676,6 +772,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KeccakTreeEntry>;
+    deployContract(
+      name: "LearnedCallProxyProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.LearnedCallProxyProof>;
     deployContract(
       name: "ManualChoice",
       args: any[],
@@ -707,6 +808,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TestVerifyAlwaysTrue>;
     deployContract(
+      name: "TestExpectInputs",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TestExpectInputs>;
+    deployContract(
+      name: "TestZKPassportRoot",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TestZKPassportRoot>;
+    deployContract(
+      name: "TestZKPassportSubVerifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TestZKPassportSubVerifier>;
+    deployContract(
       name: "TimeDelayProof",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -736,6 +852,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZKEmailProof>;
+    deployContract(
+      name: "IZKPassportRootVerifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IZKPassportRootVerifier>;
+    deployContract(
+      name: "ZKPassportProof",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ZKPassportProof>;
 
     // default types
     getContractFactory(

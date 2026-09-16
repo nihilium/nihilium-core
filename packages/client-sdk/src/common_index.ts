@@ -26,6 +26,13 @@ export type { EndpointFilter, NihiliumClientOptions } from './client';
 // here for compatibility; `export *` (rather than a name list) so the root cannot drift from the barrel.
 export * from './scenarios/zkemail';
 
+// ZKPassport signal commitments. Not a scenario -- shared utilities the application (or a
+// collection built in the chained-proof editor) uses to derive what @nihilium/core's
+// ZKPassportModule takes as a production input. The canonical import path is the subpath,
+// `@nihilium/client-sdk/zkpassport`; re-exported here because subpath facades resolve through the
+// root bundle, and `export *` so the root cannot drift from the barrel.
+export * from './zkpassport';
+
 export const cryptoTools = nhsdk.cryptoTools;
 
 // export const devProcessorUrl:string = "https://processor1.nihilium.io";

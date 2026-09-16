@@ -13,7 +13,9 @@
  *    subpath resolved to a duplicated copy, setApiEndpoint() called through the root would not reach it.
  *
  * Adding a scenario is one entry here plus a barrel at `source`; package.json needs no edit (its
- * "./scenarios/*" export is a wildcard).
+ * "./scenarios/*" export is a wildcard). A subpath outside that wildcard -- "zkpassport", which
+ * is shared utilities rather than a scenario -- also needs an "exports" and "typesVersions"
+ * entry in package.json.
  *
  * CommonJS on purpose, in an otherwise ESM package: it is read both by scripts/emit-subpath-facades.mjs
  * (ESM, which can import CJS) and by the mocha specs (transpiled to CJS, which cannot require ESM).
@@ -45,6 +47,28 @@ const SUBPATHS = [
             "ZKEmailDomainCheck",
             "ZKEmailDomainVerdict",
             "FetchLike",
+        ],
+    },
+    {
+        subpath: "zkpassport",
+        source: "src/zkpassport/index.ts",
+        values: [
+            "atLeastAge",
+            "findAgeMatches",
+            "findBirthdateMatches",
+            "getSignalLeaves",
+            "getCommitments",
+            "getMerkleCommitment",
+            "generateSignalCommitments",
+            "verifySignalCommitments",
+            "hashSignalCommitmentRequest",
+            "SIGNAL_TREE_DEPTH",
+        ],
+        types: [
+            "SignalCommitmentRequest",
+            "SignalCommitmentResponse",
+            "AgeRange",
+            "BirthdateRange",
         ],
     },
 ];

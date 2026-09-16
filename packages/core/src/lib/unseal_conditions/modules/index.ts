@@ -9,7 +9,6 @@ import { MerkleTreeModule } from './standard_modules/merkle_tree_module';
 import { ManualChoiceModule } from './standard_modules/manual_choice';
 import { TopLevelTreeModule } from './standard_modules/top_level_tree_module';
 import { HashPreimageModule } from './standard_modules/hash_preimage';
-import { ZKPassportDummyModule } from './dummy_modules/ZKPassportDummy';
 import { ZKEmailDummyModule } from './dummy_modules/ZKEmailDummy';
 import { VerifyECDSAModule } from './standard_modules/verify_ecdsa';
 import { VerifyEDDSAModule } from './standard_modules/verify_eddsa';
@@ -19,6 +18,9 @@ import { InclusionProofModule } from './standard_modules/inclusion_proof';
 import { ValueInjectionModule } from './standard_modules/value_injection';
 import { ZKEmailModule } from './standard_modules/ZKEmail';
 import { HashTieModule } from './standard_modules/hash_tie';
+import { ZKPassportAgeModule } from './standard_modules/ZKPassportAge';
+import { ZKPassportBirthdateModule } from './standard_modules/ZKPassportBirthdate';
+import { ZKPassportMinimumAgeModule } from './standard_modules/ZKPassportMinimumAge';
 
 export {
     BeforeTimeModule,
@@ -29,7 +31,9 @@ export {
     ManualChoiceModule,
     TopLevelTreeModule,
     HashPreimageModule,
-    ZKPassportDummyModule,
+    ZKPassportAgeModule,
+    ZKPassportBirthdateModule,
+    ZKPassportMinimumAgeModule,
     ZKEmailDummyModule,
     VerifyECDSAModule,
     VerifyEDDSAModule,
@@ -52,9 +56,22 @@ export abstract class ModuleLibraryType {
     public custom: {
         [key: string]: new (...args: any[]) => UnsealConditionModule;
     } = {};
+    /**
+     * Registering a custom module under a name `standard` already holds used to be silent: this
+     * lookup prefers `standard`, and import_collectionnode_from_json reads `standard` and never
+     * consults `custom` at all, so the custom registration was simply unreachable. Refusing the
+     * registration is the only way a caller finds out.
+     */
     addCustomModule(name: string, module: new (...args: any[]) => UnsealConditionModule): void {
+        if (this.standard[name]) {
+            throw new Error(
+                `Module "${name}" is already a standard module; a custom registration under that ` +
+                `name would never be reached (getModule and JSON import both prefer standard). ` +
+                `Pick a different name, or replace the standard entry.`);
+        }
         this.custom[name] = module;
     }
+
     getModule(name: string, proofLibrary: ProofLibraryType): UnsealConditionModule {
         if(this.standard[name]) {
             return new this.standard[name](proofLibrary);
@@ -81,7 +98,9 @@ export class StandardModuleLibrary extends ModuleLibraryType {
         ["MerkleTreeModule"]: MerkleTreeModule,
         
         ["HashPreimageModule"]: HashPreimageModule,
-        ["ZKPassportModule"]: ZKPassportDummyModule,
+        ["ZKPassportAgeModule"]: ZKPassportAgeModule,
+        ["ZKPassportBirthdateModule"]: ZKPassportBirthdateModule,
+        ["ZKPassportMinimumAgeModule"]: ZKPassportMinimumAgeModule,
         ["ZKEmailModule"]: ZKEmailModule,
         ["VerifyEDDSAModule"]: VerifyEDDSAModule,
         ["VerifyECDSAModule"]: VerifyECDSAModule,
