@@ -114,6 +114,11 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 proof_key: opening_proof_id,
                 signal_key: "metadata_root_hash",
                 description: "The metadata root hash",
+                // One metadata root is chosen for the whole seal and every package carries its hash,
+                // so a module bound to this can be produced once and shared even though this module
+                // cannot. That is what lets a passport condition behind a HashTie cost one scan
+                // rather than one per processor.
+                per_processor: false,
             },
             timestamp: {
                 name: "timestamp",
@@ -121,6 +126,10 @@ export class DefaultAnchoredOpeningProofModule extends UnsealConditionModule {
                 proof_key: top_level_merkle_tree_proof_id,
                 signal_key: "block_timestamp",
                 description: "The timestamp of the block that contains the reveal value",
+                // Every processor proves against the same anchoring instant -- the unsealing client
+                // resolves one and refuses to proceed if they disagree -- which is why ZKEmailModule
+                // is shared today despite consuming it. ctx.timestamp exists for the same reason.
+                per_processor: false,
             },
             sub_tree_index: {
                 name: "sub_tree_index",

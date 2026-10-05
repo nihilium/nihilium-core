@@ -104,12 +104,70 @@ export class UnsealPathProducer {
      */
     perProcessorModuleIds(proof_index: number): Set<string> {
         const ids = new Set<string>();
+        // modulesForPath is in template order, which is topological: a module's upstreams are always
+        // classified before it, so one forward pass is enough.
+        const seen = new Map<string, UnsealConditionModule>();
+
         for (const { compiled_module, module } of this.modulesForPath(proof_index)) {
-            if (module.requires_unique_proof_per_processor) {
-                ids.add(compiled_module.module_id);
+            const module_id = compiled_module.module_id;
+            seen.set(module_id, module);
+
+            let perProcessor = module.requires_unique_proof_per_processor;
+            if (!perProcessor) {
+                for (const input_name of this.boundInputNames(module)) {
+                    const edge = this.bindingEdge(module_id, input_name);
+                    if (!edge) continue;
+                    if (this.outputIsPerProcessor(ids, seen, edge.from_node_id, edge.mapping[0])) {
+                        perProcessor = true;
+                        break;
+                    }
+                }
             }
+            if (perProcessor) ids.add(module_id);
         }
         return ids;
+    }
+
+    /**
+     * This module's inputs the chain substitutes into, i.e. the ones a binding can feed.
+     *
+     * Optional-called: a module library may hand back anything that can produce, and a module that
+     * declares no inputs simply has no bindings to resolve.
+     */
+    private boundInputNames(module: UnsealConditionModule): string[] {
+        return Object.entries(module.getUserInputs?.() ?? {})
+            .filter(([, input]) => (input as { user_input?: boolean })?.user_input === false)
+            .map(([name]) => name);
+    }
+
+    /** The collection edge feeding `input_name` of `module_id`, if the graph makes one. */
+    private bindingEdge(module_id: string, input_name: string): any | undefined {
+        const edges = this.template.compiled_collection?.collection_export?.edges;
+        if (!Array.isArray(edges)) return undefined;
+        return edges.find((edge: any) =>
+            edge?.to_node_id === module_id && edge?.mapping?.[1] === input_name);
+    }
+
+    /**
+     * Whether one named output of an already-classified module carries a value that differs per
+     * processor.
+     *
+     * Per output rather than per module, and that distinction is the whole point. A module produced
+     * once for every processor can still expose an output that is identical across all of them --
+     * the opening module's metadata_root_hash is one value chosen for the seal, and HashTieModule's
+     * tied_hash is poseidon1 of one preimage chosen per recovery. Classifying by module alone would
+     * mark every consumer of those per-processor, which would turn zkEmail's single shared proof
+     * into k.
+     */
+    private outputIsPerProcessor(
+        perProcessorIds: Set<string>,
+        modules: Map<string, UnsealConditionModule>,
+        from_node_id: string,
+        output_name: string,
+    ): boolean {
+        if (!perProcessorIds.has(from_node_id)) return false;
+        const declared = modules.get(from_node_id)?.getOutputs?.()?.[output_name];
+        return declared?.per_processor !== false;
     }
 
     /**
@@ -146,7 +204,9 @@ export class UnsealPathProducer {
                         `requires external inputs (${requiredInputs.join(", ")}) but no resolver was provided`);
                 }
                 const inputs = resolver ? await resolver(module, compiled_module) : {};
-                const produceCtx = this.guardUpstream(ctx, module_id, perProcessor);
+                const bound_inputs = this.resolveBindings(
+                    proof_index, compiled_module, module, ctx.upstream, perProcessor);
+                const produceCtx = { ...this.guardUpstream(ctx, module_id, perProcessor), bound_inputs };
                 this.emitModule({ proof_index, module_id, module_name, phase: UnsealModulePhase.Producing });
                 try {
                     result = await module.produce(produceCtx, inputs);
@@ -166,6 +226,67 @@ export class UnsealPathProducer {
         }
 
         return { proofs, public_inputs };
+    }
+
+    /**
+     * The values the chain will substitute into this module's `user_input: false` inputs at verify
+     * time, keyed by the module's own input name.
+     *
+     * A module declares such an input and the collection binds it to an upstream module's output;
+     * the verifier then overwrites that public-input slot with the upstream value before checking
+     * the proof (see ChainedProof.dryrun_chain_pass_signal). A module that proves over a different
+     * value produces a proof that cannot verify -- which is exactly what happened when HashTieModule
+     * ignored its declared `tied_value` and always tied to the seal's reveal_value: correct for the
+     * one collection that binds `reveal_value -> tied_value`, and silently wrong for any other.
+     *
+     * Resolved here rather than in the module because a module knows it has an input called
+     * `tied_value`; it has no way to learn that `UnsealOpeningModule_0.metadata_root_hash` is what
+     * feeds it. That is a property of the graph, and the graph is what this class holds.
+     *
+     * A binding is omitted -- not an error -- when the upstream module has not produced, when it
+     * emits no outputs, or when this module is shared while the value would come from a
+     * per-processor one. The last is the same unsoundness `guardUpstream` refuses: a single shared
+     * proof must not bind one processor's data. Modules read the result as
+     * `ctx.bound_inputs?.<name> ?? <their own default>`, so an omitted binding is the behaviour
+     * they had before this existed.
+     *
+     * Public, like perProcessorModuleIds, because it answers a question about the graph rather than
+     * about a run: "what will the verifier substitute here?" is worth asserting in a test, and a
+     * downstream SDK pinning this fork needs to be able to ask it.
+     */
+    resolveBindings(
+        proof_index: number,
+        compiled_module: CompiledModule,
+        module: UnsealConditionModule,
+        upstream: { [module_id: string]: ModuleProof },
+        perProcessor: Set<string>,
+    ): { [input_name: string]: any } {
+        const consumerIsShared = !perProcessor.has(compiled_module.module_id);
+        const modules = consumerIsShared ? this.modulesById(proof_index) : undefined;
+        const bound: { [input_name: string]: any } = {};
+
+        // user_input inputs are supplied at seal time and compiled into the template; only the
+        // chain-substituted ones can disagree with what the module proves over.
+        for (const input_name of this.boundInputNames(module)) {
+            const edge = this.bindingEdge(compiled_module.module_id, input_name);
+            if (!edge) continue;
+            if (modules
+                && this.outputIsPerProcessor(
+                    perProcessor, modules, edge.from_node_id, edge.mapping[0])) continue;
+
+            const value = upstream[edge.from_node_id]?.outputs?.[edge.mapping[0]];
+            if (value !== undefined) bound[input_name] = value;
+        }
+        return bound;
+    }
+
+    /** Every module on a path by id, for resolving an upstream output's declaration. */
+    private modulesById(proof_index: number): Map<string, UnsealConditionModule> {
+        const map = new Map<string, UnsealConditionModule>();
+        for (const { compiled_module, module } of this.modulesForPath(proof_index)) {
+            map.set(compiled_module.module_id, module);
+        }
+        return map;
     }
 
     /**

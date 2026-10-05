@@ -55,9 +55,11 @@ describe("ZKPassport modules", () => {
         assert.instanceOf(minimumAge, ZKPassportMinimumAgeModule);
         // The editor offers them as separate choices, so they must not collapse into one another.
         assert.notInstanceOf(minimumAge, ZKPassportAgeModule);
+        // Not flagged per-processor: whether the proof can be shared depends on what the collection
+        // binds custom_data to, which is a property of the graph and is worked out by
+        // UnsealPathProducer.perProcessorModuleIds. See test/bound_inputs.test.ts.
         for (const module of [age, birthdate, minimumAge]) {
-            assert.isTrue(module.requires_unique_proof_per_processor,
-                "custom_data binds to the per-processor reveal_value");
+            assert.isFalse(module.requires_unique_proof_per_processor);
         }
     });
 

@@ -14,6 +14,7 @@
  *   node scripts/zkpassport_verifiers.mjs sync --apply   # actually send them (needs PRIVATE_KEY)
  *
  * Options:
+ *   --env <file>    env file to load, relative to packages/core (default: .env)
  *   --rpc <url>     JSON-RPC endpoint      (default: $SEPOLIA_RPC_URL, else the hardhat default)
  *   --chain <id>    chain id               (default: 11155111)
  *   --proxy <addr>  our ZKPassportProof    (default: looked up in deployed-contracts-<chain>.json)
@@ -43,8 +44,24 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ethers } from "ethers";
+import dotenv from "dotenv";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+/** Package root, so paths do not depend on where the script was invoked from. */
+const PACKAGE_ROOT = path.join(HERE, "..");
+
+/**
+ * Load the env file before anything reads process.env.
+ *
+ * Resolved against the package root rather than the cwd, so `node packages/core/scripts/...` from
+ * the repo root works the same as running it from packages/core. dotenv does not overwrite
+ * variables that are already set, so wrapping this in the repo's usual
+ * `dotenv -e .env.sepolia -- ...` still wins, and the sibling npm scripts keep working unchanged.
+ */
+const envArgIndex = process.argv.indexOf("--env");
+const envFile = envArgIndex === -1 ? ".env" : process.argv[envArgIndex + 1];
+const envPath = path.resolve(PACKAGE_ROOT, envFile);
+const envResult = dotenv.config({ path: envPath });
 
 /** The SubVerifier's unnamed `vkeyHash -> verifier` getter. Same selector ZKPassportProof uses. */
 const SUB_LOOKUP_SELECTOR = "0x1e8e0f8e";
@@ -275,6 +292,10 @@ async function main() {
     const rootAddress = resolveRootAddress();
     if (!rootAddress) throw new Error(`No zkpassport_root_verifier in known_deployed_contracts-${CHAIN}.json; pass --root`);
 
+    // "It does not read the env file" should never be a guess.
+    log(envResult.error
+        ? `env: no ${envFile} at ${envPath} (using the ambient environment)`
+        : `env: loaded ${envPath}`);
     log(`chain ${CHAIN} via ${RPC}`);
     log(`root verifier ${rootAddress}`);
     if ((await provider.getCode(rootAddress)) === "0x") {
@@ -341,7 +362,12 @@ async function main() {
         log(`\nDry run. Re-run with --apply to send these transactions.`);
         return;
     }
-    if (!process.env.PRIVATE_KEY) throw new Error("--apply needs PRIVATE_KEY in the environment");
+    if (!process.env.PRIVATE_KEY) {
+        throw new Error(
+            `--apply needs PRIVATE_KEY. Looked in ${envPath}` +
+            `${envResult.error ? " (not found)" : " (loaded, but it sets no PRIVATE_KEY)"}. ` +
+            `Pass --env .env.sepolia, or run the zkpassport-sync-sepolia npm script.`);
+    }
 
     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
     log(`\nsending as ${wallet.address}`);

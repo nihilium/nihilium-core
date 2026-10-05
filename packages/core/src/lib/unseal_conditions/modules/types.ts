@@ -21,6 +21,17 @@ export type ModuleOutput = {
     description: string;
     proof_key: string;
     signal_key: string; //[Start index, length]
+    /**
+     * Whether this output's value differs per processor. Defaults to the producing module's own
+     * requires_unique_proof_per_processor.
+     *
+     * Set false for an output that is the same for every processor even though the module producing
+     * it is not -- the opening module is per-processor because its proof binds that processor's
+     * reveal_value, but its metadata_root_hash is one value chosen once for the whole seal. A
+     * consumer bound to such an output can still be produced once and shared, which is the
+     * difference between one ZK proof per seal and one per processor.
+     */
+    per_processor?: boolean;
 }
 export type IOMap = {
     [key: string]: IO;
@@ -322,6 +333,21 @@ export type ProofProductionContext = {
     from_timestamp?: number;
     /** Contract addresses a module needs at production time, e.g. a verifier named in a public signal. */
     address_map?: AddressMap;
+    /**
+     * The values the chain will substitute into this module's `user_input: false` inputs at verify
+     * time, keyed by the module's own input name.
+     *
+     * A module declares such an input, the collection binds it to an upstream module's output with a
+     * signal_pass edge, and the verifier overwrites that public-input slot with the upstream value
+     * before checking the proof. A module that proves over some other value therefore produces a
+     * proof that cannot verify -- so the producer resolves these from the compiled graph and hands
+     * them over, and the module never has to know which node feeds it.
+     *
+     * A binding is absent when the collection leaves the input unbound, or when this module is
+     * produced once and shared but the value would come from a per-processor output. Modules
+     * therefore read it as `ctx.bound_inputs?.<name> ?? <their own default>`.
+     */
+    bound_inputs?: { [input_name: string]: any };
 }
 
 export abstract class UnsealConditionModule {

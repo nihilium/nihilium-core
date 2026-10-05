@@ -204,6 +204,7 @@ export class NihiliumSealingClient {
         metadata_root: bigint,
         template_inputs: { [key: string]: any } = {},
         data_stream_mapping: { [key: string]: string } = {},
+        
     ): Promise<NihiliumSeal> {
         // If the caller gives no explicit mapping, map every datastream input the template declares to
         // the client's first datastream (the common single-datastream case, e.g. reveal-only). This

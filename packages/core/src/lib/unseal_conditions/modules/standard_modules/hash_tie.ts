@@ -31,9 +31,10 @@ import { circomHashTie, cryptoTools } from "@nihilium/zkp-circuits";
 
 export class HashTieModule extends UnsealConditionModule {
 
-    // The produced proof binds the per-processor reveal_value into tied_value (see produce below), so it
-    // cannot be reused across processors — each processor's package has a different reveal_value.
-    override requires_unique_proof_per_processor: boolean = true;
+    // Deliberately not flagged per-processor. Whether this module's proof can be shared depends on
+    // what the collection binds tied_value to, not on the module: bound to the opening module's
+    // reveal_value it is per-processor, bound to its metadata_root_hash it is one proof for the whole
+    // seal. UnsealPathProducer.perProcessorModuleIds works that out from the graph.
 
 
 
@@ -81,6 +82,11 @@ export class HashTieModule extends UnsealConditionModule {
                 description: "The hash that is tied to the value",
                 proof_key: hash_tie_proof_id,
                 signal_key: "tied_hash",
+                // poseidon1 of the preimage, and the application picks one preimage per recovery, so
+                // this is the same for every processor whatever the tied value is. Without this,
+                // ZKEmailModule -- which binds its subject_value here -- would be reclassified
+                // per-processor and its one shared proof would become k.
+                per_processor: false,
             },
         }
     }
@@ -94,13 +100,19 @@ export class HashTieModule extends UnsealConditionModule {
         var return_proofs = ["0x" + cryptoTools.uint8ArrayToHex(proof.proof)];
         var return_public_inputs = [proof.publicSignals];
 
-        return {proofs: return_proofs, public_inputs: return_public_inputs, outputs: {}}
+        // Emitted rather than left empty: tied_hash is what a downstream module binds to, and it can
+        // only read it from here.
+        return {
+            proofs: return_proofs,
+            public_inputs: return_public_inputs,
+            outputs: this.obtain_outputs(return_public_inputs),
+        }
 
     }
 
     /**
-     * Only the preimage is application-supplied; the tied value is the seal's reveal_value,
-     * taken from the protocol context.
+     * Only the preimage is application-supplied; the tied value comes from whatever the collection
+     * binds this module's `tied_value` input to.
      */
     override productionInputs(): IOMap {
         return {
@@ -109,8 +121,20 @@ export class HashTieModule extends UnsealConditionModule {
         };
     }
 
+    /**
+     * The tied value is the one the chain will substitute into the proof's `tied_value` signal, so
+     * it has to be read from the graph rather than assumed. This used to always take the seal's
+     * reveal_value, which is right only for a collection that wires `reveal_value -> tied_value`;
+     * anything else (metadata_root_hash, say) proved over one value and verified against another.
+     *
+     * The fallback keeps direct callers and hand-built contexts working, and is exactly the old
+     * behaviour. Normalized through BigInt because the two sources are textually different
+     * renderings of the same field element -- public_package.reveal_value is already decimal, while
+     * an upstream output is the raw public signal -- and the circom witness depends on the text.
+     */
     override async produce(ctx: ProofProductionContext, inputs: { preimage: string }): Promise<ModuleProof> {
-        return this.produce_proofs(inputs.preimage, ctx.seal.public_package.reveal_value);
+        const tied_value = ctx.bound_inputs?.tied_value ?? ctx.seal.public_package.reveal_value;
+        return this.produce_proofs(inputs.preimage, BigInt(tied_value).toString());
     }
 
     

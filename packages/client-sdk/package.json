@@ -1,6 +1,6 @@
 {
   "name": "@nihilium/client-sdk",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Browser SDK for privacy-accounts, using privacy-lib.",
   "type": "module",
   "main": "dist/index.mjs",

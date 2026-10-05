@@ -47,13 +47,13 @@ export type ZKPassportProductionInputs = {
  */
 export abstract class ZKPassportClaimModule extends UnsealConditionModule {
 
-    /**
-     * custom_data binds to the per-processor reveal_value, and every package carries a different
-     * one, so this proof cannot be shared across processors -- the same reason HashTieModule sets
-     * it. A k-of-n seal would need k passport scans; putting a HashTieModule between the opening
-     * module and this one (as the ZKEmail collection does) would make it shareable again.
+    /*
+     * Deliberately not flagged per-processor: whether this proof can be shared is a property of the
+     * collection, not of this module. Bound straight to the opening module's reveal_value it is
+     * per-processor, and a k-of-n seal costs k passport scans. Behind a HashTieModule tied to the
+     * seal-wide metadata_root_hash the bound value is the same for every processor, so one scan
+     * serves all k. UnsealPathProducer.perProcessorModuleIds derives which from the graph.
      */
-    override requires_unique_proof_per_processor: boolean = true;
 
     private zkPassportProof: UnsealConditionProof;
     /** The descriptor's name for slot 6: the claim this module gates on. */
@@ -224,13 +224,16 @@ export abstract class ZKPassportClaimModule extends UnsealConditionModule {
     }
 
     /**
-     * The reveal value is protocol context, not application input: it is this processor's package's
-     * anchored value, and custom_data is bound to it. Taken from ctx for the same reason
-     * HashTieModule does, so the application never has to thread it through.
+     * The bound value is protocol context, not application input, so the application never has to
+     * thread it through. It is whatever the collection binds `random_value` to -- the opening
+     * module's anchored reveal_value when this module sits directly behind it, or a HashTie's
+     * tied_hash when one is interposed. Read from the graph rather than assumed, for the same
+     * reason HashTieModule reads its tied_value: the chain substitutes the bound value into the
+     * FormatBoundData signal at verify time, so proving over a different one cannot verify.
      */
     override async produce(ctx: ProofProductionContext, inputs: ZKPassportProductionInputs): Promise<ModuleProof> {
         return this.produce_proofs(
-            ctx.seal.public_package.reveal_value,
+            ctx.bound_inputs?.random_value ?? ctx.seal.public_package.reveal_value,
             inputs.commitments,
             inputs.zkpassport_proof,
             inputs.zkpassport_signals,
