@@ -1,6 +1,5 @@
 import { HexString } from "../../types/protocol/common";
 import { MerkleTree } from 'fixed-merkle-tree'
-import process from 'node:process';
 import { IDualDataStream, DualProofResult, DualLatestGlobalLeafProofResult } from "./types";
 import { toPaddedHex, keccakTreeHasher, createKeccakMerkelTree, signDataInsertRequestJWT, ZERO_KECCAK } from "../utils";
 
@@ -48,6 +47,11 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         local_trees_to_process: []
     }
     private postDataLock: Promise<void> = Promise.resolve();
+    // Failed inserts are retried from the publishing interval with exponential backoff instead of in a loop.
+    private insertInFlight: boolean = false;
+    private insertFailures: number = 0;
+    private nextInsertAttemptAt: number = 0;
+    private static readonly MAX_INSERT_BACKOFF_MS = 5 * 60 * 1000;
 
     constructor(
         id: string,
@@ -89,12 +93,18 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
     }
 
     private async load_everything(): Promise<void> {
-        this.global_evm_merkle_tree = new EmpheralDualMerkleTreeWrapper(this.signer)
-        await this.global_evm_merkle_tree.attach(this.global_tree_address)
+        // The wrapper is kept across reloads: it remembers the fees of a still-pending insert, which a retry
+        // has to outbid.
+        if (this.global_evm_merkle_tree.getAddress() != this.global_tree_address) {
+            await this.global_evm_merkle_tree.attach(this.global_tree_address)
+        }
         this.on_chain_publishing_state = await this.persistence.getOnChainPublishingState()
-        this.merkleTree = await this.persistence.getLocalTree(this.getGlobalTreeIndex())
         this.globalValueTree = await this.persistence.getGlobalValueTree()
         this.globalDualTree = await this.persistence.getGlobalDualTree()
+        // The tree postData is filling sits after the anchored trees and the ones queued for publishing.
+        this.merkleTree = await this.persistence.getLocalTree(
+            this.getGlobalTreeIndex() + this.on_chain_publishing_state.local_trees_to_process.length
+        )
         this.globalLeafTimestamps = await this.persistence.getGlobalLeafTimestamps()
         this.globalLeafBlockHashes = await this.persistence.getGlobalLeafBlockHashes()
         this.globalLeafEntries = await this.persistence.getGlobalLeafEntries()
@@ -103,8 +113,8 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
     async initialize(): Promise<void> {
         await this.load_everything()
         await this.resyncGlobalTree()
-        if (this.on_chain_publishing_state.processing_local_tree >= 0 && this.on_chain_publishing_state.local_trees_to_process.length > 0) {
-            await this.processGlobalTreeInsert(true)
+        if (this.on_chain_publishing_state.local_trees_to_process.length > 0) {
+            await this.processGlobalTreeInsert()
         }
         await this.postData([toPaddedHex(cryptoTools.generateRandom248BitNumber())])
         setInterval(async () => {
@@ -179,6 +189,14 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         this.globalLeafTimestamps = await this.persistence.getGlobalLeafTimestamps()
         this.globalLeafBlockHashes = await this.persistence.getGlobalLeafBlockHashes()
         this.globalLeafEntries = await this.persistence.getGlobalLeafEntries()
+
+        // Whatever is anchored on chain now is no longer waiting to be published. This drops the in-flight
+        // tree when its insert was mined after all (e.g. a stuck transaction that eventually went through),
+        // so it is never anchored twice.
+        this.on_chain_publishing_state.local_trees_to_process =
+            this.on_chain_publishing_state.local_trees_to_process.filter(i => i >= this.getGlobalTreeIndex())
+        this.on_chain_publishing_state.processing_local_tree = -1
+        await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
     }
 
     getGlobalTreeIndex(): number {
@@ -245,16 +263,30 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
         ) {
             console.log("Closing local tree, elements length", this.merkleTree.elements.length)
             this.merkleTree = await createKeccakMerkelTree(this.depth, [])
-            this.on_chain_publishing_state.local_trees_to_process.push(this.getGlobalTreeIndex())
+            // The tree postData was filling: queued trees take the global indices right after the anchored ones.
+            this.on_chain_publishing_state.local_trees_to_process.push(
+                this.getGlobalTreeIndex() + this.on_chain_publishing_state.local_trees_to_process.length
+            )
             this.lastKnownTimestamp = Date.now()
             await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
         }
     }
 
-    private async processGlobalTreeInsert(force: boolean = false): Promise<void> {
+    private async processGlobalTreeInsert(): Promise<void> {
         await this.closeLocalTree()
+        // An insert can take minutes while its fees are escalated; interval ticks must not start a second one.
+        if (this.insertInFlight || Date.now() < this.nextInsertAttemptAt) return
+        this.insertInFlight = true
         try {
-            if (force || (this.on_chain_publishing_state.processing_local_tree == -1 && this.on_chain_publishing_state.local_trees_to_process.length > 0)) {
+            await this.insertNextLocalTree()
+        } finally {
+            this.insertInFlight = false
+        }
+    }
+
+    private async insertNextLocalTree(): Promise<void> {
+        try {
+            if (this.on_chain_publishing_state.local_trees_to_process.length > 0) {
                 console.log("Processing dual global tree insert")
                 this.on_chain_publishing_state.processing_local_tree = this.on_chain_publishing_state.local_trees_to_process[0]
                 await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
@@ -302,13 +334,21 @@ export class EVMDataStreamDualMerkleNonZK implements IDualDataStream {
                 this.on_chain_publishing_state.processing_local_tree = -1
                 this.on_chain_publishing_state.local_trees_to_process.shift()
                 await this.persistence.setOnChainPublishingState(this.on_chain_publishing_state)
+                this.insertFailures = 0
+                this.nextInsertAttemptAt = 0
             }
-        } catch (error) {
-            console.error("Error processing dual global tree insert", error)
-            await this.load_everything()
-            await this.resyncGlobalTree()
-            await this.processGlobalTreeInsert(true)
-            process.exit(-1)
+        } catch (error: any) {
+            const backoff = Math.min(3000 * 2 ** this.insertFailures, EVMDataStreamDualMerkleNonZK.MAX_INSERT_BACKOFF_MS)
+            this.insertFailures++
+            this.nextInsertAttemptAt = Date.now() + backoff
+            console.error(`Error processing dual global tree insert (attempt ${this.insertFailures}, retrying in ${backoff / 1000}s):`,
+                error?.code ?? error?.name, error?.shortMessage ?? error?.message)
+            try {
+                await this.load_everything()
+                await this.resyncGlobalTree()
+            } catch (resyncError: any) {
+                console.error("Error resyncing after failed dual insert:", resyncError?.shortMessage ?? resyncError?.message)
+            }
         }
     }
 
