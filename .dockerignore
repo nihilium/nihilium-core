@@ -21,7 +21,9 @@ apps/test-ui
 # IDE files (optional)
 .vscode
 .idea
-**/typechain-types/*
+# Generated, unused at runtime (registry loads ABIs from out/*.json). Do NOT widen this to
+# **/typechain-types: packages/core/dist/typechain-types is required by core's compiled code.
+packages/registry/typechain-types
 # OS generated files
 .DS_Store
 Thumbs.db 
