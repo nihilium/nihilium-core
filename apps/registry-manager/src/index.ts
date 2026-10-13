@@ -28,11 +28,11 @@
  *
  *   registry-manager list [--all]
  *
- *   registry-manager init [--output <path>] [--force]
+ *   registry-manager init <network> [--output <path>] [--force]
  *
  * Configuration is read from a .env file in the current working directory.
- * Run `registry-manager init` to generate an example file, or see .env.example
- * for all supported variables.
+ * Run `registry-manager init testnet` to generate an example file, or see
+ * .env.example for all supported variables.
  */
 
 import yargs from "yargs";

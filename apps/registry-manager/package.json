@@ -1,6 +1,6 @@
 {
   "name": "@nihilium/registry-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CLI for managing Nihilium processor and datastream registry entries",
   "license": "Apache-2.0",
   "main": "dist/cli.js",

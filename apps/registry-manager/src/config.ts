@@ -44,15 +44,15 @@ export function getRpcUrl(): string {
 }
 
 export function getNihiliumApiUrl(): string {
-  return opt("NIHILIUM_API_URL", "https://nihilium.io");
+  return opt("NIHILIUM_API_URL", "https://api.nihilium.io");
 }
 
 export function getNihiliumPortalUrl(): string {
-  return opt("NIHILIUM_PORTAL_URL", "https://nihilium.io");
+  return opt("NIHILIUM_PORTAL_URL", "https://dashboard.nihilium.io");
 }
 
 export function getChainId(): number {
-  return parseInt(opt("CHAIN_ID", "43113"), 10);
+  return parseInt(opt("CHAIN_ID", "11155111"), 10);
 }
 
 // ---------------------------------------------------------------------------

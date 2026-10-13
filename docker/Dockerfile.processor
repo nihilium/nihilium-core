@@ -16,12 +16,12 @@ RUN apt-get update \
 # Copy the entire monorepo (node_modules and all)
 COPY . .
 
-# Install processor-only deps (workspace npm may not hoist @aws-sdk) and build
-# Remove local ethers after --no-workspaces install to avoid duplicate type identities with root
-RUN cd apps/processor \
-  && npm install @aws-sdk/client-s3@3.758.0 --no-workspaces \
-  && rm -rf node_modules/ethers \
-  && npm run build
+# Build against the copied workspace node_modules, like Dockerfile.datastream. No separate
+# install: the root `npm ci` already hoists @aws-sdk/client-s3, and an `npm install
+# --no-workspaces` here would try to fetch the workspace-only @nihilium/core and
+# @nihilium/registry from npmjs.org (404). packages/registry must be built (dist/ + out/*.json)
+# before this image: the processor imports it.
+RUN cd apps/processor && npm run build
 
 # Expose the port (default is 3006 based on server.ts)
 EXPOSE 3006

@@ -10,6 +10,16 @@ const AUTOGEN_WARNING =
   "# ⚠  AUTO-GENERATED for convenience — CHANGE THIS before production use.\n" +
   "# Anyone with this key controls the associated identity/keys.";
 
+const NETWORKS = {
+  testnet: {
+    chainId: 11155111,
+    rpcUrl: "https://rpc.sepolia.org",
+    processorRegistry: "0xedaDebF2A07Eea488edc47e2A00eE9c521e3C743",
+  },
+} as const;
+
+type NetworkName = keyof typeof NETWORKS;
+
 /**
  * Build the example environment file.
  *
@@ -21,7 +31,8 @@ const AUTOGEN_WARNING =
  * the file is usable out of the box; every generated value carries a warning
  * comment that it must be replaced for anything beyond local testing.
  */
-function buildEnvTemplate(): string {
+function buildEnvTemplate(network: NetworkName): string {
+  const { chainId, rpcUrl, processorRegistry } = NETWORKS[network];
   const heKey = generateHEKey().privateKey;
   const processorSigningKey = generateSigningPrivateKey();
   const datastreamSigningKey = generateSigningPrivateKey();
@@ -29,20 +40,20 @@ function buildEnvTemplate(): string {
   return `# =============================================================================
 # Network
 # =============================================================================
-RPC_URL=https://api.avax-test.network/ext/bc/C/rpc
-CHAIN_ID=43113
+RPC_URL=${rpcUrl}
+CHAIN_ID=${chainId}
 
 # =============================================================================
 # Nihilium portal (optional)
 # =============================================================================
 
 # Base URL of the Nihilium API used to check processor claim status.
-# Defaults to https://nihilium.io if not set.
-#NIHILIUM_API_URL=https://nihilium.io
+# Defaults to https://api.nihilium.io if not set.
+#NIHILIUM_API_URL=https://api.nihilium.io
 
 # Base URL shown in the registration instructions when a processor is unclaimed.
-# Defaults to https://nihilium.io if not set.
-#NIHILIUM_PORTAL_URL=https://nihilium.io
+# Defaults to https://dashboard.nihilium.io if not set.
+#NIHILIUM_PORTAL_URL=https://dashboard.nihilium.io
 
 # =============================================================================
 # Processor
@@ -62,7 +73,7 @@ ${AUTOGEN_WARNING}
 PROCESSOR_SIGNING_PRIVATE_KEYS=${processorSigningKey}
 
 # Deployed ProcessorRegistry contract address
-PROCESSOR_REGISTRY_ADDRESS=0x...
+PROCESSOR_REGISTRY_ADDRESS=${processorRegistry}
 
 # Human-readable metadata shown in the registry
 PROCESSOR_NAME=My Processor
@@ -103,11 +114,16 @@ DATASTREAM_GRACE_PERIOD_SECONDS=43200
 `;
 }
 
-export const command = "init";
-export const describe = "Generate an example environment file in the current directory";
+export const command = "init <network>";
+export const describe = "Generate an example environment file for a network in the current directory";
 
 export function builder(yargs: Argv): Argv {
   return yargs
+    .positional("network", {
+      type: "string",
+      choices: Object.keys(NETWORKS),
+      describe: "Network to configure",
+    })
     .option("output", {
       alias: "o",
       type: "string",
@@ -123,7 +139,7 @@ export function builder(yargs: Argv): Argv {
 }
 
 export async function handler(argv: unknown): Promise<void> {
-  const { output, force } = argv as { output: string; force: boolean };
+  const { network, output, force } = argv as { network: NetworkName; output: string; force: boolean };
   const target = resolve(process.cwd(), output);
 
   try {
@@ -132,7 +148,7 @@ export async function handler(argv: unknown): Promise<void> {
       process.exit(1);
     }
 
-    writeFileSync(target, buildEnvTemplate(), { encoding: "utf8" });
+    writeFileSync(target, buildEnvTemplate(network), { encoding: "utf8" });
 
     printSuccess(`Wrote example environment file to ${output}.`);
     printInfo("Baby Jubjub signing/HE keys were auto-generated — replace them before production use.");
