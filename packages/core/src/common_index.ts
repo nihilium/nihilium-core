@@ -72,8 +72,13 @@ export type {
 export { UnsealPathProducer } from './lib/unseal_conditions/UnsealPathProducer'
 export type { UnsealResolver, UnsealResolvers, UnsealModuleEvent } from './lib/unseal_conditions/UnsealPathProducer'
 export { UnsealModuleError, UnsealModulePhase } from './lib/unseal_conditions/UnsealPathProducer'
-export {NihiliumPaymentProvider, NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE} from './lib/client/payments';
-export type { PaymentProvider } from './lib/client/payments';
+export {
+    NihiliumPaymentProvider,
+    NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE,
+    PROCESSOR_TOKEN_PATH,
+    normalizeProcessorToken,
+} from './lib/client/payments';
+export type { PaymentProvider, ProcessorToken, NihiliumPaymentProviderOptions } from './lib/client/payments';
 export { createRevealOnlyCollection } from './lib/unseal_conditions/templates/reveal_only_template';
 // Parse a stored unseal template into an UnsealConditionTemplate. Exposed as a top-level
 // export because it is needed early in the unseal flow. Also available as `types.from_json`.

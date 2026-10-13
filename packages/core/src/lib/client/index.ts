@@ -35,6 +35,8 @@ export {
     NihiliumPaymentProvider,
     NihiliumPaymentProviderUnauthenticated,
     NihiliumPaymentProviderClientAPIKEY_DO_NOT_USE,
+    PROCESSOR_TOKEN_PATH,
     hashRequestBody,
+    normalizeProcessorToken,
 } from "./payments";
-export type { PaymentProvider } from "./payments";
+export type { PaymentProvider, ProcessorToken, NihiliumPaymentProviderOptions } from "./payments";

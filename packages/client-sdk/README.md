@@ -41,9 +41,32 @@ logic rather than being re-plumbed by a bundler.
 `./server` is node-only on purpose: `NihiliumServerPayment` holds an API key and must not be
 reachable from browser code.
 
+It is the server half of `NihiliumPaymentProvider`. The browser posts `{ processorAddress, requestId }`
+to your server at `PROCESSOR_TOKEN_PATH` (`/api/request-processor-token`). Your server checks its
+own caller, then asks Nihilium:
+
 ```ts
 import { NihiliumServerPayment } from "@nihilium/client-sdk/server";
+
+const payment = new NihiliumServerPayment("https://api.nihilium.io", process.env.NIHILIUM_API_KEY!);
+
+app.post("/api/request-processor-token", async (req, res) => {
+  if (!isSignedIn(req)) return res.status(403).end();   // the route spends your credits
+  const { processorAddress, requestId } = req.body;
+  res.json(await payment.getProcessorToken(processorAddress, requestId));
+});
 ```
+
+In the browser, send the credential that `isSignedIn` checks:
+
+```ts
+new NihiliumPaymentProvider("https://your-server.example", {
+  headers: () => ({ Authorization: `Bearer ${session.token}` }),
+});
+```
+
+The token is bound to one processor and one request body, and the processor accepts it once, so the
+browser can hold it safely.
 
 ### Maintaining the Node build
 
